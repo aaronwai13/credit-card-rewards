@@ -1220,13 +1220,29 @@ function renderCards() {
     ]);
     const matchesCategory = !categoryFilter || cardCategories.has(categoryFilter);
     return matchesQuery && matchesBank && matchesCategory;
+  }).sort((left, right) => {
+    const leftOffers = state.offers.filter((offer) => offer.cardId === left.id);
+    const rightOffers = state.offers.filter((offer) => offer.cardId === right.id);
+    const leftHighest = leftOffers.reduce((best, offer) => Math.max(best, Number(offer.bonusRate || 0) + Number(left.baseRate || 0)), Number(left.baseRate || 0));
+    const rightHighest = rightOffers.reduce((best, offer) => Math.max(best, Number(offer.bonusRate || 0) + Number(right.baseRate || 0)), Number(right.baseRate || 0));
+    if (rightHighest !== leftHighest) return rightHighest - leftHighest;
+    if (Number(right.baseRate || 0) !== Number(left.baseRate || 0)) return Number(right.baseRate || 0) - Number(left.baseRate || 0);
+    return left.name.localeCompare(right.name, "zh-Hant");
   });
 
   document.getElementById("cardsList").innerHTML = filtered.length ? filtered.map((card) => {
     const categories = Object.entries(card.categories || {})
       .map(([key, value]) => `${CATEGORY_LABELS[key] || key} ${formatNumber(value)}x`)
       .join(" / ");
-    const cardOffers = state.offers.filter((offer) => offer.cardId === card.id);
+    const cardOffers = state.offers
+      .filter((offer) => offer.cardId === card.id)
+      .sort((left, right) => {
+        const leftTotal = Number(left.bonusRate || 0) + Number(card.baseRate || 0);
+        const rightTotal = Number(right.bonusRate || 0) + Number(card.baseRate || 0);
+        if (rightTotal !== leftTotal) return rightTotal - leftTotal;
+        if (Number(right.bonusRate || 0) !== Number(left.bonusRate || 0)) return Number(right.bonusRate || 0) - Number(left.bonusRate || 0);
+        return left.title.localeCompare(right.title, "zh-Hant");
+      });
     const strongestOffer = cardOffers.reduce((best, offer) => {
       if (!best || Number(offer.bonusRate || 0) > Number(best.bonusRate || 0)) return offer;
       return best;
