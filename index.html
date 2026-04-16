@@ -655,6 +655,15 @@
 const STORAGE_KEY = "credit_card_rewards_v2";
 const APP_VERSION = "v2026.04.17.1";
 const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
+const CARD_DISPLAY_ORDER = [
+  "BOC Chill Card",
+  "HSBC 金卡",
+  "PayMe 銀聯卡",
+  "MMPOWER",
+  "恒生多貨幣扣賬卡",
+  "AEON WAKUWAKU",
+  "DBS Live Fresh"
+];
 const CANONICAL_CARD_DEFINITIONS = [
   {
     name: "BOC Chill Card",
@@ -1221,12 +1230,11 @@ function renderCards() {
     const matchesCategory = !categoryFilter || cardCategories.has(categoryFilter);
     return matchesQuery && matchesBank && matchesCategory;
   }).sort((left, right) => {
-    const leftOffers = state.offers.filter((offer) => offer.cardId === left.id);
-    const rightOffers = state.offers.filter((offer) => offer.cardId === right.id);
-    const leftHighest = leftOffers.reduce((best, offer) => Math.max(best, Number(offer.bonusRate || 0) + Number(left.baseRate || 0)), Number(left.baseRate || 0));
-    const rightHighest = rightOffers.reduce((best, offer) => Math.max(best, Number(offer.bonusRate || 0) + Number(right.baseRate || 0)), Number(right.baseRate || 0));
-    if (rightHighest !== leftHighest) return rightHighest - leftHighest;
-    if (Number(right.baseRate || 0) !== Number(left.baseRate || 0)) return Number(right.baseRate || 0) - Number(left.baseRate || 0);
+    const leftIndex = CARD_DISPLAY_ORDER.indexOf(left.name);
+    const rightIndex = CARD_DISPLAY_ORDER.indexOf(right.name);
+    if (leftIndex !== -1 && rightIndex !== -1 && leftIndex !== rightIndex) return leftIndex - rightIndex;
+    if (leftIndex !== -1) return -1;
+    if (rightIndex !== -1) return 1;
     return left.name.localeCompare(right.name, "zh-Hant");
   });
 
