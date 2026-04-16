@@ -470,6 +470,26 @@
     opacity:1;
     transform:translateX(-50%) translateY(-2px);
   }
+  .version-bar{
+    max-width:1080px;
+    margin:0 auto;
+    padding:0 18px calc(var(--tab-h) + 18px);
+    position:relative;
+    z-index:1;
+  }
+  .version-chip{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:8px 12px;
+    border-radius:999px;
+    background:rgba(17,57,70,0.06);
+    border:1px solid rgba(17,57,70,0.1);
+    color:var(--muted);
+    font-family:"IBM Plex Mono", monospace;
+    font-size:11px;
+    letter-spacing:0.06em;
+  }
   @media (max-width: 760px){
     .grid{grid-template-columns:1fr;}
     .filter-row{grid-template-columns:1fr;}
@@ -625,10 +645,15 @@
     </button>
   </nav>
 
+  <div class="version-bar">
+    <div class="version-chip">版本 <span id="appVersion"></span></div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
 <script>
 const STORAGE_KEY = "credit_card_rewards_v2";
+const APP_VERSION = "v2026.04.17.1";
 const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
 const CANONICAL_CARD_DEFINITIONS = [
   {
@@ -979,25 +1004,24 @@ function bindEvents() {
   });
 
   document.getElementById("saveCardBtn").addEventListener("click", saveCard);
-  document.getElementById("resetCardFormBtn").addEventListener("click", resetCardForm);
-  document.getElementById("openCardComposerBtn").addEventListener("click", openCardComposer);
+  document.getElementById("resetCardFormBtn").addEventListener("click", () => resetCardForm());
   document.getElementById("runRecommendationBtn").addEventListener("click", runRecommendation);
   document.getElementById("fillDemoScenarioBtn").addEventListener("click", fillDemoScenario);
   document.getElementById("card-search").addEventListener("input", renderCards);
   document.getElementById("card-bank-filter").addEventListener("change", renderCards);
   document.getElementById("card-category-filter").addEventListener("change", renderCards);
   document.getElementById("clearCardFiltersBtn").addEventListener("click", clearCardFilters);
+  document.getElementById("openCardComposerBtn").addEventListener("click", () => {
+    openCardComposer();
+    switchPage("cards");
+  });
 }
 
 function setDefaultDate() {
-  const today = new Date().toISOString().slice(0, 10);
-  document.getElementById("recommend-date").value = today;
-}
-
-function setOfferDateDefaults(dateString) {
-  const startInput = document.getElementById("offer-start-date");
+  const dateString = todayString();
+  const dateInput = document.getElementById("recommend-date");
+  if (dateInput && !dateInput.value) dateInput.value = dateString;
   const endInput = document.getElementById("offer-end-date");
-  if (startInput) startInput.value = dateString;
   if (endInput) endInput.value = dateString;
 }
 
@@ -1598,6 +1622,8 @@ function maybeRegisterServiceWorker() {
     }).catch((error) => console.error(error));
   }
 }
+
+document.getElementById("appVersion").textContent = APP_VERSION;
 
 function escapeHtml(value) {
   return String(value)
