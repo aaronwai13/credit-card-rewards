@@ -630,94 +630,315 @@
 <script>
 const STORAGE_KEY = "credit_card_rewards_v2";
 const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
+const CANONICAL_CARD_DEFINITIONS = [
+  {
+    name: "BOC Chill Card",
+    bank: "中銀",
+    baseRate: 0.4,
+    currency: "HKD",
+    categories: {
+      general: 1
+    },
+    locations: ["香港", "海外", "網上"],
+    notes: "電子錢包簽賬全部不算合資格簽賬。每月累積合資格簽賬滿 HK$1,000 後，指定 Chill 商戶可享 8% 現金回贈。"
+  },
+  {
+    name: "HSBC 金卡",
+    bank: "匯豐",
+    baseRate: 0.4,
+    currency: "HKD",
+    categories: {
+      general: 1
+    },
+    locations: ["香港", "澳門", "內地", "海外"],
+    notes: "本地簽賬 0.4% 回贈；海外、中國內地及澳門簽賬 2.4% 回贈。電子錢包簽賬全部不算合資格簽賬。"
+  },
+  {
+    name: "PayMe 銀聯卡",
+    bank: "匯豐",
+    baseRate: 0,
+    currency: "HKD",
+    categories: {
+      general: 1
+    },
+    locations: ["香港", "澳門", "內地", "海外"],
+    notes: "2026-04-22 前以 PayMe 銀聯卡經 Apple Pay 免觸支付：港幣、人民幣或澳門幣付款 3% 回贈，其他貨幣 10% 回贈。"
+  },
+  {
+    name: "MMPOWER",
+    bank: "恒生",
+    baseRate: 0.4,
+    currency: "HKD",
+    categories: {
+      general: 1
+    },
+    locations: ["香港", "海外", "網上"],
+    notes: "電子錢包簽賬全部不算合資格簽賬。每月合資格零售簽賬滿 HK$5,000 後可享海外外幣 6%、網上零售 5%、本地餐飲及娛樂 1%；全日制大學／大專生免簽賬要求。"
+  },
+  {
+    name: "恒生多貨幣扣賬卡",
+    bank: "恒生",
+    baseRate: 0.4,
+    currency: "HKD",
+    categories: {
+      general: 1
+    },
+    locations: ["香港", "海外"],
+    notes: "2026-06-30 前指定海外商戶 15% 現金回贈、指定海外交通 20% 現金回贈（上限 HK$120）、指定本地商戶 20% 現金回贈（上限 HK$120）。"
+  },
+  {
+    name: "AEON WAKUWAKU",
+    bank: "AEON",
+    baseRate: 0.4,
+    currency: "HKD",
+    categories: {
+      general: 1
+    },
+    locations: ["香港", "海外", "網上"],
+    notes: "電子錢包增值或轉賬不算合資格簽賬。網上簽賬 6%、日本簽賬 3%、本地餐飲 1%、其他 0.4%。迎新：發卡 60 日內於 App Store 任何簽賬可享 HK$50 回贈。"
+  },
+  {
+    name: "DBS Live Fresh",
+    bank: "DBS",
+    baseRate: 0.4,
+    currency: "HKD",
+    categories: {
+      general: 1
+    },
+    locations: ["香港", "海外", "網上"],
+    notes: "自選類別單一淨簽賬須滿 HK$300 先有回贈。你目前揀咗「網上旅遊商戶、娛樂及指定服務訂閱」；外幣可享 6%，港幣可享 5.4%。合資格網上外幣簽賬本身 1%；海外註冊網上商戶以港幣 DCC 付款不適用。電子錢包簽賬全部不算合資格簽賬。"
+  }
+];
+
+const CANONICAL_OFFER_DEFINITIONS = [
+  {
+    cardName: "BOC Chill Card",
+    title: "Chill 海外簽賬 4%",
+    category: "general",
+    tags: ["overseas"],
+    bonusRate: 3.6,
+    minSpend: 0,
+    cap: 0,
+    startDate: "2026-01-01",
+    endDate: "2026-06-30",
+    locations: ["海外"],
+    notes: "以外幣交易及支付的合資格海外簽賬可享 4% 現金回贈；以港幣支付外幣簽賬不包括在內。"
+  },
+  {
+    cardName: "BOC Chill Card",
+    title: "Chill 網上簽賬 4%",
+    category: "online",
+    tags: ["online"],
+    bonusRate: 3.6,
+    minSpend: 0,
+    cap: 0,
+    startDate: "2026-01-01",
+    endDate: "2026-06-30",
+    locations: ["網上"],
+    notes: "合資格網上簽賬可享 4% 現金回贈；電子錢包簽賬不算。"
+  },
+  {
+    cardName: "BOC Chill Card",
+    title: "Chill 商戶 8%",
+    category: "general",
+    tags: ["merchant", "subscription", "shopping", "dining", "entertainment"],
+    bonusRate: 7.6,
+    minSpend: 1000,
+    cap: 0,
+    startDate: "2026-01-01",
+    endDate: "2026-06-30",
+    locations: ["香港", "網上"],
+    notes: "僅適用指定 Chill 商戶：全港戲院、Apple TV、App Store、Disney+、Netflix、Spotify、McDonald's、Pacific Coffee、Starbucks、Dyson、Samsung、Sony、Uniqlo、GU、IKEA、LOG-ON。"
+  },
+  {
+    cardName: "HSBC 金卡",
+    title: "HSBC 金卡 海外/內地/澳門 2.4%",
+    category: "general",
+    tags: ["overseas"],
+    bonusRate: 2.0,
+    minSpend: 0,
+    cap: 0,
+    startDate: "2026-01-01",
+    endDate: "2026-12-31",
+    locations: ["澳門", "內地", "海外"],
+    notes: "賞世界：海外、中國內地及澳門簽賬 2.4% 回贈。"
+  },
+  {
+    cardName: "PayMe 銀聯卡",
+    title: "PayMe Apple Pay 港幣/人民幣/澳門幣 3%",
+    category: "general",
+    tags: ["applepay"],
+    bonusRate: 3,
+    minSpend: 0,
+    cap: 0,
+    startDate: "2026-01-01",
+    endDate: "2026-04-22",
+    locations: ["香港", "澳門", "內地"],
+    notes: "僅適用 PayMe 銀聯卡經 Apple Pay 免觸支付。"
+  },
+  {
+    cardName: "PayMe 銀聯卡",
+    title: "PayMe Apple Pay 其他貨幣 10%",
+    category: "general",
+    tags: ["applepay", "overseas"],
+    bonusRate: 10,
+    minSpend: 0,
+    cap: 0,
+    startDate: "2026-01-01",
+    endDate: "2026-04-22",
+    locations: ["海外"],
+    notes: "僅適用 PayMe 銀聯卡經 Apple Pay 免觸支付，並以非港幣/人民幣/澳門幣付款。"
+  },
+  {
+    cardName: "MMPOWER",
+    title: "MMPOWER 海外外幣 6%",
+    category: "general",
+    tags: ["overseas"],
+    bonusRate: 5.6,
+    minSpend: 5000,
+    cap: 0,
+    startDate: "2026-01-01",
+    endDate: "2026-12-31",
+    locations: ["海外"],
+    notes: "每月合資格零售簽賬滿 HK$5,000 後，合資格海外外幣簽賬可享高達 6% +FUN Dollars；全日制大學／大專生免簽賬要求。"
+  },
+  {
+    cardName: "MMPOWER",
+    title: "MMPOWER 網上零售 5%",
+    category: "online",
+    tags: ["online"],
+    bonusRate: 4.6,
+    minSpend: 5000,
+    cap: 0,
+    startDate: "2026-01-01",
+    endDate: "2026-12-31",
+    locations: ["網上"],
+    notes: "每月合資格零售簽賬滿 HK$5,000 後，合資格網上零售簽賬可享高達 5% +FUN Dollars；全日制大學／大專生免簽賬要求。"
+  },
+  {
+    cardName: "MMPOWER",
+    title: "MMPOWER 本地餐飲及娛樂 1%",
+    category: "dining",
+    tags: ["dining", "entertainment"],
+    bonusRate: 0.6,
+    minSpend: 5000,
+    cap: 0,
+    startDate: "2026-01-01",
+    endDate: "2026-12-31",
+    locations: ["香港"],
+    notes: "每月合資格零售簽賬滿 HK$5,000 後，本地餐廳食肆及本地休閒娛樂商戶簽賬可享高達 1% +FUN Dollars；全日制大學／大專生免簽賬要求。"
+  },
+  {
+    cardName: "恒生多貨幣扣賬卡",
+    title: "恒生扣賬卡 指定海外商戶 15%",
+    category: "general",
+    tags: ["overseas", "merchant"],
+    bonusRate: 14.6,
+    minSpend: 0,
+    cap: 0,
+    startDate: "2026-01-01",
+    endDate: "2026-06-30",
+    locations: ["海外"],
+    notes: "30/6 前於指定海外商戶作合資格交易可享 15% 現金回贈，每個指定商戶只可享一次。"
+  },
+  {
+    cardName: "恒生多貨幣扣賬卡",
+    title: "恒生扣賬卡 指定海外交通 20%",
+    category: "transport",
+    tags: ["transport", "overseas", "merchant"],
+    bonusRate: 19.6,
+    minSpend: 0,
+    cap: 120,
+    startDate: "2026-01-01",
+    endDate: "2026-06-30",
+    locations: ["海外"],
+    notes: "30/6 前於指定海外交通作合資格交易可享 20% 現金回贈，上限 HK$120。"
+  },
+  {
+    cardName: "恒生多貨幣扣賬卡",
+    title: "恒生扣賬卡 指定本地商戶 20%",
+    category: "shopping",
+    tags: ["shopping", "merchant", "entertainment"],
+    bonusRate: 19.6,
+    minSpend: 0,
+    cap: 120,
+    startDate: "2026-01-01",
+    endDate: "2026-06-30",
+    locations: ["香港"],
+    notes: "30/6 前於指定本地商戶作合資格交易可享 20% 現金回贈，上限 HK$120；商戶包括 POP MART、唐吉訶德、松本清、MCL 戲院、百老匯院線及英皇戲院。"
+  },
+  {
+    cardName: "AEON WAKUWAKU",
+    title: "WAKUWAKU 網上簽賬 6%",
+    category: "online",
+    tags: ["online"],
+    bonusRate: 5.6,
+    minSpend: 0,
+    cap: 0,
+    startDate: "2026-01-01",
+    endDate: "2026-12-31",
+    locations: ["網上"],
+    notes: "於網上以港幣或外幣完成簽賬可享 6% 回贈；電子錢包簽賬不算。"
+  },
+  {
+    cardName: "AEON WAKUWAKU",
+    title: "WAKUWAKU 日本簽賬 3%",
+    category: "general",
+    tags: ["overseas"],
+    bonusRate: 2.6,
+    minSpend: 0,
+    cap: 0,
+    startDate: "2026-01-01",
+    endDate: "2026-12-31",
+    locations: ["海外"],
+    notes: "於日本以日元完成簽賬可享 3% 回贈。"
+  },
+  {
+    cardName: "AEON WAKUWAKU",
+    title: "WAKUWAKU 本地餐飲 1%",
+    category: "dining",
+    tags: ["dining"],
+    bonusRate: 0.6,
+    minSpend: 0,
+    cap: 0,
+    startDate: "2026-01-01",
+    endDate: "2026-12-31",
+    locations: ["香港"],
+    notes: "適用於香港酒樓、餐廳、快餐店及酒店餐飲，以港幣完成簽賬。"
+  },
+  {
+    cardName: "DBS Live Fresh",
+    title: "Live Fresh 網上外幣 1%",
+    category: "online",
+    tags: ["online", "overseas"],
+    bonusRate: 0.6,
+    minSpend: 300,
+    cap: 0,
+    startDate: "2026-01-01",
+    endDate: "2026-12-31",
+    locations: ["海外", "網上"],
+    notes: "合資格網上外幣簽賬本身可享 1% 回贈；單一淨簽賬須滿 HK$300；海外註冊網上商戶以港幣 DCC 付款不適用。"
+  },
+  {
+    cardName: "DBS Live Fresh",
+    title: "Live Fresh 網上旅遊 / 娛樂 / 訂閱 6% / 5.4%",
+    category: "travel",
+    tags: ["travel", "entertainment", "subscription", "online"],
+    bonusRate: 5.6,
+    minSpend: 300,
+    cap: 0,
+    startDate: "2026-01-01",
+    endDate: "2026-12-31",
+    locations: ["香港", "海外", "網上"],
+    notes: "你已揀網上旅遊商戶、娛樂及指定服務訂閱為自選類別；外幣可享 6%，港幣可享 5.4%。本工具先按較高值估算。"
+  }
+];
 
 const DEFAULT_DATA = {
-  cards: [
-    {
-      id: crypto.randomUUID(),
-      name: "BOC Chill Card",
-      bank: "中銀",
-      baseRate: 0.4,
-      currency: "HKD",
-      categories: {
-        general: 1
-      },
-      locations: ["香港", "網上"],
-      notes: "基本回贈 0.4%。電子錢包簽賬全部不算合資格簽賬。每月累積合資格簽賬滿 HK$1,000 後，Chill 商戶可享 8% 現金回贈；合資格海外簽賬 4%；合資格網上簽賬 4%。"
-    },
-    {
-      id: crypto.randomUUID(),
-      name: "HSBC 金卡",
-      bank: "匯豐",
-      baseRate: 0.4,
-      currency: "HKD",
-      categories: {
-        general: 1
-      },
-      locations: ["香港", "澳門", "內地", "海外"],
-      notes: "本地簽賬 0.4% 回贈；海外、中國內地及澳門簽賬 2.4% 回贈。電子錢包簽賬全部不算合資格簽賬。"
-    },
-    {
-      id: crypto.randomUUID(),
-      name: "PayMe 銀聯卡",
-      bank: "匯豐",
-      baseRate: 0,
-      currency: "HKD",
-      categories: {
-        general: 1
-      },
-      locations: ["香港", "澳門", "內地", "海外"],
-      notes: "2026-04-22 前以 PayMe 銀聯卡經 Apple Pay 免觸支付：港幣、人民幣或澳門幣付款 3% 回贈，其他貨幣 10% 回贈。屬 Apple Pay 指定優惠。"
-    },
-    {
-      id: crypto.randomUUID(),
-      name: "MMPOWER",
-      bank: "恒生",
-      baseRate: 0.4,
-      currency: "HKD",
-      categories: {
-        general: 1
-      },
-      locations: ["香港", "海外", "網上"],
-      notes: "電子錢包簽賬全部不算合資格簽賬。全日制大學／大專生免簽賬要求。"
-    },
-    {
-      id: crypto.randomUUID(),
-      name: "恒生多貨幣扣賬卡",
-      bank: "恒生",
-      baseRate: 0.4,
-      currency: "HKD",
-      categories: {
-        general: 1
-      },
-      locations: ["香港", "海外"],
-      notes: "2026-06-30 前指定海外商戶 15% 現金回贈、指定海外交通 20% 現金回贈（上限 HK$120）、指定本地商戶 20% 現金回贈（上限 HK$120）。屬指定商戶優惠。"
-    },
-    {
-      id: crypto.randomUUID(),
-      name: "AEON WAKUWAKU",
-      bank: "AEON",
-      baseRate: 0.4,
-      currency: "HKD",
-      categories: {
-        general: 1
-      },
-      locations: ["香港", "海外", "網上"],
-      notes: "網上簽賬 6% 回贈、日本簽賬 3%、本地餐飲 1%、其他 0.4%。電子錢包增值或轉賬不算合資格簽賬。迎新：發卡 60 日內 App Store 任何簽賬可享 HK$50 回贈（待返）。"
-    },
-    {
-      id: crypto.randomUUID(),
-      name: "DBS Live Fresh",
-      bank: "DBS",
-      baseRate: 0.4,
-      currency: "HKD",
-      categories: {
-        general: 1
-      },
-      locations: ["香港", "海外", "網上"],
-      notes: "自選類別單一淨簽賬須滿 HK$300 才有回贈。合資格網上外幣簽賬本身 1%，揀中自選後可至 6%；合資格網上旅遊商戶、娛樂及指定訂閱可享 6%/5.4%。DCC 港幣海外網上商戶不計。電子錢包簽賬全部不算合資格簽賬。"
-    }
-  ],
+  cards: CANONICAL_CARD_DEFINITIONS.map((card) => ({
+    id: crypto.randomUUID(),
+    ...card
+  })),
   offers: []
 };
 
@@ -809,22 +1030,12 @@ function saveData() {
 }
 
 function normalizeCard(card) {
-  if (card && card.name === "DBS Live Fresh" && Number(card.baseRate || 0) === 0) {
+  if (!card) return card;
+  const canonical = CANONICAL_CARD_DEFINITIONS.find((item) => item.name === card.name);
+  if (canonical) {
     return {
-      ...card,
-      baseRate: 0.4
-    };
-  }
-  if (card && card.name === "恒生多貨幣扣賬卡" && Number(card.baseRate || 0) === 0) {
-    return {
-      ...card,
-      baseRate: 0.4
-    };
-  }
-  if (card && card.name === "MMPOWER") {
-    return {
-      ...card,
-      notes: "電子錢包簽賬全部不算合資格簽賬。全日制大學／大專生免簽賬要求。"
+      id: card.id || crypto.randomUUID(),
+      ...canonical
     };
   }
   return card;
@@ -870,345 +1081,72 @@ function normalizeOffer(offer) {
 }
 
 function migrateStoredData() {
-  state.cards = state.cards.map(normalizeCard);
+  const existingCards = Array.isArray(state.cards) ? state.cards : [];
+  const customCards = existingCards
+    .filter((card) => !CANONICAL_CARD_DEFINITIONS.some((item) => item.name === card.name))
+    .map((card) => ({
+      id: card.id || crypto.randomUUID(),
+      ...card
+    }));
 
-  const mmpower = state.cards.find((card) => card.name === "MMPOWER");
-  if (!mmpower) return;
+  const canonicalCards = CANONICAL_CARD_DEFINITIONS.map((definition) => {
+    const existing = existingCards.find((card) => card.name === definition.name);
+    return {
+      id: existing?.id || crypto.randomUUID(),
+      ...definition
+    };
+  });
 
-  const replacements = [
-    {
-      title: "MMPOWER 海外外幣 4%",
-      category: "general",
-      tags: ["overseas"],
-      bonusRate: 3.6,
-      minSpend: 0,
-      cap: 0,
-      startDate: "2026-01-01",
-      endDate: "2026-12-31",
-      locations: ["海外"],
-      notes: "於香港以外之國家或地區的實體店以外幣簽賬可享高達 4% +FUN Dollars。全日制大學／大專生免簽賬要求。"
-    },
-    {
-      title: "MMPOWER 網上零售 5%",
-      category: "online",
-      tags: ["online"],
-      bonusRate: 4.6,
-      minSpend: 0,
-      cap: 0,
-      startDate: "2026-01-01",
-      endDate: "2026-12-31",
-      locations: ["網上"],
-      notes: "於網店購物可享高達 5% +FUN Dollars。全日制大學／大專生免簽賬要求。"
-    },
-    {
-      title: "MMPOWER 指定商戶 8%",
-      category: "shopping",
-      tags: ["shopping", "merchant"],
-      bonusRate: 7.6,
-      minSpend: 0,
-      cap: 0,
-      startDate: "2026-01-01",
-      endDate: "2026-12-31",
-      locations: ["香港", "網上"],
-      notes: "指定商戶包括 Amazon、GU、lululemon、淘寶及 Uniqlo。全日制大學／大專生免簽賬要求。"
-    },
-    {
-      title: "MMPOWER 網上娛樂 8%",
-      category: "entertainment",
-      tags: ["entertainment", "online"],
-      bonusRate: 7.6,
-      minSpend: 0,
-      cap: 0,
-      startDate: "2026-01-01",
-      endDate: "2026-12-31",
-      locations: ["網上"],
-      notes: "煲劇聽歌、網上買飛睇戲、睇 SHOW 及玩樂可享高達 8% +FUN Dollars。全日制大學／大專生免簽賬要求。"
-    },
-    {
-      title: "MMPOWER 網上服飾 8%",
-      category: "shopping",
-      tags: ["shopping", "online"],
-      bonusRate: 7.6,
-      minSpend: 0,
-      cap: 0,
-      startDate: "2026-01-01",
-      endDate: "2026-12-31",
-      locations: ["網上"],
-      notes: "網上服飾簽賬可享高達 8% +FUN Dollars。全日制大學／大專生免簽賬要求。"
-    }
-  ];
+  state.cards = [...canonicalCards, ...customCards].map(normalizeCard);
 
-  const legacyTitles = new Set([
-    "MMPOWER 海外外幣 6%",
-    "MMPOWER 網上零售 5%",
-    "MMPOWER 本地餐飲 1%",
-    "MMPOWER 海外外幣 4%",
-    "MMPOWER 指定商戶 8%",
-    "MMPOWER 網上娛樂 8%",
-    "MMPOWER 網上服飾 8%"
-  ]);
+  const cardIdByName = Object.fromEntries(state.cards.map((card) => [card.name, card.id]));
+  const canonicalCardNames = new Set(CANONICAL_CARD_DEFINITIONS.map((card) => card.name));
+  const existingCardById = Object.fromEntries(existingCards.map((card) => [card.id, card]));
+  const existingOffers = Array.isArray(state.offers) ? state.offers : [];
+  const customOffers = existingOffers.filter((offer) => {
+    const linkedCard = existingCardById[offer.cardId];
+    return !linkedCard || !canonicalCardNames.has(linkedCard.name);
+  });
 
-  const retainedOffers = state.offers.filter((offer) => !(offer.cardId === mmpower.id && legacyTitles.has(offer.title)));
-  const migratedOffers = replacements.map((offer) => normalizeOffer({
-    id: crypto.randomUUID(),
-    cardId: mmpower.id,
-    ...offer
-  }));
+  const canonicalOffers = CANONICAL_OFFER_DEFINITIONS.map((definition) => {
+    const existing = existingOffers.find((offer) => offer.title === definition.title);
+    return normalizeOffer({
+      id: existing?.id || crypto.randomUUID(),
+      cardId: cardIdByName[definition.cardName] || "",
+      title: definition.title,
+      category: definition.category,
+      tags: definition.tags,
+      bonusRate: definition.bonusRate,
+      minSpend: definition.minSpend,
+      cap: definition.cap,
+      startDate: definition.startDate,
+      endDate: definition.endDate,
+      locations: definition.locations,
+      notes: definition.notes
+    });
+  });
 
-  state.offers = [...retainedOffers, ...migratedOffers];
+  state.offers = [...canonicalOffers, ...customOffers];
   saveData();
 }
 
 function seedDefaultOffers() {
   if (state.offers.length > 0) return;
-  const chill = state.cards.find((card) => card.name === "BOC Chill Card");
-  const hsbcGold = state.cards.find((card) => card.name === "HSBC 金卡");
-  const payme = state.cards.find((card) => card.name === "PayMe 銀聯卡");
-  const mmpower = state.cards.find((card) => card.name === "MMPOWER");
-  const debit = state.cards.find((card) => card.name === "恒生多貨幣扣賬卡");
-  const waku = state.cards.find((card) => card.name === "AEON WAKUWAKU");
-  const liveFresh = state.cards.find((card) => card.name === "DBS Live Fresh");
-
-  state.offers = [
-    {
-      id: crypto.randomUUID(),
-      cardId: chill ? chill.id : "",
-      title: "Chill 海外簽賬 4%",
-      category: "general",
-      tags: ["overseas"],
-      bonusRate: 3.6,
-      minSpend: 0,
-      cap: 0,
-      startDate: "2026-01-01",
-      endDate: "2026-06-30",
-      locations: ["海外"],
-      notes: "以外幣交易及支付的合資格海外簽賬可享 4% 現金回贈；以港幣支付外幣簽賬不包括在內。"
-    },
-    {
-      id: crypto.randomUUID(),
-      cardId: chill ? chill.id : "",
-      title: "Chill 網上簽賬 4%",
-      category: "online",
-      tags: ["online"],
-      bonusRate: 3.6,
-      minSpend: 0,
-      cap: 0,
-      startDate: "2026-01-01",
-      endDate: "2026-06-30",
-      locations: ["網上"],
-      notes: "合資格網上簽賬可享 4% 現金回贈；電子錢包簽賬不算。"
-    },
-    {
-      id: crypto.randomUUID(),
-      cardId: chill ? chill.id : "",
-      title: "Chill 商戶 8%",
-      category: "general",
-      tags: ["merchant", "subscription", "shopping", "dining", "entertainment"],
-      bonusRate: 7.6,
-      minSpend: 1000,
-      cap: 0,
-      startDate: "2026-01-01",
-      endDate: "2026-06-30",
-      locations: ["香港", "網上"],
-      notes: "僅適用指定 Chill 商戶：全港戲院、Apple TV、App Store、Disney+、Netflix、Spotify、McDonald's、Pacific Coffee、Starbucks、Dyson、Samsung、Sony、Uniqlo、GU、IKEA、LOG-ON。"
-    },
-    {
-      id: crypto.randomUUID(),
-      cardId: hsbcGold ? hsbcGold.id : "",
-      title: "HSBC 金卡 海外/內地/澳門 2.4%",
-      category: "general",
-      tags: ["overseas"],
-      bonusRate: 2.0,
-      minSpend: 0,
-      cap: 0,
-      startDate: "2026-01-01",
-      endDate: "2026-12-31",
-      locations: ["澳門", "內地", "海外"],
-      notes: "賞世界：海外、中國內地及澳門簽賬 2.4% 回贈。"
-    },
-    {
-      id: crypto.randomUUID(),
-      cardId: payme ? payme.id : "",
-      title: "PayMe Apple Pay 港幣/人民幣/澳門幣 3%",
-      category: "general",
-      tags: ["applepay"],
-      bonusRate: 3,
-      minSpend: 0,
-      cap: 0,
-      startDate: "2026-01-01",
-      endDate: "2026-04-22",
-      locations: ["香港", "澳門", "內地"],
-      notes: "僅適用 PayMe 銀聯卡經 Apple Pay 免觸支付。"
-    },
-    {
-      id: crypto.randomUUID(),
-      cardId: payme ? payme.id : "",
-      title: "PayMe Apple Pay 其他貨幣 10%",
-      category: "general",
-      tags: ["applepay", "overseas"],
-      bonusRate: 10,
-      minSpend: 0,
-      cap: 0,
-      startDate: "2026-01-01",
-      endDate: "2026-04-22",
-      locations: ["海外"],
-      notes: "僅適用 PayMe 銀聯卡經 Apple Pay 免觸支付，並以非港幣/人民幣/澳門幣付款。"
-    },
-    {
-      id: crypto.randomUUID(),
-      cardId: mmpower ? mmpower.id : "",
-      title: "MMPOWER 海外外幣 4%",
-      category: "general",
-      tags: ["overseas"],
-      bonusRate: 3.6,
-      minSpend: 0,
-      cap: 0,
-      startDate: "2026-01-01",
-      endDate: "2026-12-31",
-      locations: ["海外"],
-      notes: "於香港以外之國家或地區的實體店以外幣簽賬可享高達 4% +FUN Dollars。"
-    },
-    {
-      id: crypto.randomUUID(),
-      cardId: mmpower ? mmpower.id : "",
-      title: "MMPOWER 網上零售 5%",
-      category: "online",
-      tags: ["online"],
-      bonusRate: 4.6,
-      minSpend: 0,
-      cap: 0,
-      startDate: "2026-01-01",
-      endDate: "2026-12-31",
-      locations: ["網上"],
-      notes: "於網店購物可享高達 5% +FUN Dollars。"
-    },
-    {
-      id: crypto.randomUUID(),
-      cardId: mmpower ? mmpower.id : "",
-      title: "MMPOWER 指定商戶 8%",
-      category: "shopping",
-      tags: ["shopping", "merchant"],
-      bonusRate: 7.6,
-      minSpend: 0,
-      cap: 0,
-      startDate: "2026-01-01",
-      endDate: "2026-12-31",
-      locations: ["香港", "網上"],
-      notes: "指定商戶包括 Amazon、GU、lululemon、淘寶及 Uniqlo。"
-    },
-    {
-      id: crypto.randomUUID(),
-      cardId: mmpower ? mmpower.id : "",
-      title: "MMPOWER 網上娛樂 8%",
-      category: "entertainment",
-      tags: ["entertainment", "online"],
-      bonusRate: 7.6,
-      minSpend: 0,
-      cap: 0,
-      startDate: "2026-01-01",
-      endDate: "2026-12-31",
-      locations: ["網上"],
-      notes: "煲劇聽歌、網上買飛睇戲、睇 SHOW 及玩樂可享高達 8% +FUN Dollars。"
-    },
-    {
-      id: crypto.randomUUID(),
-      cardId: mmpower ? mmpower.id : "",
-      title: "MMPOWER 網上服飾 8%",
-      category: "shopping",
-      tags: ["shopping", "online"],
-      bonusRate: 7.6,
-      minSpend: 0,
-      cap: 0,
-      startDate: "2026-01-01",
-      endDate: "2026-12-31",
-      locations: ["網上"],
-      notes: "網上服飾簽賬可享高達 8% +FUN Dollars。"
-    },
-    {
-      id: crypto.randomUUID(),
-      cardId: debit ? debit.id : "",
-      title: "恒生扣賬卡 指定海外交通 20%",
-      category: "transport",
-      tags: ["transport", "overseas", "merchant"],
-      bonusRate: 20,
-      minSpend: 0,
-      cap: 120,
-      startDate: "2026-01-01",
-      endDate: "2026-06-30",
-      locations: ["海外"],
-      notes: "僅指定海外交通商戶。"
-    },
-    {
-      id: crypto.randomUUID(),
-      cardId: debit ? debit.id : "",
-      title: "恒生扣賬卡 指定本地商戶 20%",
-      category: "shopping",
-      tags: ["shopping", "merchant", "entertainment"],
-      bonusRate: 20,
-      minSpend: 0,
-      cap: 120,
-      startDate: "2026-01-01",
-      endDate: "2026-06-30",
-      locations: ["香港"],
-      notes: "僅指定本地商戶：POP MART、唐吉訶德、松本清、MCL 戲院、百老匯院線、英皇戲院。"
-    },
-    {
-      id: crypto.randomUUID(),
-      cardId: waku ? waku.id : "",
-      title: "WAKUWAKU 網上簽賬 6%",
-      category: "online",
-      tags: ["online"],
-      bonusRate: 5.6,
-      minSpend: 0,
-      cap: 0,
-      startDate: "2026-01-01",
-      endDate: "2026-12-31",
-      locations: ["網上"],
-      notes: "以網上完成簽賬，電子錢包簽賬不算。"
-    },
-    {
-      id: crypto.randomUUID(),
-      cardId: waku ? waku.id : "",
-      title: "WAKUWAKU 本地餐飲 1%",
-      category: "dining",
-      tags: ["dining"],
-      bonusRate: 0.6,
-      minSpend: 0,
-      cap: 0,
-      startDate: "2026-01-01",
-      endDate: "2026-12-31",
-      locations: ["香港"],
-      notes: "適用於香港酒樓、餐廳、快餐店及酒店餐飲，以港幣完成簽賬。"
-    },
-    {
-      id: crypto.randomUUID(),
-      cardId: liveFresh ? liveFresh.id : "",
-      title: "Live Fresh 網上外幣 6%",
-      category: "online",
-      tags: ["online", "overseas"],
-      bonusRate: 6,
-      minSpend: 300,
-      cap: 0,
-      startDate: "2026-01-01",
-      endDate: "2026-12-31",
-      locations: ["海外", "網上"],
-      notes: "單一淨簽賬須滿 HK$300；如屬海外註冊網上商戶但以港幣 DCC 付款則不適用。"
-    },
-    {
-      id: crypto.randomUUID(),
-      cardId: liveFresh ? liveFresh.id : "",
-      title: "Live Fresh 網上旅遊/娛樂/訂閱 6%/5.4%",
-      category: "travel",
-      tags: ["travel", "entertainment", "subscription", "online"],
-      bonusRate: 6,
-      minSpend: 300,
-      cap: 0,
-      startDate: "2026-01-01",
-      endDate: "2026-12-31",
-      locations: ["香港", "海外", "網上"],
-      notes: "自選類別適用；外幣可享 6%，港幣 5.4%。本工具先按較高值估算。"
-    }
-  ];
+  const cardIdByName = Object.fromEntries(state.cards.map((card) => [card.name, card.id]));
+  state.offers = CANONICAL_OFFER_DEFINITIONS.map((definition) => normalizeOffer({
+    id: crypto.randomUUID(),
+    cardId: cardIdByName[definition.cardName] || "",
+    title: definition.title,
+    category: definition.category,
+    tags: definition.tags,
+    bonusRate: definition.bonusRate,
+    minSpend: definition.minSpend,
+    cap: definition.cap,
+    startDate: definition.startDate,
+    endDate: definition.endDate,
+    locations: definition.locations,
+    notes: definition.notes
+  }));
   saveData();
 }
 
