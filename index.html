@@ -1,0 +1,1669 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>碌卡助手</title>
+<meta name="description" content="收集不同信用卡回贈和活動，並按消費場景推薦最值得刷的卡。">
+<meta name="theme-color" content="#113946">
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="碌卡助手">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#113946;
+    --ink-2:#0b2731;
+    --accent:#b08a4a;
+    --accent-soft:#eadfc9;
+    --paper:#f3efe8;
+    --surface:#fbf8f2;
+    --surface-2:#efe6d6;
+    --line:rgba(17,57,70,0.12);
+    --text:#18262b;
+    --muted:#657379;
+    --good:#1e8d62;
+    --warn:#b35b3a;
+    --shadow:0 20px 50px rgba(17,57,70,0.12);
+    --tab-h:64px;
+  }
+  *{box-sizing:border-box;max-width:100%;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(circle at top left, rgba(176,138,74,0.16), transparent 34%),
+      radial-gradient(circle at top right, rgba(17,57,70,0.14), transparent 26%),
+      linear-gradient(180deg, #f8f4ee 0%, var(--paper) 100%);
+    color:var(--text);
+    font-family:"IBM Plex Sans", sans-serif;
+    padding-bottom:calc(var(--tab-h) + env(safe-area-inset-bottom, 0px));
+  }
+  body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    background-image:linear-gradient(rgba(17,57,70,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(17,57,70,0.03) 1px, transparent 1px);
+    background-size:28px 28px;
+    mask-image:linear-gradient(180deg, rgba(0,0,0,0.4), transparent 85%);
+    pointer-events:none;
+  }
+  button,input,select,textarea{font:inherit;}
+  button{cursor:pointer;}
+  .page{display:none;}
+  .page.active{display:block;}
+  .shell{max-width:1080px;margin:0 auto;padding:28px 18px 32px;position:relative;z-index:1;}
+  .hero{
+    background:linear-gradient(145deg, rgba(17,57,70,0.96), rgba(11,39,49,0.94));
+    color:#f7f1e5;
+    border-radius:28px;
+    padding:28px 22px 22px;
+    box-shadow:var(--shadow);
+    position:relative;
+    overflow:hidden;
+    margin-bottom:18px;
+  }
+  .eyebrow{
+    display:inline-flex;
+    padding:8px 12px;
+    border-radius:999px;
+    background:rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.12);
+    font-family:"IBM Plex Mono", monospace;
+    font-size:11px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    margin-bottom:16px;
+  }
+  h1{
+    margin:0 0 10px;
+    font-family:"Fraunces", serif;
+    font-size:clamp(30px, 7vw, 56px);
+    line-height:0.95;
+    letter-spacing:-0.03em;
+  }
+  .hero p{
+    margin:0;
+    max-width:680px;
+    color:rgba(247,241,229,0.78);
+    line-height:1.6;
+    font-size:15px;
+  }
+  .panel,.list-card,.result-card,.empty-state{
+    background:rgba(251,248,242,0.92);
+    border:1px solid var(--line);
+    border-radius:22px;
+    box-shadow:var(--shadow);
+  }
+  .section-title{
+    font-family:"Fraunces", serif;
+    font-size:26px;
+    margin:0 0 6px;
+    color:var(--ink);
+  }
+  .section-sub{
+    margin:0;
+    color:var(--muted);
+    font-size:14px;
+    line-height:1.5;
+  }
+  .panel{
+    padding:22px;
+    margin-bottom:16px;
+  }
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:12px;
+  }
+  .field{display:flex;flex-direction:column;gap:6px;}
+  .field.full{grid-column:1 / -1;}
+  .field-hint{
+    margin:2px 0 0;
+    font-size:12px;
+    line-height:1.5;
+    color:var(--muted);
+  }
+  .check-grid{display:flex;flex-wrap:wrap;gap:10px;}
+  .check-chip{position:relative;}
+  .check-chip input{position:absolute;opacity:0;pointer-events:none;}
+  .check-chip span{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:42px;
+    padding:10px 14px;
+    border-radius:999px;
+    background:#fffdfa;
+    border:1px solid rgba(17,57,70,0.14);
+    color:var(--muted);
+    transition:border-color 0.18s ease, background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+  }
+  .check-chip input:checked + span{
+    background:rgba(176,138,74,0.14);
+    border-color:rgba(176,138,74,0.6);
+    color:var(--ink);
+    transform:translateY(-1px);
+  }
+  label{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:11px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--ink);
+  }
+  input,select,textarea{
+    width:100%;
+    border:1px solid rgba(17,57,70,0.14);
+    border-radius:14px;
+    background:#fffdfa;
+    color:var(--text);
+    padding:13px 14px;
+    outline:none;
+    transition:border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+  }
+  textarea{min-height:88px;resize:vertical;}
+  input:focus,select:focus,textarea:focus{
+    border-color:var(--accent);
+    box-shadow:0 0 0 4px rgba(176,138,74,0.14);
+    transform:translateY(-1px);
+  }
+  .actions{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-top:14px;
+  }
+  .btn{
+    border:none;
+    border-radius:999px;
+    padding:12px 18px;
+    min-height:44px;
+    font-weight:600;
+    transition:transform 0.18s ease, opacity 0.18s ease, box-shadow 0.18s ease;
+  }
+  .btn:hover{transform:translateY(-1px);}
+  .btn:active{transform:translateY(0);}
+  .btn-primary{
+    background:linear-gradient(135deg, var(--accent), #ccab70);
+    color:#22170b;
+    box-shadow:0 12px 24px rgba(176,138,74,0.25);
+  }
+  .btn-secondary{
+    background:rgba(17,57,70,0.08);
+    color:var(--ink);
+    border:1px solid rgba(17,57,70,0.12);
+  }
+  .toolbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    gap:14px;
+    margin-bottom:12px;
+    flex-wrap:wrap;
+  }
+  .toolbar .field{min-width:220px;flex:1;}
+  .filter-row{
+    display:grid;
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+    gap:12px;
+    margin-bottom:14px;
+  }
+  .filter-row .actions{
+    margin-top:0;
+    align-items:flex-end;
+  }
+  .composer{
+    display:none;
+  }
+  .composer.show{
+    display:block;
+  }
+  .list{
+    display:grid;
+    gap:12px;
+  }
+  .list-card{
+    padding:18px;
+    position:relative;
+    overflow:hidden;
+  }
+  .list-card::before{
+    content:"";
+    position:absolute;
+    inset:0 auto 0 0;
+    width:6px;
+    background:linear-gradient(180deg, var(--accent), var(--ink));
+  }
+  .card-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:12px;
+    margin-bottom:10px;
+  }
+  .card-name{
+    margin:0;
+    font-size:20px;
+    color:var(--ink);
+    font-family:"Fraunces", serif;
+  }
+  .chip{
+    display:inline-flex;
+    align-items:center;
+    border-radius:999px;
+    padding:6px 10px;
+    font-size:11px;
+    line-height:1;
+    background:var(--accent-soft);
+    color:var(--ink);
+    border:1px solid rgba(176,138,74,0.26);
+    font-family:"IBM Plex Mono", monospace;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+  }
+  .meta{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-bottom:10px;
+  }
+  .meta span{
+    padding:7px 10px;
+    border-radius:999px;
+    background:rgba(17,57,70,0.06);
+    color:var(--muted);
+    font-size:12px;
+  }
+  .details{
+    display:grid;
+    gap:8px;
+    color:var(--text);
+    font-size:14px;
+    line-height:1.55;
+  }
+  .details strong{color:var(--ink);}
+  .offer-list{
+    display:grid;
+    gap:10px;
+    margin-top:12px;
+  }
+  .offer-card{
+    padding:14px;
+    border-radius:16px;
+    background:linear-gradient(180deg, rgba(255,255,255,0.8), rgba(234,223,201,0.34));
+    border:1px solid rgba(17,57,70,0.10);
+  }
+  .offer-card-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:10px;
+    margin-bottom:8px;
+  }
+  .offer-card-title{
+    margin:0;
+    color:var(--ink);
+    font-size:16px;
+    font-weight:700;
+  }
+  .offer-card-date{
+    color:var(--muted);
+    font-size:12px;
+    line-height:1.5;
+    white-space:nowrap;
+  }
+  .offer-card-meta{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-bottom:8px;
+  }
+  .offer-card-note{
+    color:var(--text);
+    font-size:13px;
+    line-height:1.6;
+  }
+  .inline-actions{
+    display:flex;
+    gap:8px;
+    margin-top:14px;
+    flex-wrap:wrap;
+  }
+  .tiny-btn{
+    border:none;
+    border-radius:999px;
+    padding:9px 12px;
+    background:rgba(17,57,70,0.08);
+    color:var(--ink);
+    font-size:12px;
+    font-weight:600;
+  }
+  .tiny-btn.danger{
+    background:rgba(179,91,58,0.12);
+    color:var(--warn);
+  }
+  .result-stack{
+    display:grid;
+    gap:12px;
+    margin-top:16px;
+  }
+  .result-card{
+    padding:18px;
+  }
+  .result-card.best{
+    background:linear-gradient(135deg, rgba(176,138,74,0.18), rgba(255,255,255,0.96));
+    border-color:rgba(176,138,74,0.35);
+  }
+  .result-rank{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:11px;
+    text-transform:uppercase;
+    color:var(--muted);
+    letter-spacing:0.08em;
+    margin-bottom:8px;
+  }
+  .result-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:12px;
+    margin-bottom:12px;
+  }
+  .result-value{
+    font-family:"Fraunces", serif;
+    font-size:30px;
+    color:var(--ink);
+    line-height:1;
+    text-align:right;
+  }
+  .result-note{
+    color:var(--muted);
+    font-size:13px;
+    line-height:1.5;
+  }
+  .breakdown{
+    display:grid;
+    gap:6px;
+    font-size:14px;
+    line-height:1.5;
+  }
+  .breakdown strong{color:var(--ink);}
+  .empty-state{
+    padding:24px;
+    text-align:center;
+    color:var(--muted);
+    font-size:14px;
+    line-height:1.6;
+  }
+  .tab-bar{
+    position:fixed;
+    left:0;
+    right:0;
+    bottom:0;
+    height:var(--tab-h);
+    display:flex;
+    background:rgba(251,248,242,0.94);
+    border-top:1px solid var(--line);
+    backdrop-filter:blur(14px);
+    z-index:10;
+  }
+  .tab-btn{
+    flex:1;
+    border:none;
+    background:none;
+    color:var(--muted);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:4px;
+  }
+  .tab-btn.active{color:var(--ink);}
+  .tab-icon{
+    width:22px;
+    height:22px;
+    display:block;
+  }
+  .tab-icon svg{
+    width:100%;
+    height:100%;
+    display:block;
+    stroke:currentColor;
+    fill:none;
+    stroke-width:1.9;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+  }
+  .tab-btn.active .tab-icon svg{
+    stroke-width:2.1;
+  }
+  .tab-text{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+  }
+  .toast{
+    position:fixed;
+    left:50%;
+    bottom:calc(var(--tab-h) + 18px);
+    transform:translateX(-50%);
+    background:var(--ink);
+    color:#f7f1e5;
+    padding:12px 16px;
+    border-radius:999px;
+    font-size:13px;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity 0.2s ease, transform 0.2s ease;
+    z-index:12;
+    box-shadow:var(--shadow);
+  }
+  .toast.show{
+    opacity:1;
+    transform:translateX(-50%) translateY(-2px);
+  }
+  @media (max-width: 760px){
+    .grid{grid-template-columns:1fr;}
+    .filter-row{grid-template-columns:1fr;}
+    .hero{padding:24px 18px 18px;border-radius:22px;}
+    .panel,.list-card,.result-card,.empty-state{border-radius:18px;}
+    .result-header,.card-top{flex-direction:column;}
+    .result-value{text-align:left;}
+  }
+</style>
+</head>
+<body>
+  <main>
+    <section class="page active" id="page-recommend">
+      <div class="shell">
+        <div class="hero">
+          <div class="eyebrow">Spend Smarter</div>
+          <h1>碌卡助手</h1>
+          <p>把不同信用卡的基礎回贈、分類加成、地區限制和限時活動整合在一起。輸入消費地點、類別和金額後，系統會即時計出當前最值得碌的卡。</p>
+        </div>
+
+        <div class="panel">
+          <h2 class="section-title">消費推薦器</h2>
+          <p class="section-sub">輸入一句消費描述，再加金額和日期。系統會自動判斷地點和類別，計出當前最值得碌的卡。</p>
+          <div class="grid" style="margin-top:16px;">
+            <div class="field full">
+              <label for="recommend-description">消費描述</label>
+              <input id="recommend-description" type="text" placeholder="例如：今晚喺澳門酒店食自助餐，或者淘寶買耳機">
+            </div>
+            <div class="field">
+              <label for="recommend-amount">金額</label>
+              <input id="recommend-amount" type="number" min="0" step="0.01" placeholder="例如：388">
+            </div>
+            <div class="field">
+              <label for="recommend-date">消費日期</label>
+              <input id="recommend-date" type="date">
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn btn-primary" id="runRecommendationBtn">立即推薦</button>
+            <button class="btn btn-secondary" id="fillDemoScenarioBtn">載入示例場景</button>
+          </div>
+          <div class="result-stack" id="recommendationResults"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" id="page-cards">
+      <div class="shell">
+        <div class="panel">
+          <div class="toolbar">
+            <div>
+              <h2 class="section-title">信用卡記錄</h2>
+              <p class="section-sub">用你平時記卡的方法寫低每張卡：一般消費有幾多、邊啲情況特別好用、仲有要避開乜限制。</p>
+            </div>
+            <div class="actions" style="margin-top:0;">
+              <button class="btn btn-secondary" id="openCardComposerBtn">新增信用卡</button>
+            </div>
+          </div>
+          <div class="composer" id="cardComposer">
+          <div class="grid" style="margin-top:16px;">
+            <div class="field">
+              <label for="card-name">卡名</label>
+              <input id="card-name" type="text" placeholder="例如：HSBC Red">
+            </div>
+            <div class="field">
+              <label for="card-bank">銀行</label>
+              <input id="card-bank" type="text" placeholder="例如：匯豐">
+            </div>
+            <div class="field">
+              <label for="card-base-rate">一般消費回贈 %</label>
+              <input id="card-base-rate" type="number" min="0" step="0.1" placeholder="例如：0.4">
+            </div>
+            <div class="field">
+              <label for="card-currency">貨幣</label>
+              <input id="card-currency" type="text" placeholder="例如：HKD">
+            </div>
+            <div class="field full">
+              <label for="card-categories">較高回贈類別</label>
+              <input id="card-categories" type="text" placeholder="例如：online:6, travel:2.4, dining:1">
+              <p class="field-hint">格式用 `類別:倍率`，例如 `online:6` 即代表網上消費按 6 倍一般回贈計。</p>
+            </div>
+            <div class="field full">
+              <label for="card-locations">通常適用地點</label>
+              <div class="check-grid" id="card-location-options"></div>
+            </div>
+            <div class="field full">
+              <label for="card-notes">特別限制 / 注意事項</label>
+              <textarea id="card-notes" placeholder="例如：電子錢包唔計、指定商戶先有、要先登記、每月滿額先生效"></textarea>
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn btn-primary" id="saveCardBtn">新增信用卡</button>
+            <button class="btn btn-secondary" id="resetCardFormBtn">收起</button>
+          </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="toolbar">
+            <div>
+              <h2 class="section-title">已儲存信用卡</h2>
+            </div>
+            <div class="field">
+              <label for="card-search">搜尋</label>
+              <input id="card-search" type="text" placeholder="搜尋卡名 / 銀行 / 用途">
+            </div>
+          </div>
+          <div class="filter-row">
+            <div class="field">
+              <label for="card-bank-filter">銀行</label>
+              <select id="card-bank-filter">
+                <option value="">全部銀行</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="card-category-filter">回贈類型</label>
+              <select id="card-category-filter">
+                <option value="">全部類型</option>
+              </select>
+            </div>
+            <div class="actions">
+              <button class="btn btn-secondary" id="clearCardFiltersBtn">清除篩選</button>
+            </div>
+          </div>
+          <div class="list" id="cardsList"></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <nav class="tab-bar" aria-label="Bottom navigation">
+    <button class="tab-btn active" data-page="recommend">
+      <span class="tab-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M6.8 17.2 16.9 7.1"></path>
+          <path d="M15.7 5.9 18.1 8.3"></path>
+          <path d="M18.2 4.1 18.8 5.7 20.4 6.3 18.8 6.9 18.2 8.5 17.6 6.9 16 6.3 17.6 5.7 18.2 4.1Z"></path>
+          <path d="M6 5.7 6.7 7.5 8.5 8.2 6.7 8.9 6 10.7 5.3 8.9 3.5 8.2 5.3 7.5 6 5.7Z"></path>
+        </svg>
+      </span>
+      <span class="tab-text">推薦</span>
+    </button>
+    <button class="tab-btn" data-page="cards">
+      <span class="tab-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <rect x="4.5" y="6.5" width="15" height="11" rx="2.2"></rect>
+          <path d="M7.5 10h9"></path>
+          <path d="M7.5 14h4.5"></path>
+        </svg>
+      </span>
+      <span class="tab-text">信用卡</span>
+    </button>
+  </nav>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_KEY = "credit_card_rewards_v2";
+const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
+
+const DEFAULT_DATA = {
+  cards: [
+    {
+      id: crypto.randomUUID(),
+      name: "BOC Chill Card",
+      bank: "中銀",
+      baseRate: 0.4,
+      currency: "HKD",
+      categories: {
+        general: 1
+      },
+      locations: ["香港", "網上"],
+      notes: "基本回贈 0.4%。電子錢包簽賬全部不算合資格簽賬。每月累積合資格簽賬滿 HK$1,000 後，Chill 商戶可享 8% 現金回贈；合資格海外簽賬 4%；合資格網上簽賬 4%。"
+    },
+    {
+      id: crypto.randomUUID(),
+      name: "HSBC 金卡",
+      bank: "匯豐",
+      baseRate: 0.4,
+      currency: "HKD",
+      categories: {
+        general: 1
+      },
+      locations: ["香港", "澳門", "內地", "海外"],
+      notes: "本地簽賬 0.4% 回贈；海外、中國內地及澳門簽賬 2.4% 回贈。電子錢包簽賬全部不算合資格簽賬。"
+    },
+    {
+      id: crypto.randomUUID(),
+      name: "PayMe 銀聯卡",
+      bank: "匯豐",
+      baseRate: 0,
+      currency: "HKD",
+      categories: {
+        general: 1
+      },
+      locations: ["香港", "澳門", "內地", "海外"],
+      notes: "2026-04-22 前以 PayMe 銀聯卡經 Apple Pay 免觸支付：港幣、人民幣或澳門幣付款 3% 回贈，其他貨幣 10% 回贈。屬 Apple Pay 指定優惠。"
+    },
+    {
+      id: crypto.randomUUID(),
+      name: "MMPOWER",
+      bank: "恒生",
+      baseRate: 0.4,
+      currency: "HKD",
+      categories: {
+        general: 1
+      },
+      locations: ["香港", "海外", "網上"],
+      notes: "電子錢包簽賬全部不算合資格簽賬。全日制大學／大專生免簽賬要求。"
+    },
+    {
+      id: crypto.randomUUID(),
+      name: "恒生多貨幣扣賬卡",
+      bank: "恒生",
+      baseRate: 0.4,
+      currency: "HKD",
+      categories: {
+        general: 1
+      },
+      locations: ["香港", "海外"],
+      notes: "2026-06-30 前指定海外商戶 15% 現金回贈、指定海外交通 20% 現金回贈（上限 HK$120）、指定本地商戶 20% 現金回贈（上限 HK$120）。屬指定商戶優惠。"
+    },
+    {
+      id: crypto.randomUUID(),
+      name: "AEON WAKUWAKU",
+      bank: "AEON",
+      baseRate: 0.4,
+      currency: "HKD",
+      categories: {
+        general: 1
+      },
+      locations: ["香港", "海外", "網上"],
+      notes: "網上簽賬 6% 回贈、日本簽賬 3%、本地餐飲 1%、其他 0.4%。電子錢包增值或轉賬不算合資格簽賬。迎新：發卡 60 日內 App Store 任何簽賬可享 HK$50 回贈（待返）。"
+    },
+    {
+      id: crypto.randomUUID(),
+      name: "DBS Live Fresh",
+      bank: "DBS",
+      baseRate: 0.4,
+      currency: "HKD",
+      categories: {
+        general: 1
+      },
+      locations: ["香港", "海外", "網上"],
+      notes: "自選類別單一淨簽賬須滿 HK$300 才有回贈。合資格網上外幣簽賬本身 1%，揀中自選後可至 6%；合資格網上旅遊商戶、娛樂及指定訂閱可享 6%/5.4%。DCC 港幣海外網上商戶不計。電子錢包簽賬全部不算合資格簽賬。"
+    }
+  ],
+  offers: []
+};
+
+const CATEGORY_LABELS = {
+  dining: "餐飲",
+  travel: "旅遊",
+  shopping: "購物",
+  online: "網上",
+  groceries: "超市",
+  transport: "交通",
+  general: "一般消費",
+  entertainment: "娛樂",
+  overseas: "海外",
+  merchant: "指定商戶",
+  applepay: "Apple Pay",
+  subscription: "訂閱 / 串流"
+};
+
+let state = loadData();
+let editingCardId = null;
+let editingOfferId = null;
+
+migrateStoredData();
+seedDefaultOffers();
+init();
+
+function init() {
+  bindEvents();
+  renderLocationCheckboxGroups();
+  setDefaultDate();
+  renderAll();
+  maybeRegisterServiceWorker();
+}
+
+function bindEvents() {
+  document.querySelectorAll(".tab-btn").forEach((button) => {
+    button.addEventListener("click", () => switchPage(button.dataset.page));
+  });
+
+  document.getElementById("saveCardBtn").addEventListener("click", saveCard);
+  document.getElementById("resetCardFormBtn").addEventListener("click", resetCardForm);
+  document.getElementById("openCardComposerBtn").addEventListener("click", openCardComposer);
+  document.getElementById("runRecommendationBtn").addEventListener("click", runRecommendation);
+  document.getElementById("fillDemoScenarioBtn").addEventListener("click", fillDemoScenario);
+  document.getElementById("card-search").addEventListener("input", renderCards);
+  document.getElementById("card-bank-filter").addEventListener("change", renderCards);
+  document.getElementById("card-category-filter").addEventListener("change", renderCards);
+  document.getElementById("clearCardFiltersBtn").addEventListener("click", clearCardFilters);
+}
+
+function setDefaultDate() {
+  const today = new Date().toISOString().slice(0, 10);
+  document.getElementById("recommend-date").value = today;
+}
+
+function setOfferDateDefaults(dateString) {
+  const startInput = document.getElementById("offer-start-date");
+  const endInput = document.getElementById("offer-end-date");
+  if (startInput) startInput.value = dateString;
+  if (endInput) endInput.value = dateString;
+}
+
+function switchPage(pageName) {
+  document.querySelectorAll(".page").forEach((page) => {
+    page.classList.toggle("active", page.id === "page-" + pageName);
+  });
+  document.querySelectorAll(".tab-btn").forEach((button) => {
+    button.classList.toggle("active", button.dataset.page === pageName);
+  });
+}
+
+function loadData() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (!saved) return structuredClone(DEFAULT_DATA);
+  try {
+    const parsed = JSON.parse(saved);
+    return {
+      cards: Array.isArray(parsed.cards) ? parsed.cards.map(normalizeCard) : structuredClone(DEFAULT_DATA.cards),
+      offers: Array.isArray(parsed.offers) ? parsed.offers.map(normalizeOffer) : []
+    };
+  } catch (error) {
+    console.error(error);
+    return structuredClone(DEFAULT_DATA);
+  }
+}
+
+function saveData() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function normalizeCard(card) {
+  if (card && card.name === "DBS Live Fresh" && Number(card.baseRate || 0) === 0) {
+    return {
+      ...card,
+      baseRate: 0.4
+    };
+  }
+  if (card && card.name === "恒生多貨幣扣賬卡" && Number(card.baseRate || 0) === 0) {
+    return {
+      ...card,
+      baseRate: 0.4
+    };
+  }
+  if (card && card.name === "MMPOWER") {
+    return {
+      ...card,
+      notes: "電子錢包簽賬全部不算合資格簽賬。全日制大學／大專生免簽賬要求。"
+    };
+  }
+  return card;
+}
+
+function normalizeOffer(offer) {
+  const tags = new Set([...(offer.tags || [])].filter(Boolean));
+  const title = String(offer.title || "");
+  const notes = String(offer.notes || "");
+  const locations = Array.isArray(offer.locations) ? offer.locations : [];
+  const category = offer.category || "";
+
+  if (category && category !== "general") tags.add(category);
+  if (locations.includes("海外") || title.includes("海外") || notes.includes("海外") || notes.includes("外幣")) {
+    tags.add("overseas");
+  }
+  if (title.includes("Apple Pay") || notes.includes("Apple Pay")) {
+    tags.add("applepay");
+  }
+  if (title.includes("指定") || notes.includes("指定") || notes.includes("僅適用")) {
+    tags.add("merchant");
+  }
+  if (title.includes("Netflix") || title.includes("Spotify") || title.includes("Disney+")
+    || notes.includes("Netflix") || notes.includes("Spotify") || notes.includes("Disney+")
+    || notes.includes("Apple TV") || notes.includes("App Store") || notes.includes("訂閱")) {
+    tags.add("subscription");
+  }
+  if (title.includes("戲院") || notes.includes("戲院") || category === "entertainment" || notes.includes("娛樂")) {
+    tags.add("entertainment");
+  }
+  if (title.includes("咖啡") || notes.includes("咖啡") || notes.includes("McDonald's") || notes.includes("Starbucks") || notes.includes("Pacific Coffee")) {
+    tags.add("dining");
+  }
+  if (title.includes("Uniqlo") || title.includes("IKEA") || notes.includes("Uniqlo") || notes.includes("GU") || notes.includes("IKEA")
+    || notes.includes("POP MART") || notes.includes("唐吉訶德") || notes.includes("松本清")) {
+    tags.add("shopping");
+  }
+
+  return {
+    ...offer,
+    tags: [...tags]
+  };
+}
+
+function migrateStoredData() {
+  state.cards = state.cards.map(normalizeCard);
+
+  const mmpower = state.cards.find((card) => card.name === "MMPOWER");
+  if (!mmpower) return;
+
+  const replacements = [
+    {
+      title: "MMPOWER 海外外幣 4%",
+      category: "general",
+      tags: ["overseas"],
+      bonusRate: 3.6,
+      minSpend: 0,
+      cap: 0,
+      startDate: "2026-01-01",
+      endDate: "2026-12-31",
+      locations: ["海外"],
+      notes: "於香港以外之國家或地區的實體店以外幣簽賬可享高達 4% +FUN Dollars。全日制大學／大專生免簽賬要求。"
+    },
+    {
+      title: "MMPOWER 網上零售 5%",
+      category: "online",
+      tags: ["online"],
+      bonusRate: 4.6,
+      minSpend: 0,
+      cap: 0,
+      startDate: "2026-01-01",
+      endDate: "2026-12-31",
+      locations: ["網上"],
+      notes: "於網店購物可享高達 5% +FUN Dollars。全日制大學／大專生免簽賬要求。"
+    },
+    {
+      title: "MMPOWER 指定商戶 8%",
+      category: "shopping",
+      tags: ["shopping", "merchant"],
+      bonusRate: 7.6,
+      minSpend: 0,
+      cap: 0,
+      startDate: "2026-01-01",
+      endDate: "2026-12-31",
+      locations: ["香港", "網上"],
+      notes: "指定商戶包括 Amazon、GU、lululemon、淘寶及 Uniqlo。全日制大學／大專生免簽賬要求。"
+    },
+    {
+      title: "MMPOWER 網上娛樂 8%",
+      category: "entertainment",
+      tags: ["entertainment", "online"],
+      bonusRate: 7.6,
+      minSpend: 0,
+      cap: 0,
+      startDate: "2026-01-01",
+      endDate: "2026-12-31",
+      locations: ["網上"],
+      notes: "煲劇聽歌、網上買飛睇戲、睇 SHOW 及玩樂可享高達 8% +FUN Dollars。全日制大學／大專生免簽賬要求。"
+    },
+    {
+      title: "MMPOWER 網上服飾 8%",
+      category: "shopping",
+      tags: ["shopping", "online"],
+      bonusRate: 7.6,
+      minSpend: 0,
+      cap: 0,
+      startDate: "2026-01-01",
+      endDate: "2026-12-31",
+      locations: ["網上"],
+      notes: "網上服飾簽賬可享高達 8% +FUN Dollars。全日制大學／大專生免簽賬要求。"
+    }
+  ];
+
+  const legacyTitles = new Set([
+    "MMPOWER 海外外幣 6%",
+    "MMPOWER 網上零售 5%",
+    "MMPOWER 本地餐飲 1%",
+    "MMPOWER 海外外幣 4%",
+    "MMPOWER 指定商戶 8%",
+    "MMPOWER 網上娛樂 8%",
+    "MMPOWER 網上服飾 8%"
+  ]);
+
+  const retainedOffers = state.offers.filter((offer) => !(offer.cardId === mmpower.id && legacyTitles.has(offer.title)));
+  const migratedOffers = replacements.map((offer) => normalizeOffer({
+    id: crypto.randomUUID(),
+    cardId: mmpower.id,
+    ...offer
+  }));
+
+  state.offers = [...retainedOffers, ...migratedOffers];
+  saveData();
+}
+
+function seedDefaultOffers() {
+  if (state.offers.length > 0) return;
+  const chill = state.cards.find((card) => card.name === "BOC Chill Card");
+  const hsbcGold = state.cards.find((card) => card.name === "HSBC 金卡");
+  const payme = state.cards.find((card) => card.name === "PayMe 銀聯卡");
+  const mmpower = state.cards.find((card) => card.name === "MMPOWER");
+  const debit = state.cards.find((card) => card.name === "恒生多貨幣扣賬卡");
+  const waku = state.cards.find((card) => card.name === "AEON WAKUWAKU");
+  const liveFresh = state.cards.find((card) => card.name === "DBS Live Fresh");
+
+  state.offers = [
+    {
+      id: crypto.randomUUID(),
+      cardId: chill ? chill.id : "",
+      title: "Chill 海外簽賬 4%",
+      category: "general",
+      tags: ["overseas"],
+      bonusRate: 3.6,
+      minSpend: 0,
+      cap: 0,
+      startDate: "2026-01-01",
+      endDate: "2026-06-30",
+      locations: ["海外"],
+      notes: "以外幣交易及支付的合資格海外簽賬可享 4% 現金回贈；以港幣支付外幣簽賬不包括在內。"
+    },
+    {
+      id: crypto.randomUUID(),
+      cardId: chill ? chill.id : "",
+      title: "Chill 網上簽賬 4%",
+      category: "online",
+      tags: ["online"],
+      bonusRate: 3.6,
+      minSpend: 0,
+      cap: 0,
+      startDate: "2026-01-01",
+      endDate: "2026-06-30",
+      locations: ["網上"],
+      notes: "合資格網上簽賬可享 4% 現金回贈；電子錢包簽賬不算。"
+    },
+    {
+      id: crypto.randomUUID(),
+      cardId: chill ? chill.id : "",
+      title: "Chill 商戶 8%",
+      category: "general",
+      tags: ["merchant", "subscription", "shopping", "dining", "entertainment"],
+      bonusRate: 7.6,
+      minSpend: 1000,
+      cap: 0,
+      startDate: "2026-01-01",
+      endDate: "2026-06-30",
+      locations: ["香港", "網上"],
+      notes: "僅適用指定 Chill 商戶：全港戲院、Apple TV、App Store、Disney+、Netflix、Spotify、McDonald's、Pacific Coffee、Starbucks、Dyson、Samsung、Sony、Uniqlo、GU、IKEA、LOG-ON。"
+    },
+    {
+      id: crypto.randomUUID(),
+      cardId: hsbcGold ? hsbcGold.id : "",
+      title: "HSBC 金卡 海外/內地/澳門 2.4%",
+      category: "general",
+      tags: ["overseas"],
+      bonusRate: 2.0,
+      minSpend: 0,
+      cap: 0,
+      startDate: "2026-01-01",
+      endDate: "2026-12-31",
+      locations: ["澳門", "內地", "海外"],
+      notes: "賞世界：海外、中國內地及澳門簽賬 2.4% 回贈。"
+    },
+    {
+      id: crypto.randomUUID(),
+      cardId: payme ? payme.id : "",
+      title: "PayMe Apple Pay 港幣/人民幣/澳門幣 3%",
+      category: "general",
+      tags: ["applepay"],
+      bonusRate: 3,
+      minSpend: 0,
+      cap: 0,
+      startDate: "2026-01-01",
+      endDate: "2026-04-22",
+      locations: ["香港", "澳門", "內地"],
+      notes: "僅適用 PayMe 銀聯卡經 Apple Pay 免觸支付。"
+    },
+    {
+      id: crypto.randomUUID(),
+      cardId: payme ? payme.id : "",
+      title: "PayMe Apple Pay 其他貨幣 10%",
+      category: "general",
+      tags: ["applepay", "overseas"],
+      bonusRate: 10,
+      minSpend: 0,
+      cap: 0,
+      startDate: "2026-01-01",
+      endDate: "2026-04-22",
+      locations: ["海外"],
+      notes: "僅適用 PayMe 銀聯卡經 Apple Pay 免觸支付，並以非港幣/人民幣/澳門幣付款。"
+    },
+    {
+      id: crypto.randomUUID(),
+      cardId: mmpower ? mmpower.id : "",
+      title: "MMPOWER 海外外幣 4%",
+      category: "general",
+      tags: ["overseas"],
+      bonusRate: 3.6,
+      minSpend: 0,
+      cap: 0,
+      startDate: "2026-01-01",
+      endDate: "2026-12-31",
+      locations: ["海外"],
+      notes: "於香港以外之國家或地區的實體店以外幣簽賬可享高達 4% +FUN Dollars。"
+    },
+    {
+      id: crypto.randomUUID(),
+      cardId: mmpower ? mmpower.id : "",
+      title: "MMPOWER 網上零售 5%",
+      category: "online",
+      tags: ["online"],
+      bonusRate: 4.6,
+      minSpend: 0,
+      cap: 0,
+      startDate: "2026-01-01",
+      endDate: "2026-12-31",
+      locations: ["網上"],
+      notes: "於網店購物可享高達 5% +FUN Dollars。"
+    },
+    {
+      id: crypto.randomUUID(),
+      cardId: mmpower ? mmpower.id : "",
+      title: "MMPOWER 指定商戶 8%",
+      category: "shopping",
+      tags: ["shopping", "merchant"],
+      bonusRate: 7.6,
+      minSpend: 0,
+      cap: 0,
+      startDate: "2026-01-01",
+      endDate: "2026-12-31",
+      locations: ["香港", "網上"],
+      notes: "指定商戶包括 Amazon、GU、lululemon、淘寶及 Uniqlo。"
+    },
+    {
+      id: crypto.randomUUID(),
+      cardId: mmpower ? mmpower.id : "",
+      title: "MMPOWER 網上娛樂 8%",
+      category: "entertainment",
+      tags: ["entertainment", "online"],
+      bonusRate: 7.6,
+      minSpend: 0,
+      cap: 0,
+      startDate: "2026-01-01",
+      endDate: "2026-12-31",
+      locations: ["網上"],
+      notes: "煲劇聽歌、網上買飛睇戲、睇 SHOW 及玩樂可享高達 8% +FUN Dollars。"
+    },
+    {
+      id: crypto.randomUUID(),
+      cardId: mmpower ? mmpower.id : "",
+      title: "MMPOWER 網上服飾 8%",
+      category: "shopping",
+      tags: ["shopping", "online"],
+      bonusRate: 7.6,
+      minSpend: 0,
+      cap: 0,
+      startDate: "2026-01-01",
+      endDate: "2026-12-31",
+      locations: ["網上"],
+      notes: "網上服飾簽賬可享高達 8% +FUN Dollars。"
+    },
+    {
+      id: crypto.randomUUID(),
+      cardId: debit ? debit.id : "",
+      title: "恒生扣賬卡 指定海外交通 20%",
+      category: "transport",
+      tags: ["transport", "overseas", "merchant"],
+      bonusRate: 20,
+      minSpend: 0,
+      cap: 120,
+      startDate: "2026-01-01",
+      endDate: "2026-06-30",
+      locations: ["海外"],
+      notes: "僅指定海外交通商戶。"
+    },
+    {
+      id: crypto.randomUUID(),
+      cardId: debit ? debit.id : "",
+      title: "恒生扣賬卡 指定本地商戶 20%",
+      category: "shopping",
+      tags: ["shopping", "merchant", "entertainment"],
+      bonusRate: 20,
+      minSpend: 0,
+      cap: 120,
+      startDate: "2026-01-01",
+      endDate: "2026-06-30",
+      locations: ["香港"],
+      notes: "僅指定本地商戶：POP MART、唐吉訶德、松本清、MCL 戲院、百老匯院線、英皇戲院。"
+    },
+    {
+      id: crypto.randomUUID(),
+      cardId: waku ? waku.id : "",
+      title: "WAKUWAKU 網上簽賬 6%",
+      category: "online",
+      tags: ["online"],
+      bonusRate: 5.6,
+      minSpend: 0,
+      cap: 0,
+      startDate: "2026-01-01",
+      endDate: "2026-12-31",
+      locations: ["網上"],
+      notes: "以網上完成簽賬，電子錢包簽賬不算。"
+    },
+    {
+      id: crypto.randomUUID(),
+      cardId: waku ? waku.id : "",
+      title: "WAKUWAKU 本地餐飲 1%",
+      category: "dining",
+      tags: ["dining"],
+      bonusRate: 0.6,
+      minSpend: 0,
+      cap: 0,
+      startDate: "2026-01-01",
+      endDate: "2026-12-31",
+      locations: ["香港"],
+      notes: "適用於香港酒樓、餐廳、快餐店及酒店餐飲，以港幣完成簽賬。"
+    },
+    {
+      id: crypto.randomUUID(),
+      cardId: liveFresh ? liveFresh.id : "",
+      title: "Live Fresh 網上外幣 6%",
+      category: "online",
+      tags: ["online", "overseas"],
+      bonusRate: 6,
+      minSpend: 300,
+      cap: 0,
+      startDate: "2026-01-01",
+      endDate: "2026-12-31",
+      locations: ["海外", "網上"],
+      notes: "單一淨簽賬須滿 HK$300；如屬海外註冊網上商戶但以港幣 DCC 付款則不適用。"
+    },
+    {
+      id: crypto.randomUUID(),
+      cardId: liveFresh ? liveFresh.id : "",
+      title: "Live Fresh 網上旅遊/娛樂/訂閱 6%/5.4%",
+      category: "travel",
+      tags: ["travel", "entertainment", "subscription", "online"],
+      bonusRate: 6,
+      minSpend: 300,
+      cap: 0,
+      startDate: "2026-01-01",
+      endDate: "2026-12-31",
+      locations: ["香港", "海外", "網上"],
+      notes: "自選類別適用；外幣可享 6%，港幣 5.4%。本工具先按較高值估算。"
+    }
+  ];
+  saveData();
+}
+
+function renderAll() {
+  renderCardFilters();
+  renderCards();
+}
+
+function openCardComposer() {
+  document.getElementById("cardComposer").classList.add("show");
+  document.getElementById("card-name").focus();
+}
+
+function closeCardComposer() {
+  document.getElementById("cardComposer").classList.remove("show");
+}
+
+function renderLocationCheckboxGroups() {
+  document.getElementById("card-location-options").innerHTML = buildLocationCheckboxes("card-location");
+}
+
+function buildLocationCheckboxes(name) {
+  return LOCATION_OPTIONS.map((location) => `
+    <label class="check-chip">
+      <input type="checkbox" name="${name}" value="${location}">
+      <span>${location}</span>
+    </label>
+  `).join("");
+}
+
+function renderCards() {
+  const query = document.getElementById("card-search").value.trim().toLowerCase();
+  const bankFilter = document.getElementById("card-bank-filter").value.trim();
+  const categoryFilter = document.getElementById("card-category-filter").value.trim();
+  const filtered = state.cards.filter((card) => {
+    const haystack = [card.name, card.bank, card.notes, ...(card.locations || [])].join(" ").toLowerCase();
+    const matchesQuery = !query || haystack.includes(query);
+    const matchesBank = !bankFilter || card.bank === bankFilter;
+    const cardCategories = new Set([
+      ...Object.entries(card.categories || {})
+        .filter(([, value]) => Number(value || 0) > 1)
+        .map(([key]) => key),
+      ...((card.tags || []).filter(Boolean)),
+      ...state.offers
+        .filter((offer) => offer.cardId === card.id)
+        .flatMap((offer) => [offer.category, ...(offer.tags || [])].filter(Boolean))
+    ]);
+    const matchesCategory = !categoryFilter || cardCategories.has(categoryFilter);
+    return matchesQuery && matchesBank && matchesCategory;
+  });
+
+  document.getElementById("cardsList").innerHTML = filtered.length ? filtered.map((card) => {
+    const categories = Object.entries(card.categories || {})
+      .map(([key, value]) => `${CATEGORY_LABELS[key] || key} ${formatNumber(value)}x`)
+      .join(" / ");
+    const cardOffers = state.offers.filter((offer) => offer.cardId === card.id);
+    const strongestOffer = cardOffers.reduce((best, offer) => {
+      if (!best || Number(offer.bonusRate || 0) > Number(best.bonusRate || 0)) return offer;
+      return best;
+    }, null);
+    const highestRewardText = strongestOffer
+      ? `${formatPercent(Number(strongestOffer.bonusRate || 0) + Number(card.baseRate || 0))} (${strongestOffer.title})`
+      : formatPercent(card.baseRate);
+    const restrictionText = formatRestrictionNotes(card.notes);
+    const offerMarkup = cardOffers.length ? `
+      <div class="details" style="margin-top:12px;">
+        <div><strong>規則與優惠：</strong></div>
+        <div class="offer-list">
+          ${cardOffers.map((offer) => `
+            <article class="offer-card">
+              <div class="offer-card-header">
+                <h4 class="offer-card-title">${escapeHtml(offer.title)}</h4>
+                <div class="offer-card-date">${escapeHtml(formatOfferDate(offer))}</div>
+              </div>
+              <div class="offer-card-meta">
+                <span class="chip">${escapeHtml((offer.locations || []).join(" / ") || "不限地點")}</span>
+                ${Number(offer.minSpend || 0) > 0 ? `<span class="chip">門檻 ${escapeHtml(formatCurrency(offer.minSpend))}</span>` : ""}
+                ${Number(offer.cap || 0) > 0 ? `<span class="chip">上限 ${escapeHtml(formatCurrency(offer.cap))}</span>` : ""}
+              </div>
+              ${offer.notes ? `<div class="offer-card-note">${escapeHtml(offer.notes)}</div>` : ""}
+            </article>
+          `).join("")}
+        </div>
+      </div>
+    ` : "";
+    return `
+      <article class="list-card">
+        <div class="card-top">
+          <div>
+            <h3 class="card-name">${escapeHtml(card.name)}</h3>
+          </div>
+        </div>
+        <div class="details">
+          <div><strong>一般消費：</strong>${formatPercent(card.baseRate)}</div>
+          <div><strong>最高可達：</strong>${escapeHtml(highestRewardText)}</div>
+          <div><strong>特別限制：</strong>${escapeHtml(restrictionText || "無")}</div>
+        </div>
+        ${offerMarkup}
+        <div class="inline-actions">
+          <button class="tiny-btn" onclick="editCard('${card.id}')">編輯</button>
+          <button class="tiny-btn danger" onclick="deleteCard('${card.id}')">刪除</button>
+        </div>
+      </article>
+    `;
+  }).join("") : `<div class="empty-state">還沒有符合條件的信用卡資料。先新增一張卡，推薦器才會開始有意義。</div>`;
+}
+
+function renderCardFilters() {
+  const bankSelect = document.getElementById("card-bank-filter");
+  const categorySelect = document.getElementById("card-category-filter");
+  const currentBank = bankSelect.value;
+  const currentCategory = categorySelect.value;
+  const banks = [...new Set(state.cards.map((card) => card.bank).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b, "zh-Hant"));
+  const categories = [...new Set([
+    ...state.cards.flatMap((card) => Object.entries(card.categories || {})
+      .filter(([, value]) => Number(value || 0) > 1)
+      .map(([key]) => key)),
+    ...state.cards.flatMap((card) => card.tags || []),
+    ...state.offers.flatMap((offer) => [offer.category, ...(offer.tags || [])].filter(Boolean))
+  ])].filter((category) => category !== "general");
+
+  bankSelect.innerHTML = `<option value="">全部銀行</option>${banks.map((bank) => `<option value="${escapeHtml(bank)}">${escapeHtml(bank)}</option>`).join("")}`;
+  categorySelect.innerHTML = `<option value="">全部類型</option>${categories.map((category) => `<option value="${escapeHtml(category)}">${escapeHtml(CATEGORY_LABELS[category] || category)}</option>`).join("")}`;
+  bankSelect.value = banks.includes(currentBank) ? currentBank : "";
+  categorySelect.value = categories.includes(currentCategory) ? currentCategory : "";
+}
+
+function clearCardFilters() {
+  document.getElementById("card-search").value = "";
+  document.getElementById("card-bank-filter").value = "";
+  document.getElementById("card-category-filter").value = "";
+  renderCards();
+}
+
+function saveCard() {
+  const payload = {
+    name: document.getElementById("card-name").value.trim(),
+    bank: document.getElementById("card-bank").value.trim(),
+    baseRate: Number(document.getElementById("card-base-rate").value),
+    currency: document.getElementById("card-currency").value.trim() || "HKD",
+    categories: parseCategoryMap(document.getElementById("card-categories").value),
+    locations: getCheckedValues("card-location"),
+    notes: document.getElementById("card-notes").value.trim()
+  };
+
+  if (!payload.name || !payload.bank || Number.isNaN(payload.baseRate)) {
+    showToast("請先填好卡名、銀行和基礎回贈率。");
+    return;
+  }
+
+  if (!payload.categories.general) {
+    payload.categories.general = 1;
+  }
+
+  if (editingCardId) {
+    const card = state.cards.find((item) => item.id === editingCardId);
+    Object.assign(card, payload);
+    showToast("信用卡資料已更新。");
+  } else {
+    state.cards.unshift({
+      id: crypto.randomUUID(),
+      ...payload
+    });
+    showToast("已新增信用卡。");
+  }
+
+  saveData();
+  editingCardId = null;
+  document.getElementById("saveCardBtn").textContent = "新增信用卡";
+  resetCardForm(false);
+  renderAll();
+}
+
+function resetCardForm(announce = true) {
+  ["card-name", "card-bank", "card-base-rate", "card-currency", "card-categories", "card-notes"].forEach((id) => {
+    document.getElementById(id).value = "";
+  });
+  setCheckedValues("card-location", []);
+  document.getElementById("card-currency").value = "HKD";
+  editingCardId = null;
+  document.getElementById("saveCardBtn").textContent = "新增信用卡";
+  closeCardComposer();
+  if (announce) showToast("已收起信用卡表單。");
+}
+
+function editCard(cardId) {
+  const card = state.cards.find((item) => item.id === cardId);
+  if (!card) return;
+  openCardComposer();
+  editingCardId = cardId;
+  document.getElementById("card-name").value = card.name || "";
+  document.getElementById("card-bank").value = card.bank || "";
+  document.getElementById("card-base-rate").value = card.baseRate ?? "";
+  document.getElementById("card-currency").value = card.currency || "HKD";
+  document.getElementById("card-categories").value = formatCategoryMap(card.categories);
+  setCheckedValues("card-location", card.locations || []);
+  document.getElementById("card-notes").value = card.notes || "";
+  document.getElementById("saveCardBtn").textContent = "儲存修改";
+  switchPage("cards");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function deleteCard(cardId) {
+  state.cards = state.cards.filter((item) => item.id !== cardId);
+  state.offers = state.offers.filter((offer) => offer.cardId !== cardId);
+  saveData();
+  renderAll();
+  showToast("信用卡及其關聯活動已刪除。");
+}
+
+function fillDemoScenario() {
+  document.getElementById("recommend-description").value = "今晚喺香港網上買家電";
+  document.getElementById("recommend-amount").value = "680";
+  document.getElementById("recommend-date").value = "2026-04-16";
+  runRecommendation();
+}
+
+function runRecommendation() {
+  const description = document.getElementById("recommend-description").value.trim();
+  const scenario = {
+    description,
+    amount: Number(document.getElementById("recommend-amount").value),
+    date: document.getElementById("recommend-date").value
+  };
+
+  if (!scenario.description || Number.isNaN(scenario.amount) || scenario.amount <= 0 || !scenario.date) {
+    showToast("請先填好消費描述、金額和日期。");
+    return;
+  }
+
+  Object.assign(scenario, inferScenarioFromText(description));
+
+  const results = state.cards.map((card) => evaluateCard(card, scenario))
+    .sort((a, b) => b.totalRewardAmount - a.totalRewardAmount);
+
+  document.getElementById("recommendationResults").innerHTML = results.length ? results.map((result, index) => `
+    <article class="result-card ${index === 0 ? "best" : ""}">
+      <div class="result-rank">${index === 0 ? "最佳選擇" : "備選 " + (index + 1)}</div>
+      <div class="result-header">
+        <div>
+          <h3 class="card-name">${escapeHtml(result.card.name)}</h3>
+          <div class="meta">
+            <span>${escapeHtml(result.card.bank)}</span>
+            <span>${escapeHtml(CATEGORY_LABELS[scenario.category] || scenario.category)}</span>
+            <span>${escapeHtml(scenario.location)}</span>
+          </div>
+        </div>
+        <div class="result-value">${formatCurrency(result.totalRewardAmount)}</div>
+      </div>
+      <div class="breakdown">
+        <div><strong>基礎回贈：</strong>${formatCurrency(result.baseRewardAmount)} (${formatPercent(result.baseRateApplied)})</div>
+        <div><strong>分類倍率：</strong>${formatNumber(result.categoryMultiplier)}x</div>
+        <div><strong>活動加碼：</strong>${formatCurrency(result.offerRewardAmount)}</div>
+        <div><strong>命中活動：</strong>${escapeHtml(result.offerTitles.length ? result.offerTitles.join(" / ") : "無")}</div>
+        <div><strong>解析結果：</strong>${escapeHtml(scenario.description)} → ${escapeHtml(scenario.location)} / ${escapeHtml(CATEGORY_LABELS[scenario.category] || scenario.category)}</div>
+      </div>
+      <p class="result-note">${escapeHtml(result.explanation)}</p>
+    </article>
+  `).join("") : `<div class="empty-state">還沒有信用卡資料，暫時無法推薦。</div>`;
+}
+
+function inferScenarioFromText(text) {
+  const normalized = text.toLowerCase();
+  const locationMatchers = [
+    { location: "網上", keywords: ["網上", "online", "app", "官網", "網站", "淘寶", "amazon", "hk tvmall", "tvmall", "京東"] },
+    { location: "澳門", keywords: ["澳門", "macau"] },
+    { location: "內地", keywords: ["內地", "大陸", "深圳", "廣州", "上海", "北京", "中國", "china"] },
+    { location: "海外", keywords: ["海外", "日本", "台灣", "韓國", "新加坡", "歐洲", "美國", "英國", "泰國", "旅行", "旅遊", "foreign"] },
+    { location: "香港", keywords: ["香港", "hk", "本地"] }
+  ];
+  const categoryMatchers = [
+    { category: "dining", keywords: ["餐廳", "食", "晚飯", "午飯", "早餐", "cafe", "咖啡", "自助餐", "酒吧", "餐飲"] },
+    { category: "travel", keywords: ["酒店", "機票", "航空", "旅行", "旅遊", "住宿", "訂房", "航班"] },
+    { category: "groceries", keywords: ["超市", "買餸", "百佳", "惠康", "groceries"] },
+    { category: "transport", keywords: ["地鐵", "的士", "uber", "巴士", "高鐵", "交通", "停車場"] },
+    { category: "online", keywords: ["網上", "online", "app", "官網", "網站", "淘寶", "amazon", "電商"] },
+    { category: "shopping", keywords: ["買", "購物", "商場", "耳機", "衫", "鞋", "家電", "百貨"] }
+  ];
+
+  const matchedLocation = locationMatchers.find((item) => item.keywords.some((keyword) => normalized.includes(keyword.toLowerCase())));
+  const matchedCategory = categoryMatchers.find((item) => item.keywords.some((keyword) => normalized.includes(keyword.toLowerCase())));
+
+  return {
+    location: matchedLocation ? matchedLocation.location : "香港",
+    category: matchedCategory ? matchedCategory.category : "general"
+  };
+}
+
+function evaluateCard(card, scenario) {
+  const categoryMultiplier = getCategoryMultiplier(card, scenario.category);
+  const locationMatched = locationApplies(card.locations, scenario.location);
+  const effectiveMultiplier = locationMatched ? categoryMultiplier : 0;
+  const baseRateApplied = card.baseRate * effectiveMultiplier;
+  const baseRewardAmount = scenario.amount * baseRateApplied / 100;
+
+  const matchingOffers = state.offers.filter((offer) => {
+    if (offer.cardId !== card.id) return false;
+    if (!isDateInRange(scenario.date, offer.startDate, offer.endDate)) return false;
+    if (scenario.amount < Number(offer.minSpend || 0)) return false;
+    if (offer.category !== "general" && offer.category !== scenario.category) return false;
+    if (!locationApplies(offer.locations, scenario.location)) return false;
+    return true;
+  });
+
+  const offerRewardAmount = matchingOffers.reduce((sum, offer) => {
+    const rawBonus = scenario.amount * Number(offer.bonusRate || 0) / 100;
+    const cap = Number(offer.cap || 0);
+    return sum + (cap > 0 ? Math.min(rawBonus, cap) : rawBonus);
+  }, 0);
+
+  const totalRewardAmount = baseRewardAmount + offerRewardAmount;
+  const explanationParts = [];
+
+  if (locationMatched) {
+    explanationParts.push("地點符合這張卡的適用範圍");
+  } else {
+    explanationParts.push("地點未命中卡片適用範圍，基礎回贈按 0 處理");
+  }
+
+  if (categoryMultiplier > 1) {
+    explanationParts.push(`${CATEGORY_LABELS[scenario.category] || scenario.category} 類別有 ${formatNumber(categoryMultiplier)}x 倍率`);
+  } else {
+    explanationParts.push("沒有額外類別加成，按基礎回贈計算");
+  }
+
+  if (matchingOffers.length) {
+    explanationParts.push("同時命中 " + matchingOffers.length + " 個活動");
+  } else {
+    explanationParts.push("沒有命中可疊加活動");
+  }
+
+  return {
+    card,
+    categoryMultiplier,
+    baseRateApplied,
+    baseRewardAmount,
+    offerRewardAmount,
+    totalRewardAmount,
+    offerTitles: matchingOffers.map((offer) => offer.title),
+    explanation: explanationParts.join("；")
+  };
+}
+
+function getCategoryMultiplier(card, category) {
+  const categories = card.categories || {};
+  return Number(categories[category] || categories.general || 1);
+}
+
+function locationApplies(locations, scenarioLocation) {
+  if (!Array.isArray(locations) || locations.length === 0) return true;
+  return locations.includes(scenarioLocation);
+}
+
+function parseCategoryMap(text) {
+  const map = {};
+  parseList(text).forEach((entry) => {
+    const [rawKey, rawValue] = entry.split(":");
+    if (!rawKey || !rawValue) return;
+    const value = Number(rawValue.trim());
+    if (!Number.isNaN(value)) {
+      map[rawKey.trim()] = value;
+    }
+  });
+  return map;
+}
+
+function formatCategoryMap(map) {
+  return Object.entries(map || {}).map(([key, value]) => `${key}:${value}`).join(", ");
+}
+
+function parseList(text) {
+  return text.split(",").map((item) => item.trim()).filter(Boolean);
+}
+
+function getCheckedValues(name) {
+  return Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map((input) => input.value);
+}
+
+function setCheckedValues(name, values) {
+  const allowed = new Set(values || []);
+  document.querySelectorAll(`input[name="${name}"]`).forEach((input) => {
+    input.checked = allowed.has(input.value);
+  });
+}
+
+function formatPercent(value) {
+  return formatNumber(value) + "%";
+}
+
+function formatNumber(value) {
+  const number = Number(value || 0);
+  return Number.isInteger(number) ? String(number) : number.toFixed(2).replace(/\.?0+$/, "");
+}
+
+function formatCurrency(value) {
+  return "$" + Number(value || 0).toFixed(2);
+}
+
+function formatRestrictionNotes(notes) {
+  if (!notes) return "";
+  if (notes.includes("每月累積合資格簽賬滿 HK$1,000 後")) {
+    const matched = notes.match(/電子錢包[^。]*。|每月累積合資格簽賬滿 HK\$1,000 後[^。]*。?/g) || [];
+    if (matched.length) return matched.join(" ").trim();
+  }
+  const segments = notes
+    .split(/(?<=。)/)
+    .map((segment) => segment.trim())
+    .filter(Boolean);
+  const filtered = segments.filter((segment) => {
+    if (segment.startsWith("基本回贈")) return false;
+    if (segment.includes("合資格海外簽賬") && !segment.includes("不")) return false;
+    if (segment.includes("合資格網上簽賬") && !segment.includes("不")) return false;
+    return /(不算|不計|先|須|需|指定|僅|只限|上限|DCC|電子錢包|Apple Pay|登記|滿 HK\$|滿\$|滿額)/.test(segment);
+  });
+  return filtered.join(" ").trim() || notes;
+}
+
+function formatOfferDate(offer) {
+  return `${offer.startDate} 至 ${offer.endDate}`;
+}
+
+function isDateInRange(date, startDate, endDate) {
+  return date >= startDate && date <= endDate;
+}
+
+function todayString() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function showToast(message) {
+  const toast = document.getElementById("toast");
+  toast.textContent = message;
+  toast.classList.add("show");
+  clearTimeout(showToast.timer);
+  showToast.timer = setTimeout(() => toast.classList.remove("show"), 1800);
+}
+
+function maybeRegisterServiceWorker() {
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("./sw.js").catch((error) => console.error(error));
+  }
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+window.editCard = editCard;
+window.deleteCard = deleteCard;
+</script>
+</body>
+</html>
