@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>碌卡助手</title>
 <meta name="description" content="收集不同信用卡回贈和活動，並按消費場景推薦最值得刷的卡。">
-<meta name="theme-color" content="#FDFAF5">
+<meta name="theme-color" content="#FDFAF5" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111112" media="(prefers-color-scheme: dark)">
 <link rel="manifest" href="./manifest.json">
 <link rel="icon" href="./icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="./apple-touch-icon.png">
@@ -18,7 +19,6 @@
 <style>
   :root {
     --ink: #113946;
-    --ink-2: #0b2731;
     --accent: #b08a4a;
     --accent-soft: #f0e6d2;
     --bg: #FDFAF5;
@@ -33,16 +33,33 @@
     --shadow: 0 1px 3px rgba(17,57,70,0.06), 0 6px 20px rgba(17,57,70,0.07);
     --tab-h: 60px;
   }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink: #7bb8d4;
+      --accent: #c9a55f;
+      --accent-soft: #2a2010;
+      --bg: #111112;
+      --card: #1C1C1E;
+      --card-inner: #2C2C2E;
+      --text: #F2F2F0;
+      --muted: #8E8E93;
+      --border: rgba(255,255,255,0.08);
+      --border-strong: rgba(255,255,255,0.14);
+      --good: #4ADE80;
+      --warn: #F87171;
+      --shadow: 0 1px 3px rgba(0,0,0,0.2), 0 6px 20px rgba(0,0,0,0.25);
+    }
+  }
   * { box-sizing: border-box; max-width: 100%; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; margin: 0; overflow: hidden; }
   html { scroll-behavior: smooth; background: var(--bg); }
   body {
-    margin: 0;
-    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
     background: var(--bg);
     color: var(--text);
     font-family: "IBM Plex Sans", sans-serif;
     font-size: 15px;
-    padding-bottom: calc(var(--tab-h) + env(safe-area-inset-bottom, 0px));
   }
   button, input, select, textarea { font: inherit; }
   button { cursor: pointer; }
@@ -51,6 +68,7 @@
   .header {
     background: var(--card);
     border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
     position: sticky;
     top: 0;
     z-index: 20;
@@ -73,6 +91,9 @@
     color: var(--ink);
     margin-bottom: 7px;
   }
+  @media (prefers-color-scheme: dark) {
+    .header-eyebrow { background: rgba(255,255,255,0.08); }
+  }
   .header-title {
     font-family: "Fraunces", serif;
     font-size: 28px;
@@ -87,6 +108,13 @@
     padding-bottom: 16px;
   }
 
+  /* MAIN SCROLL */
+  main {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
   /* PAGES */
   .page { display: none; }
   .page.active { display: block; }
@@ -98,15 +126,7 @@
     padding: 28px 20px 16px;
   }
 
-  /* SECTION HEADINGS */
-  .section-label {
-    font-family: "IBM Plex Mono", monospace;
-    font-size: 10px;
-    letter-spacing: 0.10em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin: 0 0 10px;
-  }
+  /* SECTION TYPOGRAPHY */
   .section-title {
     font-family: "Fraunces", serif;
     font-size: 20px;
@@ -121,10 +141,8 @@
     margin: 0;
   }
 
-  /* FORM FIELDS — flat, no wrapper card */
-  .form-group {
-    margin-bottom: 24px;
-  }
+  /* FORM FIELDS */
+  .form-group { margin-bottom: 24px; }
   .form-group:last-of-type { margin-bottom: 0; }
   label {
     display: block;
@@ -167,6 +185,26 @@
     border-color: var(--ink);
     box-shadow: 0 0 0 3px rgba(17,57,70,0.08);
   }
+  @media (prefers-color-scheme: dark) {
+    input:focus, select:focus, textarea:focus {
+      box-shadow: 0 0 0 3px rgba(255,255,255,0.08);
+    }
+  }
+
+  /* AMOUNT ROW with currency selector */
+  .amount-row { display: flex; gap: 8px; }
+  .amount-row select {
+    width: auto;
+    flex-shrink: 0;
+    padding: 14px 12px;
+    -webkit-appearance: auto;
+    appearance: auto;
+    border-radius: 14px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .amount-row input { flex: 1; min-width: 0; }
 
   /* BUTTONS */
   .actions { display: flex; gap: 10px; margin-top: 28px; flex-wrap: wrap; }
@@ -199,6 +237,9 @@
     color: var(--ink);
     font-size: 12px;
     font-weight: 600;
+  }
+  @media (prefers-color-scheme: dark) {
+    .tiny-btn { background: rgba(255,255,255,0.1); }
   }
   .tiny-btn.danger { background: rgba(179,91,58,0.10); color: var(--warn); }
   .inline-actions { display: flex; gap: 7px; margin-top: 12px; flex-wrap: wrap; }
@@ -238,13 +279,12 @@
     letter-spacing: 0.03em;
     white-space: nowrap;
   }
+  @media (prefers-color-scheme: dark) {
+    .chip { color: var(--accent); }
+  }
 
   /* DIVIDER */
-  .divider {
-    border: none;
-    border-top: 1px solid var(--border);
-    margin: 32px 0;
-  }
+  .divider { border: none; border-top: 1px solid var(--border); margin: 28px 0; }
 
   /* TOOLBAR */
   .toolbar {
@@ -257,10 +297,10 @@
   }
   .toolbar .actions { margin-top: 0; }
 
-  /* FILTER ROW */
+  /* FILTER ROW — cards page */
   .filter-row {
     display: grid;
-    grid-template-columns: 1fr 1fr auto;
+    grid-template-columns: 2fr 1fr 1fr auto;
     gap: 10px;
     align-items: end;
     margin-bottom: 20px;
@@ -268,13 +308,8 @@
   .filter-row .field { margin: 0; }
   .filter-row .actions { margin-top: 0; }
 
-  /* SEARCH ROW */
-  .search-row {
-    margin-bottom: 20px;
-  }
-
   /* COMPOSER */
-  .composer { display: none; padding-top: 20px; }
+  .composer { display: none; padding-top: 20px; border-top: 1px solid var(--border); margin-top: 4px; }
   .composer.show { display: block; }
 
   /* CARD LIST */
@@ -283,7 +318,7 @@
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: 16px;
-    padding: 18px 18px 16px 22px;
+    padding: 18px 18px 14px 22px;
     box-shadow: var(--shadow);
     position: relative;
     overflow: hidden;
@@ -295,53 +330,20 @@
     width: 4px;
     background: linear-gradient(180deg, var(--accent) 0%, var(--ink) 100%);
   }
-  .card-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 10px;
-    margin-bottom: 8px;
-  }
-  .card-name {
-    font-family: "Fraunces", serif;
-    font-size: 18px;
-    color: var(--ink);
-    margin: 0;
-    line-height: 1.2;
-  }
-  .details {
-    font-size: 13px;
-    line-height: 1.6;
-    color: var(--text);
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-  }
+  .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+  .card-name { font-family: "Fraunces", serif; font-size: 18px; color: var(--ink); margin: 0; line-height: 1.2; }
+  .details { font-size: 13px; line-height: 1.6; color: var(--text); display: flex; flex-direction: column; gap: 3px; }
   .details strong { color: var(--ink); font-weight: 600; }
   .meta { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
-  .meta span {
-    padding: 3px 9px;
-    border-radius: 999px;
-    background: rgba(17,57,70,0.06);
-    color: var(--muted);
-    font-size: 11px;
+  .meta span { padding: 3px 9px; border-radius: 999px; background: rgba(17,57,70,0.06); color: var(--muted); font-size: 11px; }
+  @media (prefers-color-scheme: dark) {
+    .meta span { background: rgba(255,255,255,0.07); }
   }
 
   /* OFFER CARDS */
   .offer-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
-  .offer-card {
-    background: var(--card-inner);
-    border: 1px solid var(--border);
-    border-radius: 11px;
-    padding: 13px;
-  }
-  .offer-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 8px;
-    margin-bottom: 6px;
-  }
+  .offer-card { background: var(--card-inner); border: 1px solid var(--border); border-radius: 11px; padding: 13px; }
+  .offer-card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 6px; }
   .offer-card-title { font-size: 13px; font-weight: 600; color: var(--ink); margin: 0; }
   .offer-card-date { font-size: 11px; color: var(--muted); white-space: nowrap; flex-shrink: 0; }
   .offer-card-meta { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 6px; }
@@ -349,77 +351,31 @@
 
   /* RESULT CARDS */
   .result-stack { display: flex; flex-direction: column; gap: 12px; margin-top: 32px; }
-  .result-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 18px;
-    box-shadow: var(--shadow);
+  .result-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 18px; box-shadow: var(--shadow); }
+  .result-card.best { border-color: rgba(176,138,74,0.35); background: linear-gradient(160deg, #fef8ed 0%, var(--card) 60%); }
+  @media (prefers-color-scheme: dark) {
+    .result-card.best { background: linear-gradient(160deg, #2a1e08 0%, var(--card) 60%); }
   }
-  .result-card.best {
-    border-color: rgba(176,138,74,0.35);
-    background: linear-gradient(160deg, #fef8ed 0%, var(--card) 60%);
-  }
-  .result-rank {
-    font-family: "IBM Plex Mono", monospace;
-    font-size: 10px;
-    text-transform: uppercase;
-    color: var(--muted);
-    letter-spacing: 0.08em;
-    margin-bottom: 8px;
-  }
+  .result-rank { font-family: "IBM Plex Mono", monospace; font-size: 10px; text-transform: uppercase; color: var(--muted); letter-spacing: 0.08em; margin-bottom: 8px; }
   .result-card.best .result-rank { color: var(--accent); font-weight: 500; }
-  .result-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 10px;
-    margin-bottom: 12px;
-  }
-  .result-value {
-    font-family: "Fraunces", serif;
-    font-size: 28px;
-    color: var(--ink);
-    line-height: 1;
-    white-space: nowrap;
-  }
+  .result-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
+  .result-value { font-family: "Fraunces", serif; font-size: 28px; color: var(--ink); line-height: 1; white-space: nowrap; }
   .result-note { color: var(--muted); font-size: 13px; line-height: 1.5; margin-top: 10px; }
-  .breakdown {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    font-size: 13px;
-    line-height: 1.55;
-  }
+  .breakdown { display: flex; flex-direction: column; gap: 4px; font-size: 13px; line-height: 1.55; }
   .breakdown strong { color: var(--ink); font-weight: 600; }
 
   /* EMPTY STATE */
-  .empty-state {
-    text-align: center;
-    padding: 48px 16px;
-    color: var(--muted);
-    font-size: 13px;
-    line-height: 1.9;
-  }
+  .empty-state { text-align: center; padding: 48px 16px; color: var(--muted); font-size: 13px; line-height: 1.9; }
 
-  /* TAB BAR */
+  /* TAB BAR — flex child, not fixed */
   .tab-bar {
-    position: fixed;
-    left: 0; right: 0; bottom: 0;
-    height: var(--tab-h);
+    flex-shrink: 0;
+    height: calc(var(--tab-h) + env(safe-area-inset-bottom, 0px));
     background: var(--card);
     border-top: 1px solid var(--border);
     display: flex;
     z-index: 100;
     padding-bottom: env(safe-area-inset-bottom, 0px);
-  }
-  .tab-bar::after {
-    content: "";
-    position: absolute;
-    bottom: calc(-1 * env(safe-area-inset-bottom, 0px));
-    left: 0; right: 0;
-    height: env(safe-area-inset-bottom, 0px);
-    background: var(--card);
   }
   .tab-btn {
     flex: 1;
@@ -449,22 +405,14 @@
     border-radius: 0 0 2px 2px;
   }
   .tab-icon { width: 22px; height: 22px; }
-  .tab-icon svg {
-    width: 100%; height: 100%;
-    stroke: currentColor;
-    fill: none;
-    stroke-width: 1.8;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    display: block;
-  }
+  .tab-icon svg { width: 100%; height: 100%; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; display: block; }
   .tab-btn.active .tab-icon svg { stroke-width: 2.1; }
 
   /* TOAST */
   .toast {
     position: fixed;
     left: 50%;
-    bottom: calc(var(--tab-h) + 16px);
+    bottom: calc(var(--tab-h) + env(safe-area-inset-bottom, 0px) + 12px);
     transform: translateX(-50%);
     background: var(--ink);
     color: white;
@@ -481,22 +429,14 @@
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(-2px); }
 
   /* VERSION */
-  .version-bar { max-width: 600px; margin: 0 auto; padding: 8px 20px 12px; }
-  .version-chip {
-    display: inline-flex;
-    align-items: center;
-    padding: 5px 10px;
-    border-radius: 999px;
-    border: 1px solid var(--border);
-    color: var(--muted);
-    font-family: "IBM Plex Mono", monospace;
-    font-size: 10px;
-    letter-spacing: 0.05em;
-  }
+  .version-bar { max-width: 600px; margin: 0 auto; padding: 8px 20px 16px; }
+  .version-chip { display: inline-flex; align-items: center; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--border); color: var(--muted); font-family: "IBM Plex Mono", monospace; font-size: 10px; letter-spacing: 0.05em; }
 
   @media (max-width: 500px) {
     .grid { grid-template-columns: 1fr; }
     .filter-row { grid-template-columns: 1fr 1fr; }
+    .filter-row .field:first-child { grid-column: 1 / -1; }
+    .filter-row .actions { grid-column: 1 / -1; }
   }
 </style>
 </head>
@@ -521,8 +461,19 @@
 
         <div class="field-row">
           <div class="form-group" style="margin-bottom:0;">
-            <label for="recommend-amount">金額</label>
-            <input id="recommend-amount" type="number" min="0" step="0.01" placeholder="例如：388">
+            <label for="recommend-amount">金額（選填）</label>
+            <div class="amount-row">
+              <select id="recommend-currency">
+                <option value="HKD">HKD</option>
+                <option value="CNY">CNY</option>
+                <option value="JPY">JPY</option>
+                <option value="MOP">MOP</option>
+                <option value="THB">THB</option>
+                <option value="TWD">TWD</option>
+                <option value="USD">USD</option>
+              </select>
+              <input id="recommend-amount" type="number" min="0" step="0.01" placeholder="例如：388">
+            </div>
           </div>
           <div class="form-group" style="margin-bottom:0;">
             <label for="recommend-date">消費日期</label>
@@ -533,6 +484,7 @@
         <div class="actions">
           <button class="btn btn-primary" id="runRecommendationBtn">立即推薦</button>
           <button class="btn btn-secondary" id="fillDemoScenarioBtn">載入示例</button>
+          <button class="btn btn-secondary" id="clearRecommendBtn">清除</button>
         </div>
 
         <div class="result-stack" id="recommendationResults"></div>
@@ -592,15 +544,11 @@
           <hr class="divider">
         </div>
 
-        <div class="toolbar" style="margin-bottom:14px;">
-          <h2 class="section-title" style="margin:0;">已儲存信用卡</h2>
-          <div class="field" style="min-width:130px;margin:0;">
+        <div class="filter-row">
+          <div class="field">
             <label for="card-search">搜尋</label>
             <input id="card-search" type="text" placeholder="卡名 / 銀行">
           </div>
-        </div>
-
-        <div class="filter-row">
           <div class="field">
             <label for="card-bank-filter">銀行</label>
             <select id="card-bank-filter"><option value="">全部</option></select>
@@ -618,6 +566,10 @@
 
       </div>
     </section>
+
+    <div class="version-bar">
+      <div class="version-chip">版本 <span id="appVersion"></span></div>
+    </div>
   </main>
 
   <nav class="tab-bar" aria-label="Bottom navigation">
@@ -644,15 +596,11 @@
     </button>
   </nav>
 
-  <div class="version-bar">
-    <div class="version-chip">版本 <span id="appVersion"></span></div>
-  </div>
-
   <div class="toast" id="toast"></div>
 
 <script>
 const STORAGE_KEY = "credit_card_rewards_v2";
-const APP_VERSION = "v2026.04.18.4";
+const APP_VERSION = "v2026.04.18.5";
 const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
 const CARD_DISPLAY_ORDER = [
   "BOC Chill Card",
@@ -673,7 +621,7 @@ const CANONICAL_CARD_DEFINITIONS = [
       general: 1
     },
     locations: ["香港", "海外", "網上"],
-    notes: "電子錢包簽賬全部不算合資格簽賬。每月累積合資格簽賬滿 HK$1,000 後，指定 Chill 商戶可享 8% 現金回贈。"
+    notes: "電子錢包簽賬全部不算合資格簽賬。"
   },
   {
     name: "HSBC 金卡",
@@ -684,7 +632,7 @@ const CANONICAL_CARD_DEFINITIONS = [
       general: 1
     },
     locations: ["香港", "澳門", "內地", "海外"],
-    notes: "本地簽賬 0.4% 回贈；海外、中國內地及澳門簽賬 2.4% 回贈。電子錢包簽賬全部不算合資格簽賬。"
+    notes: "電子錢包簽賬全部不算合資格簽賬。"
   },
   {
     name: "PayMe 銀聯卡",
@@ -695,7 +643,7 @@ const CANONICAL_CARD_DEFINITIONS = [
       general: 1
     },
     locations: ["香港", "澳門", "內地", "海外"],
-    notes: "2026-04-22 前以 PayMe 銀聯卡經 Apple Pay 免觸支付：港幣、人民幣或澳門幣付款 3% 回贈，其他貨幣 10% 回贈。"
+    notes: ""
   },
   {
     name: "MMPOWER",
@@ -706,7 +654,7 @@ const CANONICAL_CARD_DEFINITIONS = [
       general: 1
     },
     locations: ["香港", "海外", "網上"],
-    notes: "電子錢包簽賬全部不算合資格簽賬。每月合資格零售簽賬滿 HK$5,000 後可享海外外幣 6%、網上零售 5%、本地餐飲及娛樂 1%；全日制大學／大專生免簽賬要求。"
+    notes: "電子錢包簽賬全部不算合資格簽賬。"
   },
   {
     name: "恒生多貨幣扣賬卡",
@@ -717,7 +665,7 @@ const CANONICAL_CARD_DEFINITIONS = [
       general: 1
     },
     locations: ["香港", "海外"],
-    notes: "2026-06-30 前指定海外商戶 15% 現金回贈、指定海外交通 20% 現金回贈（上限 HK$120）、指定本地商戶 20% 現金回贈（上限 HK$120）。"
+    notes: ""
   },
   {
     name: "AEON WAKUWAKU",
@@ -728,7 +676,7 @@ const CANONICAL_CARD_DEFINITIONS = [
       general: 1
     },
     locations: ["香港", "海外", "網上"],
-    notes: "電子錢包增值或轉賬不算合資格簽賬。網上簽賬 6%、日本簽賬 3%、本地餐飲 1%、其他 0.4%。迎新：發卡 60 日內於 App Store 任何簽賬可享 HK$50 回贈。"
+    notes: "電子錢包增值或轉賬不算合資格簽賬。"
   },
   {
     name: "DBS Live Fresh",
@@ -739,14 +687,14 @@ const CANONICAL_CARD_DEFINITIONS = [
       general: 1
     },
     locations: ["香港", "海外", "網上"],
-    notes: "自選類別單一淨簽賬須滿 HK$300 先有回贈。你目前揀咗「網上旅遊商戶、娛樂及指定服務訂閱」；外幣可享 6%，港幣可享 5.4%。合資格網上外幣簽賬本身 1%；海外註冊網上商戶以港幣 DCC 付款不適用。電子錢包簽賬全部不算合資格簽賬。"
+    notes: "電子錢包簽賬全部不算合資格簽賬。海外註冊網上商戶以港幣 DCC 付款不適用。"
   }
 ];
 
 const CANONICAL_OFFER_DEFINITIONS = [
   {
     cardName: "BOC Chill Card",
-    title: "Chill 海外簽賬 4%",
+    title: "海外簽賬 4%",
     category: "general",
     tags: ["overseas"],
     bonusRate: 3.6,
@@ -759,7 +707,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
   },
   {
     cardName: "BOC Chill Card",
-    title: "Chill 網上簽賬 4%",
+    title: "網上簽賬 4%",
     category: "online",
     tags: ["online"],
     bonusRate: 3.6,
@@ -772,7 +720,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
   },
   {
     cardName: "BOC Chill Card",
-    title: "Chill 商戶 8%",
+    title: "指定商戶 8%",
     category: "general",
     tags: ["merchant", "subscription", "shopping", "dining", "entertainment"],
     bonusRate: 7.6,
@@ -785,7 +733,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
   },
   {
     cardName: "HSBC 金卡",
-    title: "HSBC 金卡 海外/內地/澳門 2.4%",
+    title: "海外/內地/澳門 2.4%",
     category: "general",
     tags: ["overseas"],
     bonusRate: 2.0,
@@ -798,7 +746,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
   },
   {
     cardName: "PayMe 銀聯卡",
-    title: "PayMe Apple Pay 港幣/人民幣/澳門幣 3%",
+    title: "Apple Pay 港幣/人民幣/澳門幣 3%",
     category: "general",
     tags: ["applepay"],
     bonusRate: 3,
@@ -811,7 +759,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
   },
   {
     cardName: "PayMe 銀聯卡",
-    title: "PayMe Apple Pay 其他貨幣 10%",
+    title: "Apple Pay 其他貨幣 10%",
     category: "general",
     tags: ["applepay", "overseas"],
     bonusRate: 10,
@@ -824,7 +772,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
   },
   {
     cardName: "MMPOWER",
-    title: "MMPOWER 海外外幣 6%",
+    title: "海外外幣 6%",
     category: "general",
     tags: ["overseas"],
     bonusRate: 5.6,
@@ -837,7 +785,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
   },
   {
     cardName: "MMPOWER",
-    title: "MMPOWER 網上零售 5%",
+    title: "網上零售 5%",
     category: "online",
     tags: ["online"],
     bonusRate: 4.6,
@@ -850,7 +798,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
   },
   {
     cardName: "MMPOWER",
-    title: "MMPOWER 本地餐飲及娛樂 1%",
+    title: "本地餐飲及娛樂 1%",
     category: "dining",
     tags: ["dining", "entertainment"],
     bonusRate: 0.6,
@@ -863,7 +811,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
   },
   {
     cardName: "恒生多貨幣扣賬卡",
-    title: "恒生扣賬卡 指定海外商戶 15%",
+    title: "指定海外商戶 15%",
     category: "general",
     tags: ["overseas", "merchant"],
     bonusRate: 14.6,
@@ -876,7 +824,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
   },
   {
     cardName: "恒生多貨幣扣賬卡",
-    title: "恒生扣賬卡 指定海外交通 20%",
+    title: "指定海外交通 20%",
     category: "transport",
     tags: ["overseas", "transport"],
     bonusRate: 19.6,
@@ -889,7 +837,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
   },
   {
     cardName: "恒生多貨幣扣賬卡",
-    title: "恒生扣賬卡 指定本地商戶 20%",
+    title: "指定本地商戶 20%",
     category: "shopping",
     tags: ["merchant", "shopping", "entertainment"],
     bonusRate: 19.6,
@@ -902,7 +850,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
   },
   {
     cardName: "AEON WAKUWAKU",
-    title: "WAKUWAKU 網上簽賬 6%",
+    title: "網上簽賬 6%",
     category: "online",
     tags: ["online"],
     bonusRate: 5.6,
@@ -915,7 +863,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
   },
   {
     cardName: "AEON WAKUWAKU",
-    title: "WAKUWAKU 日本簽賬 3%",
+    title: "日本簽賬 3%",
     category: "general",
     tags: ["overseas"],
     bonusRate: 2.6,
@@ -928,7 +876,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
   },
   {
     cardName: "AEON WAKUWAKU",
-    title: "WAKUWAKU 本地餐飲 1%",
+    title: "本地餐飲 1%",
     category: "dining",
     tags: ["dining"],
     bonusRate: 0.6,
@@ -941,7 +889,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
   },
   {
     cardName: "AEON WAKUWAKU",
-    title: "WAKUWAKU App Store 迎新 HK$50",
+    title: "App Store 迎新 HK$50",
     category: "online",
     tags: ["subscription", "online"],
     bonusRate: 0,
@@ -954,7 +902,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
   },
   {
     cardName: "DBS Live Fresh",
-    title: "Live Fresh 網上旅遊/娛樂/訂閱 外幣 6%",
+    title: "網上旅遊/娛樂/訂閱 外幣 6%",
     category: "general",
     tags: ["travel", "entertainment", "subscription", "online", "overseas"],
     bonusRate: 5.6,
@@ -967,7 +915,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
   },
   {
     cardName: "DBS Live Fresh",
-    title: "Live Fresh 網上旅遊/娛樂/訂閱 港幣 5.4%",
+    title: "網上旅遊/娛樂/訂閱 港幣 5.4%",
     category: "general",
     tags: ["travel", "entertainment", "subscription", "online"],
     bonusRate: 5,
@@ -980,7 +928,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
   },
   {
     cardName: "DBS Live Fresh",
-    title: "Live Fresh 合資格網上外幣 1%",
+    title: "合資格網上外幣 1%",
     category: "online",
     tags: ["online", "overseas"],
     bonusRate: 0.6,
@@ -1043,6 +991,7 @@ function bindEvents() {
 
   document.getElementById("runRecommendationBtn").addEventListener("click", runRecommendation);
   document.getElementById("fillDemoScenarioBtn").addEventListener("click", fillDemoScenario);
+  document.getElementById("clearRecommendBtn").addEventListener("click", clearRecommendForm);
   document.getElementById("saveCardBtn").addEventListener("click", saveCard);
   document.getElementById("resetCardFormBtn").addEventListener("click", () => resetCardForm());
   document.getElementById("openCardComposerBtn").addEventListener("click", () => {
@@ -1064,7 +1013,7 @@ function switchPage(page) {
   document.querySelectorAll(".tab-btn").forEach((button) => {
     button.classList.toggle("active", button.dataset.page === page);
   });
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  document.querySelector("main").scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function loadData() {
@@ -1275,9 +1224,6 @@ function renderCards() {
   });
 
   document.getElementById("cardsList").innerHTML = filtered.length ? filtered.map((card) => {
-    const categories = Object.entries(card.categories || {})
-      .map(([key, value]) => `${CATEGORY_LABELS[key] || key} ${formatNumber(value)}x`)
-      .join(" / ");
     const cardOffers = state.offers
       .filter((offer) => offer.cardId === card.id)
       .sort((left, right) => {
@@ -1294,7 +1240,7 @@ function renderCards() {
     const highestRewardText = strongestOffer
       ? `${formatPercent(Number(strongestOffer.bonusRate || 0) + Number(card.baseRate || 0))} (${strongestOffer.title})`
       : formatPercent(card.baseRate);
-    const restrictionText = formatRestrictionNotes(card.notes);
+    const restrictionText = card.notes ? card.notes.trim() : "";
     const offerMarkup = cardOffers.length ? `
       <div class="details" style="margin-top:12px;">
         <div><strong>規則與優惠：</strong></div>
@@ -1324,9 +1270,8 @@ function renderCards() {
           </div>
         </div>
         <div class="details">
-          <div><strong>一般消費：</strong>${formatPercent(card.baseRate)}</div>
           <div><strong>最高可達：</strong>${escapeHtml(highestRewardText)}</div>
-          <div><strong>特別限制：</strong>${escapeHtml(restrictionText || "無")}</div>
+          ${restrictionText ? `<div><strong>限制：</strong>${escapeHtml(restrictionText)}</div>` : ""}
         </div>
         ${offerMarkup}
         <div class="inline-actions">
@@ -1431,7 +1376,6 @@ function editCard(cardId) {
   document.getElementById("card-notes").value = card.notes || "";
   document.getElementById("saveCardBtn").textContent = "儲存修改";
   switchPage("cards");
-  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function deleteCard(cardId) {
@@ -1442,30 +1386,44 @@ function deleteCard(cardId) {
   showToast("信用卡及其關聯活動已刪除。");
 }
 
+function clearRecommendForm() {
+  document.getElementById("recommend-description").value = "";
+  document.getElementById("recommend-amount").value = "";
+  document.getElementById("recommend-currency").value = "HKD";
+  document.getElementById("recommend-date").value = todayString();
+  document.getElementById("recommendationResults").innerHTML = "";
+}
+
 function fillDemoScenario() {
   document.getElementById("recommend-description").value = "今晚喺香港網上買家電";
   document.getElementById("recommend-amount").value = "680";
+  document.getElementById("recommend-currency").value = "HKD";
   document.getElementById("recommend-date").value = "2026-04-16";
   runRecommendation();
 }
 
 function runRecommendation() {
   const description = document.getElementById("recommend-description").value.trim();
-  const scenario = {
-    description,
-    amount: Number(document.getElementById("recommend-amount").value),
-    date: document.getElementById("recommend-date").value
-  };
+  const amountRaw = document.getElementById("recommend-amount").value;
+  const amount = amountRaw === "" ? null : Number(amountRaw);
+  const currency = document.getElementById("recommend-currency").value || "HKD";
+  const date = document.getElementById("recommend-date").value;
 
-  if (!scenario.description || Number.isNaN(scenario.amount) || scenario.amount <= 0 || !scenario.date) {
-    showToast("請先填好消費描述、金額和日期。");
+  if (!description || !date) {
+    showToast("請先填好消費描述和日期。");
     return;
   }
 
+  const scenario = { description, amount, currency, date };
   Object.assign(scenario, inferScenarioFromText(description));
 
-  const results = state.cards.map((card) => evaluateCard(card, scenario))
-    .sort((a, b) => b.totalRewardAmount - a.totalRewardAmount);
+  const rateMode = amount === null || amount <= 0;
+
+  const results = state.cards.map((card) => evaluateCard(card, scenario, rateMode))
+    .sort((a, b) => rateMode
+      ? b.bestRate - a.bestRate
+      : b.totalRewardAmount - a.totalRewardAmount
+    );
 
   document.getElementById("recommendationResults").innerHTML = results.length ? results.map((result, index) => `
     <article class="result-card ${index === 0 ? "best" : ""}">
@@ -1479,13 +1437,18 @@ function runRecommendation() {
             <span>${escapeHtml(scenario.location)}</span>
           </div>
         </div>
-        <div class="result-value">${formatCurrency(result.totalRewardAmount)}</div>
+        <div class="result-value">${rateMode ? formatPercent(result.bestRate) : formatCurrencyWithCode(result.totalRewardAmount, currency)}</div>
       </div>
       <div class="breakdown">
-        <div><strong>基礎回贈：</strong>${formatCurrency(result.baseRewardAmount)} (${formatPercent(result.baseRateApplied)})</div>
-        <div><strong>分類倍率：</strong>${formatNumber(result.categoryMultiplier)}x</div>
-        <div><strong>活動加碼：</strong>${formatCurrency(result.offerRewardAmount)}</div>
-        <div><strong>命中活動：</strong>${escapeHtml(result.offerTitles.length ? result.offerTitles.join(" / ") : "無")}</div>
+        ${rateMode ? `
+          <div><strong>最高回贈率：</strong>${formatPercent(result.bestRate)}</div>
+          <div><strong>命中活動：</strong>${escapeHtml(result.offerTitles.length ? result.offerTitles.join(" / ") : "無")}</div>
+        ` : `
+          <div><strong>基礎回贈：</strong>${formatCurrencyWithCode(result.baseRewardAmount, currency)} (${formatPercent(result.baseRateApplied)})</div>
+          <div><strong>分類倍率：</strong>${formatNumber(result.categoryMultiplier)}x</div>
+          <div><strong>活動加碼：</strong>${formatCurrencyWithCode(result.offerRewardAmount, currency)}</div>
+          <div><strong>命中活動：</strong>${escapeHtml(result.offerTitles.length ? result.offerTitles.join(" / ") : "無")}</div>
+        `}
         <div><strong>解析結果：</strong>${escapeHtml(scenario.description)} → ${escapeHtml(scenario.location)} / ${escapeHtml(CATEGORY_LABELS[scenario.category] || scenario.category)}</div>
       </div>
       <p class="result-note">${escapeHtml(result.explanation)}</p>
@@ -1520,43 +1483,46 @@ function inferScenarioFromText(text) {
   };
 }
 
-function evaluateCard(card, scenario) {
+function evaluateCard(card, scenario, rateMode) {
   const categoryMultiplier = getCategoryMultiplier(card, scenario.category);
   const locationMatched = locationApplies(card.locations, scenario.location);
   const effectiveMultiplier = locationMatched ? categoryMultiplier : 0;
   const baseRateApplied = card.baseRate * effectiveMultiplier;
-  const baseRewardAmount = scenario.amount * baseRateApplied / 100;
+  const amount = scenario.amount || 0;
+  const baseRewardAmount = amount * baseRateApplied / 100;
 
   const matchingOffers = state.offers.filter((offer) => {
     if (offer.cardId !== card.id) return false;
     if (!isDateInRange(scenario.date, offer.startDate, offer.endDate)) return false;
-    if (scenario.amount < Number(offer.minSpend || 0)) return false;
+    if (!rateMode && amount < Number(offer.minSpend || 0)) return false;
     if (offer.category !== "general" && offer.category !== scenario.category) return false;
     if (!locationApplies(offer.locations, scenario.location)) return false;
     return true;
   });
 
   const offerRewardAmount = matchingOffers.reduce((sum, offer) => {
-    const rawBonus = scenario.amount * Number(offer.bonusRate || 0) / 100;
+    const rawBonus = amount * Number(offer.bonusRate || 0) / 100;
     const cap = Number(offer.cap || 0);
     return sum + (cap > 0 ? Math.min(rawBonus, cap) : rawBonus);
   }, 0);
 
   const totalRewardAmount = baseRewardAmount + offerRewardAmount;
-  const explanationParts = [];
 
+  // Best rate = base rate + best single offer rate
+  const bestOfferRate = matchingOffers.reduce((max, offer) => Math.max(max, Number(offer.bonusRate || 0)), 0);
+  const bestRate = baseRateApplied + bestOfferRate;
+
+  const explanationParts = [];
   if (locationMatched) {
     explanationParts.push("地點符合這張卡的適用範圍");
   } else {
     explanationParts.push("地點未命中卡片適用範圍，基礎回贈按 0 處理");
   }
-
   if (categoryMultiplier > 1) {
     explanationParts.push(`${CATEGORY_LABELS[scenario.category] || scenario.category} 類別有 ${formatNumber(categoryMultiplier)}x 倍率`);
   } else {
     explanationParts.push("沒有額外類別加成，按基礎回贈計算");
   }
-
   if (matchingOffers.length) {
     explanationParts.push("同時命中 " + matchingOffers.length + " 個活動");
   } else {
@@ -1570,6 +1536,7 @@ function evaluateCard(card, scenario) {
     baseRewardAmount,
     offerRewardAmount,
     totalRewardAmount,
+    bestRate,
     offerTitles: matchingOffers.map((offer) => offer.title),
     explanation: explanationParts.join("；")
   };
@@ -1630,23 +1597,10 @@ function formatCurrency(value) {
   return "$" + Number(value || 0).toFixed(2);
 }
 
-function formatRestrictionNotes(notes) {
-  if (!notes) return "";
-  if (notes.includes("每月累積合資格簽賬滿 HK$1,000 後")) {
-    const matched = notes.match(/電子錢包[^。]*。|每月累積合資格簽賬滿 HK\$1,000 後[^。]*。?/g) || [];
-    if (matched.length) return matched.join(" ").trim();
-  }
-  const segments = notes
-    .split(/(?<=。)/)
-    .map((segment) => segment.trim())
-    .filter(Boolean);
-  const filtered = segments.filter((segment) => {
-    if (segment.startsWith("基本回贈")) return false;
-    if (segment.includes("合資格海外簽賬") && !segment.includes("不")) return false;
-    if (segment.includes("合資格網上簽賬") && !segment.includes("不")) return false;
-    return /(不算|不計|先|須|需|指定|僅|只限|上限|DCC|電子錢包|Apple Pay|登記|滿 HK\$|滿\$|滿額)/.test(segment);
-  });
-  return filtered.join(" ").trim() || notes;
+function formatCurrencyWithCode(value, currency) {
+  const amount = Number(value || 0).toFixed(2);
+  const symbols = { HKD: "HK$", USD: "US$", CNY: "¥", JPY: "¥", MOP: "MOP$", THB: "฿", TWD: "NT$" };
+  return (symbols[currency] || currency + "$") + amount;
 }
 
 function formatOfferDate(offer) {
