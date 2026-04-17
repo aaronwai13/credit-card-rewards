@@ -2,533 +2,489 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>碌卡助手</title>
 <meta name="description" content="收集不同信用卡回贈和活動，並按消費場景推薦最值得刷的卡。">
-<meta name="theme-color" content="#113946">
+<meta name="theme-color" content="#F5F2EE">
 <link rel="manifest" href="./manifest.json">
 <link rel="icon" href="./icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="./apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="碌卡助手">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --ink:#113946;
-    --ink-2:#0b2731;
-    --accent:#b08a4a;
-    --accent-soft:#eadfc9;
-    --paper:#f3efe8;
-    --surface:#fbf8f2;
-    --surface-2:#efe6d6;
-    --line:rgba(17,57,70,0.12);
-    --text:#18262b;
-    --muted:#657379;
-    --good:#1e8d62;
-    --warn:#b35b3a;
-    --shadow:0 20px 50px rgba(17,57,70,0.12);
-    --tab-h:64px;
-  }
-  *{box-sizing:border-box;max-width:100%;}
-  html{scroll-behavior:smooth;background:#f8f4ee;}
-  body{
-    margin:0;
-    min-height:100vh;
-    background:
-      radial-gradient(circle at top left, rgba(176,138,74,0.16), transparent 34%),
-      radial-gradient(circle at top right, rgba(17,57,70,0.14), transparent 26%),
-      linear-gradient(180deg, #f8f4ee 0%, var(--paper) 100%);
-    color:var(--text);
-    font-family:"IBM Plex Sans", sans-serif;
-    padding-bottom:calc(var(--tab-h) + env(safe-area-inset-bottom, 0px));
-  }
-  body::before{
-    content:"";
-    position:fixed;
-    inset:0;
-    background-image:linear-gradient(rgba(17,57,70,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(17,57,70,0.03) 1px, transparent 1px);
-    background-size:28px 28px;
-    mask-image:linear-gradient(180deg, rgba(0,0,0,0.4), transparent 85%);
-    pointer-events:none;
-  }
-  button,input,select,textarea{font:inherit;}
-  button{cursor:pointer;}
-  .page{display:none;}
-  .page.active{display:block;}
-  .shell{max-width:1080px;margin:0 auto;padding:0 18px 32px;position:relative;z-index:1;}
-  .hero{
-    background:linear-gradient(145deg, rgba(17,57,70,0.96), rgba(11,39,49,0.94));
-    color:#f7f1e5;
-    border-radius:0 0 28px 28px;
-    padding:calc(22px + env(safe-area-inset-top,0px)) 22px 22px;
-    margin:0 -18px 18px;
-    box-shadow:var(--shadow);
-    position:relative;
-    overflow:hidden;
-  }
-  .eyebrow{
-    display:inline-flex;
-    padding:8px 12px;
-    border-radius:999px;
-    background:rgba(255,255,255,0.08);
-    border:1px solid rgba(255,255,255,0.12);
-    font-family:"IBM Plex Mono", monospace;
-    font-size:11px;
-    letter-spacing:0.08em;
-    text-transform:uppercase;
-    margin-bottom:16px;
-  }
-  h1{
-    margin:0 0 10px;
-    font-family:"Fraunces", serif;
-    font-size:clamp(30px, 7vw, 56px);
-    line-height:0.95;
-    letter-spacing:-0.03em;
-  }
-  .hero p{
-    margin:0;
-    max-width:680px;
-    color:rgba(247,241,229,0.78);
-    line-height:1.6;
-    font-size:15px;
-  }
-  .panel,.list-card,.result-card,.empty-state{
-    background:rgba(251,248,242,0.92);
-    border:1px solid var(--line);
-    border-radius:22px;
-    box-shadow:var(--shadow);
-  }
-  .section-title{
-    font-family:"Fraunces", serif;
-    font-size:26px;
-    margin:0 0 6px;
-    color:var(--ink);
-  }
-  .section-sub{
-    margin:0;
-    color:var(--muted);
-    font-size:14px;
-    line-height:1.5;
-  }
-  .panel{
-    padding:22px;
-    margin-bottom:16px;
-  }
-  .grid{
-    display:grid;
-    grid-template-columns:repeat(2, minmax(0, 1fr));
-    gap:12px;
-  }
-  .field{display:flex;flex-direction:column;gap:6px;min-width:0;}
-  .field.full{grid-column:1 / -1;}
-  .field-hint{
-    margin:2px 0 0;
-    font-size:12px;
-    line-height:1.5;
-    color:var(--muted);
-  }
-  .check-grid{display:flex;flex-wrap:wrap;gap:10px;}
-  .check-chip{position:relative;}
-  .check-chip input{position:absolute;opacity:0;pointer-events:none;}
-  .check-chip span{
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    min-height:42px;
-    padding:10px 14px;
-    border-radius:999px;
-    background:#fffdfa;
-    border:1px solid rgba(17,57,70,0.14);
-    color:var(--muted);
-    transition:border-color 0.18s ease, background 0.18s ease, color 0.18s ease, transform 0.18s ease;
-  }
-  .check-chip input:checked + span{
-    background:rgba(176,138,74,0.14);
-    border-color:rgba(176,138,74,0.6);
-    color:var(--ink);
-    transform:translateY(-1px);
-  }
-  label{
-    font-family:"IBM Plex Mono", monospace;
-    font-size:11px;
-    letter-spacing:0.08em;
-    text-transform:uppercase;
-    color:var(--ink);
-  }
-  input,select,textarea{
-    width:100%;
-    max-width:100%;
-    min-width:0;
-    border:1px solid rgba(17,57,70,0.14);
-    border-radius:14px;
-    background:#fffdfa;
-    color:var(--text);
-    padding:13px 14px;
-    outline:none;
-    transition:border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
-  }
-  textarea{min-height:88px;resize:vertical;}
-  input[type="date"]{
-    appearance:none;
-    -webkit-appearance:none;
-    display:block;
-    min-height:54px;
-  }
-  #recommend-description{
-    min-height:96px;
-  }
-  input:focus,select:focus,textarea:focus{
-    border-color:var(--accent);
-    box-shadow:0 0 0 4px rgba(176,138,74,0.14);
-    transform:translateY(-1px);
-  }
-  .actions{
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
-    margin-top:14px;
-  }
-  .btn{
-    border:none;
-    border-radius:999px;
-    padding:12px 18px;
-    min-height:44px;
-    font-weight:600;
-    transition:transform 0.18s ease, opacity 0.18s ease, box-shadow 0.18s ease;
-  }
-  .btn:hover{transform:translateY(-1px);}
-  .btn:active{transform:translateY(0);}
-  .btn-primary{
-    background:linear-gradient(135deg, var(--accent), #ccab70);
-    color:#22170b;
-    box-shadow:0 12px 24px rgba(176,138,74,0.25);
-  }
-  .btn-secondary{
-    background:rgba(17,57,70,0.08);
-    color:var(--ink);
-    border:1px solid rgba(17,57,70,0.12);
-  }
-  .toolbar{
-    display:flex;
-    justify-content:space-between;
-    align-items:flex-end;
-    gap:14px;
-    margin-bottom:12px;
-    flex-wrap:wrap;
-  }
-  .toolbar .field{min-width:220px;flex:1;}
-  .filter-row{
-    display:grid;
-    grid-template-columns:repeat(3, minmax(0, 1fr));
-    gap:12px;
-    margin-bottom:14px;
-  }
-  .filter-row .actions{
-    margin-top:0;
-    align-items:flex-end;
-  }
-  .composer{
-    display:none;
-  }
-  .composer.show{
-    display:block;
-  }
-  .list{
-    display:grid;
-    gap:12px;
-  }
-  .list-card{
-    padding:18px;
-    position:relative;
-    overflow:hidden;
-  }
-  .list-card::before{
-    content:"";
-    position:absolute;
-    inset:0 auto 0 0;
-    width:6px;
-    background:linear-gradient(180deg, var(--accent), var(--ink));
-  }
-  .card-top{
-    display:flex;
-    justify-content:space-between;
-    align-items:flex-start;
-    gap:12px;
-    margin-bottom:10px;
-  }
-  .card-name{
-    margin:0;
-    font-size:20px;
-    color:var(--ink);
-    font-family:"Fraunces", serif;
-  }
-  .chip{
-    display:inline-flex;
-    align-items:center;
-    border-radius:999px;
-    padding:6px 10px;
-    font-size:11px;
-    line-height:1;
-    background:var(--accent-soft);
-    color:var(--ink);
-    border:1px solid rgba(176,138,74,0.26);
-    font-family:"IBM Plex Mono", monospace;
-    text-transform:uppercase;
-    letter-spacing:0.05em;
-  }
-  .meta{
-    display:flex;
-    flex-wrap:wrap;
-    gap:8px;
-    margin-bottom:10px;
-  }
-  .meta span{
-    padding:7px 10px;
-    border-radius:999px;
-    background:rgba(17,57,70,0.06);
-    color:var(--muted);
-    font-size:12px;
-  }
-  .details{
-    display:grid;
-    gap:8px;
-    color:var(--text);
-    font-size:14px;
-    line-height:1.55;
-  }
-  .details strong{color:var(--ink);}
-  .offer-list{
-    display:grid;
-    gap:10px;
-    margin-top:12px;
-  }
-  .offer-card{
-    padding:14px;
-    border-radius:16px;
-    background:linear-gradient(180deg, rgba(255,255,255,0.8), rgba(234,223,201,0.34));
-    border:1px solid rgba(17,57,70,0.10);
-  }
-  .offer-card-header{
-    display:flex;
-    justify-content:space-between;
-    align-items:flex-start;
-    gap:10px;
-    margin-bottom:8px;
-  }
-  .offer-card-title{
-    margin:0;
-    color:var(--ink);
-    font-size:16px;
-    font-weight:700;
-  }
-  .offer-card-date{
-    color:var(--muted);
-    font-size:12px;
-    line-height:1.5;
-    white-space:nowrap;
-  }
-  .offer-card-meta{
-    display:flex;
-    flex-wrap:wrap;
-    gap:8px;
-    margin-bottom:8px;
-  }
-  .offer-card-note{
-    color:var(--text);
-    font-size:13px;
-    line-height:1.6;
-  }
-  .inline-actions{
-    display:flex;
-    gap:8px;
-    margin-top:14px;
-    flex-wrap:wrap;
-  }
-  .tiny-btn{
-    border:none;
-    border-radius:999px;
-    padding:9px 12px;
-    background:rgba(17,57,70,0.08);
-    color:var(--ink);
-    font-size:12px;
-    font-weight:600;
-  }
-  .tiny-btn.danger{
-    background:rgba(179,91,58,0.12);
-    color:var(--warn);
-  }
-  .result-stack{
-    display:grid;
-    gap:12px;
-    margin-top:16px;
-  }
-  .result-card{
-    padding:18px;
-  }
-  .result-card.best{
-    background:linear-gradient(135deg, rgba(176,138,74,0.18), rgba(255,255,255,0.96));
-    border-color:rgba(176,138,74,0.35);
-  }
-  .result-rank{
-    font-family:"IBM Plex Mono", monospace;
-    font-size:11px;
-    text-transform:uppercase;
-    color:var(--muted);
-    letter-spacing:0.08em;
-    margin-bottom:8px;
-  }
-  .result-header{
-    display:flex;
-    justify-content:space-between;
-    align-items:flex-start;
-    gap:12px;
-    margin-bottom:12px;
-  }
-  .result-value{
-    font-family:"Fraunces", serif;
-    font-size:30px;
-    color:var(--ink);
-    line-height:1;
-    text-align:right;
-  }
-  .result-note{
-    color:var(--muted);
-    font-size:13px;
-    line-height:1.5;
-  }
-  .breakdown{
-    display:grid;
-    gap:6px;
-    font-size:14px;
-    line-height:1.5;
-  }
-  .breakdown strong{color:var(--ink);}
-  .empty-state{
-    padding:24px;
-    text-align:center;
-    color:var(--muted);
-    font-size:14px;
-    line-height:1.6;
-  }
-  .tab-bar{
-    position:fixed;
-    left:0;
-    right:0;
-    bottom:0;
-    height:var(--tab-h);
-    display:flex;
-    background:rgba(251,248,242,0.94);
-    border-top:1px solid var(--line);
-    backdrop-filter:blur(14px);
-    z-index:10;
-  }
-  .tab-btn{
-    flex:1;
-    border:none;
-    background:none;
-    color:var(--muted);
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    gap:4px;
-  }
-  .tab-btn.active{color:var(--ink);}
-  .tab-icon{
-    width:22px;
-    height:22px;
-    display:block;
-  }
-  .tab-icon svg{
-    width:100%;
-    height:100%;
-    display:block;
-    stroke:currentColor;
-    fill:none;
-    stroke-width:1.9;
-    stroke-linecap:round;
-    stroke-linejoin:round;
-  }
-  .tab-btn.active .tab-icon svg{
-    stroke-width:2.1;
-  }
-  .tab-text{
-    font-family:"IBM Plex Mono", monospace;
-    font-size:10px;
-    text-transform:uppercase;
-    letter-spacing:0.08em;
-  }
-  .toast{
-    position:fixed;
-    left:50%;
-    bottom:calc(var(--tab-h) + 18px);
-    transform:translateX(-50%);
-    background:var(--ink);
-    color:#f7f1e5;
-    padding:12px 16px;
-    border-radius:999px;
-    font-size:13px;
-    opacity:0;
-    pointer-events:none;
-    transition:opacity 0.2s ease, transform 0.2s ease;
-    z-index:12;
-    box-shadow:var(--shadow);
-  }
-  .toast.show{
-    opacity:1;
-    transform:translateX(-50%) translateY(-2px);
-  }
-  .version-bar{
-    max-width:1080px;
-    margin:0 auto;
-    padding:0 18px calc(var(--tab-h) + 18px);
-    position:relative;
-    z-index:1;
-  }
-  .version-chip{
-    display:inline-flex;
-    align-items:center;
-    gap:8px;
-    padding:8px 12px;
-    border-radius:999px;
-    background:rgba(17,57,70,0.06);
-    border:1px solid rgba(17,57,70,0.1);
-    color:var(--muted);
-    font-family:"IBM Plex Mono", monospace;
-    font-size:11px;
-    letter-spacing:0.06em;
-  }
-  @media (max-width: 760px){
-    .grid{grid-template-columns:1fr;}
-    .filter-row{grid-template-columns:1fr;}
-    .hero{padding:calc(20px + env(safe-area-inset-top,0px)) 18px 18px;border-radius:0 0 22px 22px;}
-    .panel,.list-card,.result-card,.empty-state{border-radius:18px;}
-    .result-header,.card-top{flex-direction:column;}
-    .result-value{text-align:left;}
+  :root {
+    --ink: #113946;
+    --accent: #b08a4a;
+    --accent-soft: #f5ede0;
+    --bg: #F5F2EE;
+    --white: #FFFFFF;
+    --text: #18262b;
+    --muted: #657379;
+    --border: rgba(17,57,70,0.10);
+    --border-strong: rgba(17,57,70,0.18);
+    --good: #1e8d62;
+    --warn: #b35b3a;
+    --shadow: 0 2px 10px rgba(17,57,70,0.07);
+    --tab-h: 60px;
+  }
+  * { box-sizing: border-box; max-width: 100%; -webkit-tap-highlight-color: transparent; }
+  html { scroll-behavior: smooth; background: var(--bg); }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "IBM Plex Sans", sans-serif;
+    font-size: 15px;
+    padding-bottom: calc(var(--tab-h) + env(safe-area-inset-bottom, 0px));
+  }
+  button, input, select, textarea { font: inherit; }
+  button { cursor: pointer; }
+
+  /* HEADER */
+  .header {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 20;
+  }
+  .header-inner {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 16px 16px 0;
+  }
+  .header-title {
+    font-family: "Fraunces", serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.1;
+  }
+  .header-sub {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 3px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding-bottom: 14px;
+  }
+
+  /* PAGES */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* CONTENT WRAPPER */
+  .content {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 14px 14px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* PANEL */
+  .panel {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 18px;
+    box-shadow: var(--shadow);
+  }
+
+  /* SECTION LABELS */
+  .section-title {
+    font-family: "Fraunces", serif;
+    font-size: 19px;
+    color: var(--ink);
+    margin: 0 0 4px;
+    line-height: 1.2;
+  }
+  .section-sub {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.55;
+    margin: 0 0 14px;
+  }
+
+  /* FORM */
+  label {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: block;
+    margin-bottom: 5px;
+  }
+  .field { display: flex; flex-direction: column; }
+  .field.full { grid-column: 1 / -1; }
+  .field-hint { font-size: 11px; color: var(--muted); line-height: 1.5; margin-top: 4px; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 11px;
+    margin-top: 14px;
+  }
+  input, select, textarea {
+    width: 100%;
+    border: 1.5px solid var(--border-strong);
+    border-radius: 10px;
+    background: var(--bg);
+    color: var(--text);
+    padding: 10px 12px;
+    outline: none;
+    transition: border-color 0.15s;
+    -webkit-appearance: none;
+  }
+  textarea { min-height: 80px; resize: vertical; }
+  input[type="date"] { min-height: 42px; display: block; }
+  input:focus, select:focus, textarea:focus { border-color: var(--ink); }
+
+  /* BUTTONS */
+  .actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+  .btn {
+    border: none;
+    border-radius: 999px;
+    padding: 10px 18px;
+    min-height: 42px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: opacity 0.15s;
+  }
+  .btn:active { opacity: 0.75; }
+  .btn-primary { background: var(--ink); color: white; }
+  .btn-secondary {
+    background: transparent;
+    border: 1.5px solid var(--border-strong);
+    color: var(--text);
+  }
+  .tiny-btn {
+    border: none;
+    border-radius: 999px;
+    padding: 7px 12px;
+    background: rgba(17,57,70,0.07);
+    color: var(--ink);
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .tiny-btn.danger { background: rgba(179,91,58,0.10); color: var(--warn); }
+  .inline-actions { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+
+  /* CHECK CHIPS */
+  .check-grid { display: flex; flex-wrap: wrap; gap: 7px; }
+  .check-chip { position: relative; }
+  .check-chip input { position: absolute; opacity: 0; pointer-events: none; }
+  .check-chip span {
+    display: inline-flex;
+    align-items: center;
+    padding: 7px 13px;
+    border-radius: 999px;
+    background: transparent;
+    border: 1.5px solid var(--border-strong);
+    color: var(--muted);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .check-chip input:checked + span {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: white;
+  }
+
+  /* CHIP BADGE */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 11px;
+    background: var(--accent-soft);
+    color: #7a5220;
+    font-family: "IBM Plex Mono", monospace;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+  }
+
+  /* TOOLBAR */
+  .toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .toolbar .actions { margin-top: 0; }
+
+  /* FILTER ROW */
+  .filter-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .filter-row .field { flex: 1; min-width: 120px; }
+  .filter-row .actions { margin-top: 0; align-items: flex-end; }
+
+  /* COMPOSER */
+  .composer { display: none; padding-top: 14px; }
+  .composer.show { display: block; }
+
+  /* CARD LIST */
+  .list { display: flex; flex-direction: column; gap: 10px; }
+  .list-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 16px 16px 20px;
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+  }
+  .list-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 4px;
+    background: linear-gradient(180deg, var(--accent), var(--ink));
+    border-radius: 4px 0 0 4px;
+  }
+  .card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .card-name {
+    font-family: "Fraunces", serif;
+    font-size: 18px;
+    color: var(--ink);
+    margin: 0;
+    line-height: 1.2;
+  }
+  .details {
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .details strong { color: var(--ink); font-weight: 600; }
+  .meta { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
+  .meta span {
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: rgba(17,57,70,0.06);
+    color: var(--muted);
+    font-size: 11px;
+  }
+
+  /* OFFER CARDS */
+  .offer-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+  .offer-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+  }
+  .offer-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .offer-card-title { font-size: 13px; font-weight: 600; color: var(--ink); margin: 0; }
+  .offer-card-date { font-size: 11px; color: var(--muted); white-space: nowrap; flex-shrink: 0; }
+  .offer-card-meta { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 6px; }
+  .offer-card-note { font-size: 12px; line-height: 1.5; color: var(--muted); }
+
+  /* RESULT CARDS */
+  .result-stack { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+  .result-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    box-shadow: var(--shadow);
+  }
+  .result-card.best {
+    border-color: rgba(176,138,74,0.4);
+    background: linear-gradient(135deg, #fdf8f0, var(--white));
+  }
+  .result-rank {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    margin-bottom: 6px;
+  }
+  .result-card.best .result-rank { color: var(--accent); }
+  .result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .result-value {
+    font-family: "Fraunces", serif;
+    font-size: 26px;
+    color: var(--ink);
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .result-note { color: var(--muted); font-size: 13px; line-height: 1.5; margin-top: 8px; }
+  .breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  .breakdown strong { color: var(--ink); font-weight: 600; }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center;
+    padding: 40px 16px;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.8;
+  }
+
+  /* TAB BAR */
+  .tab-bar {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    height: var(--tab-h);
+    background: var(--white);
+    border-top: 1px solid var(--border);
+    display: flex;
+    z-index: 100;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .tab-bar::after {
+    content: "";
+    position: absolute;
+    bottom: calc(-1 * env(safe-area-inset-bottom, 0px));
+    left: 0; right: 0;
+    height: env(safe-area-inset-bottom, 0px);
+    background: var(--white);
+  }
+  .tab-btn {
+    flex: 1;
+    border: none;
+    background: none;
+    color: var(--muted);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    transition: color 0.15s;
+    position: relative;
+    outline: none;
+  }
+  .tab-btn.active { color: var(--ink); }
+  .tab-btn.active::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 25%; right: 25%;
+    height: 2px;
+    background: var(--ink);
+    border-radius: 0 0 2px 2px;
+  }
+  .tab-icon { width: 22px; height: 22px; }
+  .tab-icon svg {
+    width: 100%; height: 100%;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    display: block;
+  }
+  .tab-btn.active .tab-icon svg { stroke-width: 2.1; }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(var(--tab-h) + 16px);
+    transform: translateX(-50%);
+    background: var(--ink);
+    color: white;
+    padding: 10px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s, transform 0.2s;
+    z-index: 200;
+    white-space: nowrap;
+    box-shadow: 0 4px 16px rgba(17,57,70,0.2);
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(-2px); }
+
+  /* VERSION */
+  .version-bar { max-width: 480px; margin: 0 auto; padding: 4px 14px 10px; }
+  .version-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: rgba(17,57,70,0.05);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 10px;
+    letter-spacing: 0.05em;
+  }
+
+  @media (max-width: 600px) {
+    .grid { grid-template-columns: 1fr; }
+    .result-header { flex-direction: column; }
+    .card-top { flex-direction: column; }
   }
 </style>
 </head>
 <body>
+
+  <header class="header">
+    <div class="header-inner">
+      <div class="header-title">碌卡助手</div>
+      <div class="header-sub">信用卡回贈推薦</div>
+    </div>
+  </header>
+
   <main>
     <section class="page active" id="page-recommend">
-      <div class="shell">
-        <div class="hero">
-          <div class="eyebrow">Spend Smarter</div>
-          <h1>碌卡助手</h1>
-          <p>把不同信用卡的基礎回贈、分類加成、地區限制和限時活動整合在一起。輸入消費地點、類別和金額後，系統會即時計出當前最值得碌的卡。</p>
-        </div>
-
+      <div class="content">
         <div class="panel">
           <h2 class="section-title">消費推薦器</h2>
           <p class="section-sub">輸入一句消費描述，再加金額和日期。系統會自動判斷地點和類別，計出當前最值得碌的卡。</p>
-          <div class="grid" style="margin-top:16px;">
-            <div class="field full">
-              <label for="recommend-description">消費描述</label>
-              <textarea id="recommend-description" placeholder="例如：今晚喺澳門酒店食自助餐，或者淘寶買耳機"></textarea>
-            </div>
+          <div class="field">
+            <label for="recommend-description">消費描述</label>
+            <textarea id="recommend-description" placeholder="例如：今晚喺澳門酒店食自助餐，或者淘寶買耳機"></textarea>
+          </div>
+          <div class="grid" style="margin-top:11px;">
             <div class="field">
               <label for="recommend-amount">金額</label>
               <input id="recommend-amount" type="number" min="0" step="0.01" placeholder="例如：388">
@@ -548,88 +504,81 @@
     </section>
 
     <section class="page" id="page-cards">
-      <div class="shell">
+      <div class="content">
         <div class="panel">
           <div class="toolbar">
             <div>
               <h2 class="section-title">信用卡記錄</h2>
-              <p class="section-sub">用你平時記卡的方法寫低每張卡：一般消費有幾多、邊啲情況特別好用、仲有要避開乜限制。</p>
+              <p class="section-sub" style="margin-bottom:0;">管理你的信用卡及回贈規則。</p>
             </div>
             <div class="actions" style="margin-top:0;">
-              <button class="btn btn-secondary" id="openCardComposerBtn">新增信用卡</button>
+              <button class="btn btn-secondary" id="openCardComposerBtn">新增</button>
             </div>
           </div>
           <div class="composer" id="cardComposer">
-          <div class="grid" style="margin-top:16px;">
-            <div class="field">
-              <label for="card-name">卡名</label>
-              <input id="card-name" type="text" placeholder="例如：HSBC Red">
+            <div class="grid">
+              <div class="field">
+                <label for="card-name">卡名</label>
+                <input id="card-name" type="text" placeholder="例如：HSBC Red">
+              </div>
+              <div class="field">
+                <label for="card-bank">銀行</label>
+                <input id="card-bank" type="text" placeholder="例如：匯豐">
+              </div>
+              <div class="field">
+                <label for="card-base-rate">一般回贈 %</label>
+                <input id="card-base-rate" type="number" min="0" step="0.1" placeholder="例如：0.4">
+              </div>
+              <div class="field">
+                <label for="card-currency">貨幣</label>
+                <input id="card-currency" type="text" placeholder="例如：HKD">
+              </div>
+              <div class="field full">
+                <label for="card-categories">較高回贈類別</label>
+                <input id="card-categories" type="text" placeholder="例如：online:6, travel:2.4">
+                <p class="field-hint">格式：類別:倍率，例如 online:6 即 6 倍一般回贈。</p>
+              </div>
+              <div class="field full">
+                <label>適用地點</label>
+                <div class="check-grid" id="card-location-options"></div>
+              </div>
+              <div class="field full">
+                <label for="card-notes">限制 / 注意事項</label>
+                <textarea id="card-notes" placeholder="例如：電子錢包唔計、指定商戶先有、要先登記"></textarea>
+              </div>
             </div>
-            <div class="field">
-              <label for="card-bank">銀行</label>
-              <input id="card-bank" type="text" placeholder="例如：匯豐">
+            <div class="actions">
+              <button class="btn btn-primary" id="saveCardBtn">新增信用卡</button>
+              <button class="btn btn-secondary" id="resetCardFormBtn">收起</button>
             </div>
-            <div class="field">
-              <label for="card-base-rate">一般消費回贈 %</label>
-              <input id="card-base-rate" type="number" min="0" step="0.1" placeholder="例如：0.4">
-            </div>
-            <div class="field">
-              <label for="card-currency">貨幣</label>
-              <input id="card-currency" type="text" placeholder="例如：HKD">
-            </div>
-            <div class="field full">
-              <label for="card-categories">較高回贈類別</label>
-              <input id="card-categories" type="text" placeholder="例如：online:6, travel:2.4, dining:1">
-              <p class="field-hint">格式用 `類別:倍率`，例如 `online:6` 即代表網上消費按 6 倍一般回贈計。</p>
-            </div>
-            <div class="field full">
-              <label for="card-locations">通常適用地點</label>
-              <div class="check-grid" id="card-location-options"></div>
-            </div>
-            <div class="field full">
-              <label for="card-notes">特別限制 / 注意事項</label>
-              <textarea id="card-notes" placeholder="例如：電子錢包唔計、指定商戶先有、要先登記、每月滿額先生效"></textarea>
-            </div>
-          </div>
-          <div class="actions">
-            <button class="btn btn-primary" id="saveCardBtn">新增信用卡</button>
-            <button class="btn btn-secondary" id="resetCardFormBtn">收起</button>
-          </div>
           </div>
         </div>
 
         <div class="panel">
           <div class="toolbar">
-            <div>
-              <h2 class="section-title">已儲存信用卡</h2>
-            </div>
-            <div class="field">
+            <h2 class="section-title">已儲存信用卡</h2>
+            <div class="field" style="min-width:140px;">
               <label for="card-search">搜尋</label>
-              <input id="card-search" type="text" placeholder="搜尋卡名 / 銀行 / 用途">
+              <input id="card-search" type="text" placeholder="搜尋卡名 / 銀行">
             </div>
           </div>
           <div class="filter-row">
             <div class="field">
               <label for="card-bank-filter">銀行</label>
-              <select id="card-bank-filter">
-                <option value="">全部銀行</option>
-              </select>
+              <select id="card-bank-filter"><option value="">全部銀行</option></select>
             </div>
             <div class="field">
               <label for="card-category-filter">回贈類型</label>
-              <select id="card-category-filter">
-                <option value="">全部類型</option>
-              </select>
+              <select id="card-category-filter"><option value="">全部類型</option></select>
             </div>
             <div class="actions">
-              <button class="btn btn-secondary" id="clearCardFiltersBtn">清除篩選</button>
+              <button class="btn btn-secondary" id="clearCardFiltersBtn">清除</button>
             </div>
           </div>
           <div class="list" id="cardsList"></div>
         </div>
       </div>
     </section>
-
   </main>
 
   <nav class="tab-bar" aria-label="Bottom navigation">
@@ -642,7 +591,7 @@
           <path d="M6 5.7 6.7 7.5 8.5 8.2 6.7 8.9 6 10.7 5.3 8.9 3.5 8.2 5.3 7.5 6 5.7Z"></path>
         </svg>
       </span>
-      <span class="tab-text">推薦</span>
+      <span>推薦</span>
     </button>
     <button class="tab-btn" data-page="cards">
       <span class="tab-icon" aria-hidden="true">
@@ -652,7 +601,7 @@
           <path d="M7.5 14h4.5"></path>
         </svg>
       </span>
-      <span class="tab-text">信用卡</span>
+      <span>信用卡</span>
     </button>
   </nav>
 
@@ -664,7 +613,7 @@
 
 <script>
 const STORAGE_KEY = "credit_card_rewards_v2";
-const APP_VERSION = "v2026.04.18.1";
+const APP_VERSION = "v2026.04.18.2";
 const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
 const CARD_DISPLAY_ORDER = [
   "BOC Chill Card",
