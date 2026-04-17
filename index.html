@@ -122,7 +122,7 @@
     grid-template-columns:repeat(2, minmax(0, 1fr));
     gap:12px;
   }
-  .field{display:flex;flex-direction:column;gap:6px;}
+  .field{display:flex;flex-direction:column;gap:6px;min-width:0;}
   .field.full{grid-column:1 / -1;}
   .field-hint{
     margin:2px 0 0;
@@ -160,6 +160,8 @@
   }
   input,select,textarea{
     width:100%;
+    max-width:100%;
+    min-width:0;
     border:1px solid rgba(17,57,70,0.14);
     border-radius:14px;
     background:#fffdfa;
@@ -169,6 +171,15 @@
     transition:border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
   }
   textarea{min-height:88px;resize:vertical;}
+  input[type="date"]{
+    appearance:none;
+    -webkit-appearance:none;
+    display:block;
+    min-height:54px;
+  }
+  #recommend-description{
+    min-height:96px;
+  }
   input:focus,select:focus,textarea:focus{
     border-color:var(--accent);
     box-shadow:0 0 0 4px rgba(176,138,74,0.14);
@@ -516,7 +527,7 @@
           <div class="grid" style="margin-top:16px;">
             <div class="field full">
               <label for="recommend-description">消費描述</label>
-              <input id="recommend-description" type="text" placeholder="例如：今晚喺澳門酒店食自助餐，或者淘寶買耳機">
+              <textarea id="recommend-description" placeholder="例如：今晚喺澳門酒店食自助餐，或者淘寶買耳機"></textarea>
             </div>
             <div class="field">
               <label for="recommend-amount">金額</label>
@@ -653,7 +664,7 @@
 
 <script>
 const STORAGE_KEY = "credit_card_rewards_v2";
-const APP_VERSION = "v2026.04.17.1";
+const APP_VERSION = "v2026.04.17.2";
 const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
 const CARD_DISPLAY_ORDER = [
   "BOC Chill Card",
