@@ -23,14 +23,14 @@
     --accent-soft: #f0e6d2;
     --bg: #FDFAF5;
     --card: #FFFFFF;
-    --card-inner: #FDFAF5;
+    --card-inner: #F9F6F0;
     --text: #18262b;
     --muted: #6b7c81;
     --border: rgba(17,57,70,0.10);
     --border-strong: rgba(17,57,70,0.16);
     --good: #1e8d62;
     --warn: #b35b3a;
-    --shadow: 0 1px 4px rgba(17,57,70,0.06), 0 4px 16px rgba(17,57,70,0.06);
+    --shadow: 0 1px 3px rgba(17,57,70,0.06), 0 6px 20px rgba(17,57,70,0.07);
     --tab-h: 60px;
   }
   * { box-sizing: border-box; max-width: 100%; -webkit-tap-highlight-color: transparent; }
@@ -56,9 +56,9 @@
     z-index: 20;
   }
   .header-inner {
-    max-width: 480px;
+    max-width: 600px;
     margin: 0 auto;
-    padding: 14px 18px 0;
+    padding: 16px 20px 0;
   }
   .header-eyebrow {
     display: inline-flex;
@@ -71,11 +71,11 @@
     letter-spacing: 0.10em;
     text-transform: uppercase;
     color: var(--ink);
-    margin-bottom: 6px;
+    margin-bottom: 7px;
   }
   .header-title {
     font-family: "Fraunces", serif;
-    font-size: 26px;
+    font-size: 28px;
     font-weight: 700;
     color: var(--ink);
     line-height: 1.0;
@@ -83,8 +83,8 @@
   .header-sub {
     font-size: 13px;
     color: var(--muted);
-    margin-top: 3px;
-    padding-bottom: 14px;
+    margin-top: 4px;
+    padding-bottom: 16px;
   }
 
   /* PAGES */
@@ -93,92 +93,88 @@
 
   /* CONTENT WRAPPER */
   .content {
-    max-width: 480px;
+    max-width: 600px;
     margin: 0 auto;
-    padding: 16px 16px 8px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
+    padding: 28px 20px 16px;
   }
 
-  /* PANEL */
-  .panel {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 18px;
-    padding: 20px;
-    box-shadow: var(--shadow);
+  /* SECTION HEADINGS */
+  .section-label {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 10px;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 10px;
   }
-
-  /* SECTION TYPOGRAPHY */
   .section-title {
     font-family: "Fraunces", serif;
     font-size: 20px;
     color: var(--ink);
-    margin: 0 0 5px;
+    margin: 0 0 6px;
     line-height: 1.15;
   }
   .section-sub {
     font-size: 13px;
     color: var(--muted);
     line-height: 1.55;
-    margin: 0 0 16px;
+    margin: 0;
   }
 
-  /* FORM FIELDS */
+  /* FORM FIELDS — flat, no wrapper card */
+  .form-group {
+    margin-bottom: 24px;
+  }
+  .form-group:last-of-type { margin-bottom: 0; }
   label {
+    display: block;
     font-family: "IBM Plex Mono", monospace;
     font-size: 10px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--ink);
-    opacity: 0.6;
-    display: block;
-    margin-bottom: 6px;
+    color: var(--muted);
+    margin-bottom: 8px;
   }
   .field { display: flex; flex-direction: column; }
   .field.full { grid-column: 1 / -1; }
-  .field-hint { font-size: 11px; color: var(--muted); line-height: 1.5; margin-top: 5px; }
+  .field-hint { font-size: 11px; color: var(--muted); line-height: 1.5; margin-top: 6px; }
 
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-    margin-top: 14px;
-  }
-  /* Specific 2-col row that never breaks */
   .field-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-top: 12px;
+    gap: 14px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
   }
 
   input, select, textarea {
     width: 100%;
     border: 1.5px solid var(--border-strong);
-    border-radius: 12px;
-    background: var(--card-inner);
+    border-radius: 14px;
+    background: var(--card);
     color: var(--text);
-    padding: 11px 13px;
+    padding: 14px 16px;
     outline: none;
     transition: border-color 0.15s, box-shadow 0.15s;
     -webkit-appearance: none;
   }
-  textarea { min-height: 82px; resize: vertical; }
-  input[type="date"] { min-height: 44px; display: block; text-align: center; }
+  textarea { min-height: 110px; resize: vertical; }
+  input[type="date"] { min-height: 50px; display: block; text-align: center; }
   input:focus, select:focus, textarea:focus {
     border-color: var(--ink);
     box-shadow: 0 0 0 3px rgba(17,57,70,0.08);
   }
 
   /* BUTTONS */
-  .actions { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+  .actions { display: flex; gap: 10px; margin-top: 28px; flex-wrap: wrap; }
   .btn {
     border: none;
     border-radius: 999px;
-    padding: 11px 20px;
-    min-height: 44px;
+    padding: 14px 24px;
+    min-height: 50px;
     font-size: 15px;
     font-weight: 600;
     transition: opacity 0.15s, transform 0.1s;
@@ -187,10 +183,11 @@
   .btn-primary {
     background: linear-gradient(135deg, var(--accent) 0%, #c9a55f 100%);
     color: #2a1800;
-    box-shadow: 0 4px 14px rgba(176,138,74,0.30);
+    box-shadow: 0 4px 16px rgba(176,138,74,0.32);
+    flex: 1;
   }
   .btn-secondary {
-    background: transparent;
+    background: var(--card);
     border: 1.5px solid var(--border-strong);
     color: var(--text);
   }
@@ -213,12 +210,12 @@
   .check-chip span {
     display: inline-flex;
     align-items: center;
-    padding: 8px 14px;
+    padding: 9px 16px;
     border-radius: 999px;
-    background: transparent;
+    background: var(--card);
     border: 1.5px solid var(--border-strong);
     color: var(--muted);
-    font-size: 13px;
+    font-size: 14px;
     cursor: pointer;
     transition: all 0.15s;
   }
@@ -242,17 +239,23 @@
     white-space: nowrap;
   }
 
+  /* DIVIDER */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 32px 0;
+  }
+
   /* TOOLBAR */
   .toolbar {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    gap: 10px;
-    margin-bottom: 14px;
+    gap: 12px;
+    margin-bottom: 20px;
     flex-wrap: wrap;
   }
   .toolbar .actions { margin-top: 0; }
-  .toolbar .section-sub { margin-bottom: 0; }
 
   /* FILTER ROW */
   .filter-row {
@@ -260,22 +263,27 @@
     grid-template-columns: 1fr 1fr auto;
     gap: 10px;
     align-items: end;
-    margin-bottom: 14px;
+    margin-bottom: 20px;
   }
   .filter-row .field { margin: 0; }
   .filter-row .actions { margin-top: 0; }
 
+  /* SEARCH ROW */
+  .search-row {
+    margin-bottom: 20px;
+  }
+
   /* COMPOSER */
-  .composer { display: none; padding-top: 16px; border-top: 1px solid var(--border); margin-top: 4px; }
+  .composer { display: none; padding-top: 20px; }
   .composer.show { display: block; }
 
   /* CARD LIST */
-  .list { display: flex; flex-direction: column; gap: 10px; }
+  .list { display: flex; flex-direction: column; gap: 12px; }
   .list-card {
     background: var(--card);
     border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 16px 16px 14px 20px;
+    border-radius: 16px;
+    padding: 18px 18px 16px 22px;
     box-shadow: var(--shadow);
     position: relative;
     overflow: hidden;
@@ -303,7 +311,7 @@
   }
   .details {
     font-size: 13px;
-    line-height: 1.55;
+    line-height: 1.6;
     color: var(--text);
     display: flex;
     flex-direction: column;
@@ -320,12 +328,12 @@
   }
 
   /* OFFER CARDS */
-  .offer-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+  .offer-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
   .offer-card {
     background: var(--card-inner);
     border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 12px;
+    border-radius: 11px;
+    padding: 13px;
   }
   .offer-card-header {
     display: flex;
@@ -340,12 +348,12 @@
   .offer-card-note { font-size: 12px; line-height: 1.5; color: var(--muted); }
 
   /* RESULT CARDS */
-  .result-stack { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+  .result-stack { display: flex; flex-direction: column; gap: 12px; margin-top: 32px; }
   .result-card {
     background: var(--card);
     border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 16px;
+    border-radius: 16px;
+    padding: 18px;
     box-shadow: var(--shadow);
   }
   .result-card.best {
@@ -358,7 +366,7 @@
     text-transform: uppercase;
     color: var(--muted);
     letter-spacing: 0.08em;
-    margin-bottom: 7px;
+    margin-bottom: 8px;
   }
   .result-card.best .result-rank { color: var(--accent); font-weight: 500; }
   .result-header {
@@ -366,20 +374,20 @@
     justify-content: space-between;
     align-items: flex-start;
     gap: 10px;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
   }
   .result-value {
     font-family: "Fraunces", serif;
-    font-size: 26px;
+    font-size: 28px;
     color: var(--ink);
     line-height: 1;
     white-space: nowrap;
   }
-  .result-note { color: var(--muted); font-size: 13px; line-height: 1.5; margin-top: 8px; }
+  .result-note { color: var(--muted); font-size: 13px; line-height: 1.5; margin-top: 10px; }
   .breakdown {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 4px;
     font-size: 13px;
     line-height: 1.55;
   }
@@ -388,10 +396,10 @@
   /* EMPTY STATE */
   .empty-state {
     text-align: center;
-    padding: 40px 16px;
+    padding: 48px 16px;
     color: var(--muted);
     font-size: 13px;
-    line-height: 1.8;
+    line-height: 1.9;
   }
 
   /* TAB BAR */
@@ -460,7 +468,7 @@
     transform: translateX(-50%);
     background: var(--ink);
     color: white;
-    padding: 10px 18px;
+    padding: 11px 20px;
     border-radius: 999px;
     font-size: 13px;
     opacity: 0;
@@ -473,13 +481,12 @@
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(-2px); }
 
   /* VERSION */
-  .version-bar { max-width: 480px; margin: 0 auto; padding: 4px 16px 8px; }
+  .version-bar { max-width: 600px; margin: 0 auto; padding: 8px 20px 12px; }
   .version-chip {
     display: inline-flex;
     align-items: center;
     padding: 5px 10px;
     border-radius: 999px;
-    background: transparent;
     border: 1px solid var(--border);
     color: var(--muted);
     font-family: "IBM Plex Mono", monospace;
@@ -487,11 +494,9 @@
     letter-spacing: 0.05em;
   }
 
-  @media (max-width: 600px) {
+  @media (max-width: 500px) {
     .grid { grid-template-columns: 1fr; }
     .filter-row { grid-template-columns: 1fr 1fr; }
-    .result-header { flex-direction: column; }
-    .card-top { flex-direction: column; }
   }
 </style>
 </head>
@@ -508,106 +513,109 @@
   <main>
     <section class="page active" id="page-recommend">
       <div class="content">
-        <div class="panel">
-          <h2 class="section-title">消費推薦器</h2>
-          <p class="section-sub">輸入消費描述、金額和日期，系統自動判斷地點和類別。</p>
-          <div class="field">
-            <label for="recommend-description">消費描述</label>
-            <textarea id="recommend-description" placeholder="例如：今晚喺澳門酒店食自助餐，或者淘寶買耳機"></textarea>
-          </div>
-          <div class="field-row">
-            <div class="field">
-              <label for="recommend-amount">金額</label>
-              <input id="recommend-amount" type="number" min="0" step="0.01" placeholder="例如：388">
-            </div>
-            <div class="field">
-              <label for="recommend-date">消費日期</label>
-              <input id="recommend-date" type="date">
-            </div>
-          </div>
-          <div class="actions">
-            <button class="btn btn-primary" id="runRecommendationBtn">立即推薦</button>
-            <button class="btn btn-secondary" id="fillDemoScenarioBtn">載入示例</button>
-          </div>
-          <div class="result-stack" id="recommendationResults"></div>
+
+        <div class="form-group">
+          <label for="recommend-description">消費描述</label>
+          <textarea id="recommend-description" placeholder="例如：今晚喺澳門酒店食自助餐，或者淘寶買耳機"></textarea>
         </div>
+
+        <div class="field-row">
+          <div class="form-group" style="margin-bottom:0;">
+            <label for="recommend-amount">金額</label>
+            <input id="recommend-amount" type="number" min="0" step="0.01" placeholder="例如：388">
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label for="recommend-date">消費日期</label>
+            <input id="recommend-date" type="date">
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-primary" id="runRecommendationBtn">立即推薦</button>
+          <button class="btn btn-secondary" id="fillDemoScenarioBtn">載入示例</button>
+        </div>
+
+        <div class="result-stack" id="recommendationResults"></div>
+
       </div>
     </section>
 
     <section class="page" id="page-cards">
       <div class="content">
-        <div class="panel">
-          <div class="toolbar">
-            <div>
-              <h2 class="section-title">信用卡記錄</h2>
-              <p class="section-sub">管理你的信用卡及回贈規則。</p>
-            </div>
-            <div class="actions" style="margin-top:0;">
-              <button class="btn btn-secondary" id="openCardComposerBtn">新增</button>
-            </div>
+
+        <div class="toolbar">
+          <div>
+            <h2 class="section-title">信用卡記錄</h2>
+            <p class="section-sub">管理你的信用卡及回贈規則。</p>
           </div>
-          <div class="composer" id="cardComposer">
-            <div class="grid">
-              <div class="field">
-                <label for="card-name">卡名</label>
-                <input id="card-name" type="text" placeholder="例如：HSBC Red">
-              </div>
-              <div class="field">
-                <label for="card-bank">銀行</label>
-                <input id="card-bank" type="text" placeholder="例如：匯豐">
-              </div>
-              <div class="field">
-                <label for="card-base-rate">一般回贈 %</label>
-                <input id="card-base-rate" type="number" min="0" step="0.1" placeholder="例如：0.4">
-              </div>
-              <div class="field">
-                <label for="card-currency">貨幣</label>
-                <input id="card-currency" type="text" placeholder="例如：HKD">
-              </div>
-              <div class="field full">
-                <label for="card-categories">較高回贈類別</label>
-                <input id="card-categories" type="text" placeholder="例如：online:6, travel:2.4">
-                <p class="field-hint">格式：類別:倍率，例如 online:6 即 6 倍一般回贈。</p>
-              </div>
-              <div class="field full">
-                <label>適用地點</label>
-                <div class="check-grid" id="card-location-options"></div>
-              </div>
-              <div class="field full">
-                <label for="card-notes">限制 / 注意事項</label>
-                <textarea id="card-notes" placeholder="例如：電子錢包唔計、指定商戶先有、要先登記"></textarea>
-              </div>
-            </div>
-            <div class="actions">
-              <button class="btn btn-primary" id="saveCardBtn">新增信用卡</button>
-              <button class="btn btn-secondary" id="resetCardFormBtn">收起</button>
-            </div>
+          <div class="actions" style="margin-top:0;">
+            <button class="btn btn-secondary" id="openCardComposerBtn">新增</button>
           </div>
         </div>
 
-        <div class="panel">
-          <div class="toolbar">
-            <h2 class="section-title" style="margin:0;">已儲存信用卡</h2>
-            <div class="field" style="min-width:130px;margin:0;">
-              <label for="card-search">搜尋</label>
-              <input id="card-search" type="text" placeholder="卡名 / 銀行">
-            </div>
-          </div>
-          <div class="filter-row">
+        <div class="composer" id="cardComposer">
+          <div class="grid">
             <div class="field">
-              <label for="card-bank-filter">銀行</label>
-              <select id="card-bank-filter"><option value="">全部</option></select>
+              <label for="card-name">卡名</label>
+              <input id="card-name" type="text" placeholder="例如：HSBC Red">
             </div>
             <div class="field">
-              <label for="card-category-filter">類型</label>
-              <select id="card-category-filter"><option value="">全部</option></select>
+              <label for="card-bank">銀行</label>
+              <input id="card-bank" type="text" placeholder="例如：匯豐">
             </div>
-            <div class="actions" style="margin-top:0;align-items:flex-end;">
-              <button class="btn btn-secondary" id="clearCardFiltersBtn">清除</button>
+            <div class="field">
+              <label for="card-base-rate">一般回贈 %</label>
+              <input id="card-base-rate" type="number" min="0" step="0.1" placeholder="例如：0.4">
+            </div>
+            <div class="field">
+              <label for="card-currency">貨幣</label>
+              <input id="card-currency" type="text" placeholder="例如：HKD">
+            </div>
+            <div class="field full">
+              <label for="card-categories">較高回贈類別</label>
+              <input id="card-categories" type="text" placeholder="例如：online:6, travel:2.4">
+              <p class="field-hint">格式：類別:倍率，例如 online:6 即 6 倍一般回贈。</p>
+            </div>
+            <div class="field full">
+              <label>適用地點</label>
+              <div class="check-grid" id="card-location-options"></div>
+            </div>
+            <div class="field full">
+              <label for="card-notes">限制 / 注意事項</label>
+              <textarea id="card-notes" placeholder="例如：電子錢包唔計、指定商戶先有、要先登記"></textarea>
             </div>
           </div>
-          <div class="list" id="cardsList"></div>
+          <div class="actions">
+            <button class="btn btn-primary" id="saveCardBtn">新增信用卡</button>
+            <button class="btn btn-secondary" id="resetCardFormBtn">收起</button>
+          </div>
+          <hr class="divider">
         </div>
+
+        <div class="toolbar" style="margin-bottom:14px;">
+          <h2 class="section-title" style="margin:0;">已儲存信用卡</h2>
+          <div class="field" style="min-width:130px;margin:0;">
+            <label for="card-search">搜尋</label>
+            <input id="card-search" type="text" placeholder="卡名 / 銀行">
+          </div>
+        </div>
+
+        <div class="filter-row">
+          <div class="field">
+            <label for="card-bank-filter">銀行</label>
+            <select id="card-bank-filter"><option value="">全部</option></select>
+          </div>
+          <div class="field">
+            <label for="card-category-filter">類型</label>
+            <select id="card-category-filter"><option value="">全部</option></select>
+          </div>
+          <div class="actions" style="margin-top:0;align-items:flex-end;">
+            <button class="btn btn-secondary" id="clearCardFiltersBtn">清除</button>
+          </div>
+        </div>
+
+        <div class="list" id="cardsList"></div>
+
       </div>
     </section>
   </main>
@@ -644,7 +652,7 @@
 
 <script>
 const STORAGE_KEY = "credit_card_rewards_v2";
-const APP_VERSION = "v2026.04.18.3";
+const APP_VERSION = "v2026.04.18.4";
 const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
 const CARD_DISPLAY_ORDER = [
   "BOC Chill Card",
