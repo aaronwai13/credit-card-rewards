@@ -600,7 +600,7 @@
 
 <script>
 const STORAGE_KEY = "credit_card_rewards_v2";
-const APP_VERSION = "v2026.04.18.9";
+const APP_VERSION = "v2026.04.18.10";
 const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
 const CARD_DISPLAY_ORDER = [
   "BOC Chill Card",
@@ -846,7 +846,8 @@ const CANONICAL_OFFER_DEFINITIONS = [
     startDate: "2026-01-01",
     endDate: "2026-06-30",
     locations: ["海外"],
-    notes: "指定海外商戶（每個商戶限一次）：【日本】松本清、唐吉訶德、阪急／阪神百貨、大丸松坂屋、樂天免稅店東京銀座店、三越伊勢丹、三井 Outlet Park 爵士之夢長島、三井 Outlet Park 木更津；【英國】Harrods；【加拿大】Lululemon；【澳洲】Coles、Woolworths；【泰國】曼谷 Emporium、Paragon Department Stores。"
+    notes: "指定海外商戶（每個商戶限一次）：【日本】松本清、唐吉訶德、阪急／阪神百貨、大丸松坂屋、樂天免稅店東京銀座店、三越伊勢丹、三井 Outlet Park 爵士之夢長島、三井 Outlet Park 木更津；【英國】Harrods；【加拿大】Lululemon；【澳洲】Coles、Woolworths；【泰國】曼谷 Emporium、Paragon Department Stores。",
+    requiresKeywords: ["松本清", "唐吉訶德", "阪急", "阪神", "大丸", "松坂屋", "樂天免稅", "三越", "伊勢丹", "三井", "harrods", "lululemon", "coles", "woolworths", "emporium", "paragon"]
   },
   {
     cardName: "恒生多貨幣扣賬卡",
@@ -859,7 +860,8 @@ const CANONICAL_OFFER_DEFINITIONS = [
     startDate: "2026-01-01",
     endDate: "2026-06-30",
     locations: ["海外"],
-    notes: "指定海外交通（上限 HK$120）：【澳洲】Transport for NSW TrainLink、Translink；【加拿大】Go Transit；【中國】中國鐵路 12306、北京地鐵、Go 巴出行、上海地鐵、上海磁浮、環島中港通；【日本】Japan Railway；【泰國】Mass Rapid Transit Authority of Thailand；【英國】Lothian Buses、Transport for Greater Manchester、Transport for London。"
+    notes: "指定海外交通（上限 HK$120）：【澳洲】Transport for NSW TrainLink、Translink；【加拿大】Go Transit；【中國】中國鐵路 12306、北京地鐵、Go 巴出行、上海地鐵、上海磁浮、環島中港通；【日本】Japan Railway；【泰國】Mass Rapid Transit Authority of Thailand；【英國】Lothian Buses、Transport for Greater Manchester、Transport for London。",
+    requiresKeywords: ["translink", "trainlink", "go transit", "中國鐵路", "北京地鐵", "go巴出行", "上海地鐵", "上海磁浮", "環島中港通", "japan railway", "jr", "mass rapid transit", "mrt", "lothian buses", "transport for greater manchester", "transport for london", "tfl"]
   },
   {
     cardName: "恒生多貨幣扣賬卡",
@@ -872,7 +874,8 @@ const CANONICAL_OFFER_DEFINITIONS = [
     startDate: "2026-01-01",
     endDate: "2026-06-30",
     locations: ["香港"],
-    notes: "指定本地商戶（上限 HK$120）：POP MART、唐吉訶德、松本清、MCL 戲院、百老匯院線、英皇戲院。"
+    notes: "指定本地商戶（上限 HK$120）：POP MART、唐吉訶德、松本清、MCL 戲院、百老匯院線、英皇戲院。",
+    requiresKeywords: ["pop mart", "popmart", "唐吉訶德", "松本清", "mcl", "百老匯", "英皇戲院"]
   },
   {
     cardName: "AEON WAKUWAKU",
@@ -1146,7 +1149,8 @@ function normalizeOffer(offer) {
     endDate: offer.endDate || todayString(),
     locations: Array.isArray(offer.locations) ? offer.locations : [],
     notes,
-    tags: [...tags]
+    tags: [...tags],
+    requiresKeywords: Array.isArray(offer.requiresKeywords) ? offer.requiresKeywords : []
   };
 }
 
@@ -1549,6 +1553,10 @@ function evaluateCard(card, scenario, rateMode) {
     if (!rateMode && amount < Number(offer.minSpend || 0)) return false;
     if (offer.category !== "general" && offer.category !== scenario.category) return false;
     if (!locationApplies(offer.locations, scenario.location)) return false;
+    if (offer.requiresKeywords && offer.requiresKeywords.length > 0) {
+      const desc = scenario.description.toLowerCase();
+      if (!offer.requiresKeywords.some((kw) => desc.includes(kw.toLowerCase()))) return false;
+    }
     return true;
   });
 
