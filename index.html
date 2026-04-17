@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="./apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="碌卡助手">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -58,7 +58,7 @@
   button{cursor:pointer;}
   .page{display:none;}
   .page.active{display:block;}
-  .shell{max-width:1080px;margin:0 auto;padding:28px 18px 32px;position:relative;z-index:1;}
+  .shell{max-width:1080px;margin:0 auto;padding:calc(28px + env(safe-area-inset-top, 0px)) 18px 32px;position:relative;z-index:1;}
   .hero{
     background:linear-gradient(145deg, rgba(17,57,70,0.96), rgba(11,39,49,0.94));
     color:#f7f1e5;
@@ -664,7 +664,7 @@
 
 <script>
 const STORAGE_KEY = "credit_card_rewards_v2";
-const APP_VERSION = "v2026.04.17.2";
+const APP_VERSION = "v2026.04.17.3";
 const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
 const CARD_DISPLAY_ORDER = [
   "BOC Chill Card",
@@ -818,8 +818,8 @@ const CANONICAL_OFFER_DEFINITIONS = [
     cap: 0,
     startDate: "2026-01-01",
     endDate: "2026-04-22",
-    locations: ["香港", "澳門", "內地"],
-    notes: "僅適用 PayMe 銀聯卡經 Apple Pay 免觸支付。"
+    locations: ["香港", "澳門", "內地", "海外"],
+    notes: "2026-04-22 前以 Apple Pay 免觸支付，港幣、人民幣或澳門幣付款可享 3% 回贈。"
   },
   {
     cardName: "PayMe 銀聯卡",
@@ -832,7 +832,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
     startDate: "2026-01-01",
     endDate: "2026-04-22",
     locations: ["海外"],
-    notes: "僅適用 PayMe 銀聯卡經 Apple Pay 免觸支付，並以非港幣/人民幣/澳門幣付款。"
+    notes: "2026-04-22 前以 Apple Pay 免觸支付，其他貨幣付款可享 10% 回贈。"
   },
   {
     cardName: "MMPOWER",
@@ -845,7 +845,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
     startDate: "2026-01-01",
     endDate: "2026-12-31",
     locations: ["海外"],
-    notes: "每月合資格零售簽賬滿 HK$5,000 後，合資格海外外幣簽賬可享高達 6% +FUN Dollars；全日制大學／大專生免簽賬要求。"
+    notes: "每月合資格零售簽賬滿 HK$5,000 後，海外外幣簽賬高達 6%；全日制大學／大專生免簽賬要求。"
   },
   {
     cardName: "MMPOWER",
@@ -858,7 +858,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
     startDate: "2026-01-01",
     endDate: "2026-12-31",
     locations: ["網上"],
-    notes: "每月合資格零售簽賬滿 HK$5,000 後，合資格網上零售簽賬可享高達 5% +FUN Dollars；全日制大學／大專生免簽賬要求。"
+    notes: "每月合資格零售簽賬滿 HK$5,000 後，網上零售簽賬高達 5%；全日制大學／大專生免簽賬要求。"
   },
   {
     cardName: "MMPOWER",
@@ -871,7 +871,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
     startDate: "2026-01-01",
     endDate: "2026-12-31",
     locations: ["香港"],
-    notes: "每月合資格零售簽賬滿 HK$5,000 後，本地餐廳食肆及本地休閒娛樂商戶簽賬可享高達 1% +FUN Dollars；全日制大學／大專生免簽賬要求。"
+    notes: "每月合資格零售簽賬滿 HK$5,000 後，本地餐飲（不包括快餐店）及娛樂簽賬高達 1%；全日制大學／大專生免簽賬要求。"
   },
   {
     cardName: "恒生多貨幣扣賬卡",
@@ -884,33 +884,33 @@ const CANONICAL_OFFER_DEFINITIONS = [
     startDate: "2026-01-01",
     endDate: "2026-06-30",
     locations: ["海外"],
-    notes: "30/6 前於指定海外商戶作合資格交易可享 15% 現金回贈，每個指定商戶只可享一次。"
+    notes: "指定海外商戶可享 15% 現金回贈，每個指定商戶只可享一次。"
   },
   {
     cardName: "恒生多貨幣扣賬卡",
     title: "恒生扣賬卡 指定海外交通 20%",
     category: "transport",
-    tags: ["transport", "overseas", "merchant"],
+    tags: ["overseas", "transport"],
     bonusRate: 19.6,
     minSpend: 0,
     cap: 120,
     startDate: "2026-01-01",
     endDate: "2026-06-30",
     locations: ["海外"],
-    notes: "30/6 前於指定海外交通作合資格交易可享 20% 現金回贈，上限 HK$120。"
+    notes: "指定海外交通可享 20% 現金回贈，上限 HK$120。"
   },
   {
     cardName: "恒生多貨幣扣賬卡",
     title: "恒生扣賬卡 指定本地商戶 20%",
     category: "shopping",
-    tags: ["shopping", "merchant", "entertainment"],
+    tags: ["merchant", "shopping", "entertainment"],
     bonusRate: 19.6,
     minSpend: 0,
     cap: 120,
     startDate: "2026-01-01",
     endDate: "2026-06-30",
     locations: ["香港"],
-    notes: "30/6 前於指定本地商戶作合資格交易可享 20% 現金回贈，上限 HK$120；商戶包括 POP MART、唐吉訶德、松本清、MCL 戲院、百老匯院線及英皇戲院。"
+    notes: "指定本地商戶可享 20% 現金回贈，上限 HK$120；包括 POP MART、唐吉訶德、松本清、MCL 戲院、百老匯院線及英皇戲院。"
   },
   {
     cardName: "AEON WAKUWAKU",
@@ -923,7 +923,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
     startDate: "2026-01-01",
     endDate: "2026-12-31",
     locations: ["網上"],
-    notes: "於網上以港幣或外幣完成簽賬可享 6% 回贈；電子錢包簽賬不算。"
+    notes: "網上簽賬 6% 回贈；電子錢包簽賬不算。"
   },
   {
     cardName: "AEON WAKUWAKU",
@@ -936,7 +936,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
     startDate: "2026-01-01",
     endDate: "2026-12-31",
     locations: ["海外"],
-    notes: "於日本以日元完成簽賬可享 3% 回贈。"
+    notes: "於日本以日圓完成簽賬可享 3% 回贈。"
   },
   {
     cardName: "AEON WAKUWAKU",
@@ -949,71 +949,101 @@ const CANONICAL_OFFER_DEFINITIONS = [
     startDate: "2026-01-01",
     endDate: "2026-12-31",
     locations: ["香港"],
-    notes: "適用於香港酒樓、餐廳、快餐店及酒店餐飲，以港幣完成簽賬。"
+    notes: "香港酒樓、餐廳、快餐店及酒店餐飲簽賬可享 1% 回贈。"
   },
   {
-    cardName: "DBS Live Fresh",
-    title: "Live Fresh 網上外幣 1%",
+    cardName: "AEON WAKUWAKU",
+    title: "WAKUWAKU App Store 迎新 HK$50",
     category: "online",
-    tags: ["online", "overseas"],
-    bonusRate: 0.6,
-    minSpend: 300,
-    cap: 0,
+    tags: ["subscription", "online"],
+    bonusRate: 0,
+    minSpend: 0,
+    cap: 50,
     startDate: "2026-01-01",
     endDate: "2026-12-31",
-    locations: ["海外", "網上"],
-    notes: "合資格網上外幣簽賬本身可享 1% 回贈；單一淨簽賬須滿 HK$300；海外註冊網上商戶以港幣 DCC 付款不適用。"
+    locations: ["網上"],
+    notes: "發卡後 60 日內於 App Store 作任何簽賬可享 HK$50 回贈。"
   },
   {
     cardName: "DBS Live Fresh",
-    title: "Live Fresh 網上旅遊 / 娛樂 / 訂閱 6% / 5.4%",
-    category: "travel",
-    tags: ["travel", "entertainment", "subscription", "online"],
+    title: "Live Fresh 網上旅遊/娛樂/訂閱 外幣 6%",
+    category: "general",
+    tags: ["travel", "entertainment", "subscription", "online", "overseas"],
     bonusRate: 5.6,
     minSpend: 300,
     cap: 0,
     startDate: "2026-01-01",
     endDate: "2026-12-31",
-    locations: ["香港", "海外", "網上"],
-    notes: "你已揀網上旅遊商戶、娛樂及指定服務訂閱為自選類別；外幣可享 6%，港幣可享 5.4%。本工具先按較高值估算。"
+    locations: ["網上", "海外"],
+    notes: "你揀咗網上旅遊商戶、娛樂及指定服務訂閱；外幣簽賬可享 6%。單一淨簽賬須滿 HK$300。"
+  },
+  {
+    cardName: "DBS Live Fresh",
+    title: "Live Fresh 網上旅遊/娛樂/訂閱 港幣 5.4%",
+    category: "general",
+    tags: ["travel", "entertainment", "subscription", "online"],
+    bonusRate: 5,
+    minSpend: 300,
+    cap: 0,
+    startDate: "2026-01-01",
+    endDate: "2026-12-31",
+    locations: ["網上"],
+    notes: "你揀咗網上旅遊商戶、娛樂及指定服務訂閱；港幣簽賬可享 5.4%。單一淨簽賬須滿 HK$300。"
+  },
+  {
+    cardName: "DBS Live Fresh",
+    title: "Live Fresh 合資格網上外幣 1%",
+    category: "online",
+    tags: ["online", "overseas"],
+    bonusRate: 0.6,
+    minSpend: 0,
+    cap: 0,
+    startDate: "2026-01-01",
+    endDate: "2026-12-31",
+    locations: ["網上", "海外"],
+    notes: "合資格網上外幣簽賬本身可享 1% 回贈。"
   }
 ];
 
-const DEFAULT_DATA = {
-  cards: CANONICAL_CARD_DEFINITIONS.map((card) => ({
-    id: crypto.randomUUID(),
-    ...card
-  })),
-  offers: []
+const CATEGORY_LABELS = {
+  general: "一般消費",
+  online: "網上",
+  dining: "餐飲",
+  entertainment: "娛樂",
+  shopping: "購物",
+  transport: "交通",
+  travel: "旅遊",
+  subscription: "訂閱",
+  groceries: "超市",
+  overseas: "海外",
+  applepay: "Apple Pay",
+  merchant: "指定商戶"
 };
 
-const CATEGORY_LABELS = {
-  dining: "餐飲",
-  travel: "旅遊",
-  shopping: "購物",
-  online: "網上",
-  groceries: "超市",
-  transport: "交通",
-  general: "一般消費",
-  entertainment: "娛樂",
-  overseas: "海外",
-  merchant: "指定商戶",
-  applepay: "Apple Pay",
-  subscription: "訂閱 / 串流"
+const DEFAULT_STATE = {
+  cards: [],
+  offers: []
 };
 
 let state = loadData();
 let editingCardId = null;
-let editingOfferId = null;
 
-migrateStoredData();
-seedDefaultOffers();
-init();
+bootstrap();
 
-function init() {
-  bindEvents();
+function bootstrap() {
+  state.cards = state.cards.map(normalizeCard);
+  state.offers = state.offers.map(normalizeOffer);
+  if (!state.cards.length) {
+    state.cards = CANONICAL_CARD_DEFINITIONS.map((definition) => normalizeCard({
+      id: crypto.randomUUID(),
+      ...definition
+    }));
+  }
+  migrateStoredData();
+  seedDefaultOffers();
   renderLocationCheckboxGroups();
-  setDefaultDate();
+  bindEvents();
+  document.getElementById("recommend-date").value = todayString();
   renderAll();
   maybeRegisterServiceWorker();
 }
@@ -1023,49 +1053,40 @@ function bindEvents() {
     button.addEventListener("click", () => switchPage(button.dataset.page));
   });
 
-  document.getElementById("saveCardBtn").addEventListener("click", saveCard);
-  document.getElementById("resetCardFormBtn").addEventListener("click", () => resetCardForm());
   document.getElementById("runRecommendationBtn").addEventListener("click", runRecommendation);
   document.getElementById("fillDemoScenarioBtn").addEventListener("click", fillDemoScenario);
+  document.getElementById("saveCardBtn").addEventListener("click", saveCard);
+  document.getElementById("resetCardFormBtn").addEventListener("click", () => resetCardForm());
+  document.getElementById("openCardComposerBtn").addEventListener("click", () => {
+    editingCardId = null;
+    document.getElementById("saveCardBtn").textContent = "新增信用卡";
+    resetCardForm(false);
+    openCardComposer();
+  });
   document.getElementById("card-search").addEventListener("input", renderCards);
   document.getElementById("card-bank-filter").addEventListener("change", renderCards);
   document.getElementById("card-category-filter").addEventListener("change", renderCards);
   document.getElementById("clearCardFiltersBtn").addEventListener("click", clearCardFilters);
-  document.getElementById("openCardComposerBtn").addEventListener("click", () => {
-    openCardComposer();
-    switchPage("cards");
-  });
 }
 
-function setDefaultDate() {
-  const dateString = todayString();
-  const dateInput = document.getElementById("recommend-date");
-  if (dateInput && !dateInput.value) dateInput.value = dateString;
-  const endInput = document.getElementById("offer-end-date");
-  if (endInput) endInput.value = dateString;
-}
-
-function switchPage(pageName) {
-  document.querySelectorAll(".page").forEach((page) => {
-    page.classList.toggle("active", page.id === "page-" + pageName);
+function switchPage(page) {
+  document.querySelectorAll(".page").forEach((section) => {
+    section.classList.toggle("active", section.id === `page-${page}`);
   });
   document.querySelectorAll(".tab-btn").forEach((button) => {
-    button.classList.toggle("active", button.dataset.page === pageName);
+    button.classList.toggle("active", button.dataset.page === page);
   });
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function loadData() {
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if (!saved) return structuredClone(DEFAULT_DATA);
   try {
-    const parsed = JSON.parse(saved);
-    return {
-      cards: Array.isArray(parsed.cards) ? parsed.cards.map(normalizeCard) : structuredClone(DEFAULT_DATA.cards),
-      offers: Array.isArray(parsed.offers) ? parsed.offers.map(normalizeOffer) : []
-    };
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return structuredClone(DEFAULT_STATE);
+    return { ...structuredClone(DEFAULT_STATE), ...JSON.parse(raw) };
   } catch (error) {
     console.error(error);
-    return structuredClone(DEFAULT_DATA);
+    return structuredClone(DEFAULT_STATE);
   }
 }
 
@@ -1074,26 +1095,32 @@ function saveData() {
 }
 
 function normalizeCard(card) {
-  if (!card) return card;
-  const canonical = CANONICAL_CARD_DEFINITIONS.find((item) => item.name === card.name);
-  if (canonical) {
-    return {
-      id: card.id || crypto.randomUUID(),
-      ...canonical
-    };
-  }
-  return card;
+  return {
+    id: card.id || crypto.randomUUID(),
+    name: card.name || "未命名信用卡",
+    bank: card.bank || "未分類",
+    baseRate: Number(card.baseRate || 0),
+    currency: card.currency || "HKD",
+    categories: card.categories || { general: 1 },
+    locations: Array.isArray(card.locations) ? card.locations : [],
+    notes: card.notes || "",
+    tags: Array.isArray(card.tags) ? card.tags : []
+  };
 }
 
 function normalizeOffer(offer) {
-  const tags = new Set([...(offer.tags || [])].filter(Boolean));
-  const title = String(offer.title || "");
-  const notes = String(offer.notes || "");
-  const locations = Array.isArray(offer.locations) ? offer.locations : [];
-  const category = offer.category || "";
+  const category = offer.category || "general";
+  const title = offer.title || "未命名優惠";
+  const notes = offer.notes || "";
+  const tags = new Set(Array.isArray(offer.tags) ? offer.tags : []);
 
-  if (category && category !== "general") tags.add(category);
-  if (locations.includes("海外") || title.includes("海外") || notes.includes("海外") || notes.includes("外幣")) {
+  if (category && category !== "general") {
+    tags.add(category);
+  }
+  if ((offer.locations || []).includes("網上") || title.includes("網上") || notes.includes("網上")) {
+    tags.add("online");
+  }
+  if ((offer.locations || []).some((location) => ["海外", "澳門", "內地"].includes(location)) || title.includes("海外") || notes.includes("海外") || notes.includes("外幣")) {
     tags.add("overseas");
   }
   if (title.includes("Apple Pay") || notes.includes("Apple Pay")) {
@@ -1119,7 +1146,17 @@ function normalizeOffer(offer) {
   }
 
   return {
-    ...offer,
+    id: offer.id || crypto.randomUUID(),
+    cardId: offer.cardId || "",
+    title,
+    category,
+    bonusRate: Number(offer.bonusRate || 0),
+    minSpend: Number(offer.minSpend || 0),
+    cap: Number(offer.cap || 0),
+    startDate: offer.startDate || todayString(),
+    endDate: offer.endDate || todayString(),
+    locations: Array.isArray(offer.locations) ? offer.locations : [],
+    notes,
     tags: [...tags]
   };
 }
