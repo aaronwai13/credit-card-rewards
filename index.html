@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>碌卡助手</title>
 <meta name="description" content="收集不同信用卡回贈和活動，並按消費場景推薦最值得刷的卡。">
 <meta name="theme-color" content="#113946">
@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="./apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="碌卡助手">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -58,16 +58,16 @@
   button{cursor:pointer;}
   .page{display:none;}
   .page.active{display:block;}
-  .shell{max-width:1080px;margin:0 auto;padding:28px 18px 32px;position:relative;z-index:1;}
+  .shell{max-width:1080px;margin:0 auto;padding:0 18px 32px;position:relative;z-index:1;}
   .hero{
     background:linear-gradient(145deg, rgba(17,57,70,0.96), rgba(11,39,49,0.94));
     color:#f7f1e5;
-    border-radius:28px;
-    padding:28px 22px 22px;
+    border-radius:0 0 28px 28px;
+    padding:calc(22px + env(safe-area-inset-top,0px)) 22px 22px;
+    margin:0 -18px 18px;
     box-shadow:var(--shadow);
     position:relative;
     overflow:hidden;
-    margin-bottom:18px;
   }
   .eyebrow{
     display:inline-flex;
@@ -504,7 +504,7 @@
   @media (max-width: 760px){
     .grid{grid-template-columns:1fr;}
     .filter-row{grid-template-columns:1fr;}
-    .hero{padding:24px 18px 18px;border-radius:22px;}
+    .hero{padding:calc(20px + env(safe-area-inset-top,0px)) 18px 18px;border-radius:0 0 22px 22px;}
     .panel,.list-card,.result-card,.empty-state{border-radius:18px;}
     .result-header,.card-top{flex-direction:column;}
     .result-value{text-align:left;}
@@ -664,7 +664,7 @@
 
 <script>
 const STORAGE_KEY = "credit_card_rewards_v2";
-const APP_VERSION = "v2026.04.17.5";
+const APP_VERSION = "v2026.04.18.1";
 const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
 const CARD_DISPLAY_ORDER = [
   "BOC Chill Card",
