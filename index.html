@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>碌卡助手</title>
 <meta name="description" content="收集不同信用卡回贈和活動，並按消費場景推薦最值得刷的卡。">
-<meta name="theme-color" content="#F5F2EE">
+<meta name="theme-color" content="#FDFAF5">
 <link rel="manifest" href="./manifest.json">
 <link rel="icon" href="./icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="./apple-touch-icon.png">
@@ -18,17 +18,19 @@
 <style>
   :root {
     --ink: #113946;
+    --ink-2: #0b2731;
     --accent: #b08a4a;
-    --accent-soft: #f5ede0;
-    --bg: #F5F2EE;
-    --white: #FFFFFF;
+    --accent-soft: #f0e6d2;
+    --bg: #FDFAF5;
+    --card: #FFFFFF;
+    --card-inner: #FDFAF5;
     --text: #18262b;
-    --muted: #657379;
+    --muted: #6b7c81;
     --border: rgba(17,57,70,0.10);
-    --border-strong: rgba(17,57,70,0.18);
+    --border-strong: rgba(17,57,70,0.16);
     --good: #1e8d62;
     --warn: #b35b3a;
-    --shadow: 0 2px 10px rgba(17,57,70,0.07);
+    --shadow: 0 1px 4px rgba(17,57,70,0.06), 0 4px 16px rgba(17,57,70,0.06);
     --tab-h: 60px;
   }
   * { box-sizing: border-box; max-width: 100%; -webkit-tap-highlight-color: transparent; }
@@ -47,7 +49,7 @@
 
   /* HEADER */
   .header {
-    background: var(--white);
+    background: var(--card);
     border-bottom: 1px solid var(--border);
     position: sticky;
     top: 0;
@@ -56,22 +58,32 @@
   .header-inner {
     max-width: 480px;
     margin: 0 auto;
-    padding: 16px 16px 0;
+    padding: 14px 18px 0;
+  }
+  .header-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(17,57,70,0.07);
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 9px;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: var(--ink);
+    margin-bottom: 6px;
   }
   .header-title {
     font-family: "Fraunces", serif;
-    font-size: 22px;
+    font-size: 26px;
     font-weight: 700;
     color: var(--ink);
-    line-height: 1.1;
+    line-height: 1.0;
   }
   .header-sub {
-    font-family: "IBM Plex Mono", monospace;
-    font-size: 10px;
+    font-size: 13px;
     color: var(--muted);
     margin-top: 3px;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
     padding-bottom: 14px;
   }
 
@@ -83,83 +95,100 @@
   .content {
     max-width: 480px;
     margin: 0 auto;
-    padding: 14px 14px 0;
+    padding: 16px 16px 8px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 14px;
   }
 
   /* PANEL */
   .panel {
-    background: var(--white);
+    background: var(--card);
     border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 18px;
+    border-radius: 18px;
+    padding: 20px;
     box-shadow: var(--shadow);
   }
 
-  /* SECTION LABELS */
+  /* SECTION TYPOGRAPHY */
   .section-title {
     font-family: "Fraunces", serif;
-    font-size: 19px;
+    font-size: 20px;
     color: var(--ink);
-    margin: 0 0 4px;
-    line-height: 1.2;
+    margin: 0 0 5px;
+    line-height: 1.15;
   }
   .section-sub {
     font-size: 13px;
     color: var(--muted);
     line-height: 1.55;
-    margin: 0 0 14px;
+    margin: 0 0 16px;
   }
 
-  /* FORM */
+  /* FORM FIELDS */
   label {
     font-family: "IBM Plex Mono", monospace;
     font-size: 10px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--ink);
+    opacity: 0.6;
     display: block;
-    margin-bottom: 5px;
+    margin-bottom: 6px;
   }
   .field { display: flex; flex-direction: column; }
   .field.full { grid-column: 1 / -1; }
-  .field-hint { font-size: 11px; color: var(--muted); line-height: 1.5; margin-top: 4px; }
+  .field-hint { font-size: 11px; color: var(--muted); line-height: 1.5; margin-top: 5px; }
+
   .grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 11px;
+    gap: 12px;
     margin-top: 14px;
   }
+  /* Specific 2-col row that never breaks */
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 12px;
+  }
+
   input, select, textarea {
     width: 100%;
     border: 1.5px solid var(--border-strong);
-    border-radius: 10px;
-    background: var(--bg);
+    border-radius: 12px;
+    background: var(--card-inner);
     color: var(--text);
-    padding: 10px 12px;
+    padding: 11px 13px;
     outline: none;
-    transition: border-color 0.15s;
+    transition: border-color 0.15s, box-shadow 0.15s;
     -webkit-appearance: none;
   }
-  textarea { min-height: 80px; resize: vertical; }
-  input[type="date"] { min-height: 42px; display: block; }
-  input:focus, select:focus, textarea:focus { border-color: var(--ink); }
+  textarea { min-height: 82px; resize: vertical; }
+  input[type="date"] { min-height: 44px; display: block; text-align: center; }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--ink);
+    box-shadow: 0 0 0 3px rgba(17,57,70,0.08);
+  }
 
   /* BUTTONS */
-  .actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+  .actions { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
   .btn {
     border: none;
     border-radius: 999px;
-    padding: 10px 18px;
-    min-height: 42px;
-    font-size: 14px;
+    padding: 11px 20px;
+    min-height: 44px;
+    font-size: 15px;
     font-weight: 600;
-    transition: opacity 0.15s;
+    transition: opacity 0.15s, transform 0.1s;
   }
-  .btn:active { opacity: 0.75; }
-  .btn-primary { background: var(--ink); color: white; }
+  .btn:active { opacity: 0.8; transform: scale(0.98); }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent) 0%, #c9a55f 100%);
+    color: #2a1800;
+    box-shadow: 0 4px 14px rgba(176,138,74,0.30);
+  }
   .btn-secondary {
     background: transparent;
     border: 1.5px solid var(--border-strong);
@@ -168,23 +197,23 @@
   .tiny-btn {
     border: none;
     border-radius: 999px;
-    padding: 7px 12px;
+    padding: 7px 13px;
     background: rgba(17,57,70,0.07);
     color: var(--ink);
     font-size: 12px;
     font-weight: 600;
   }
   .tiny-btn.danger { background: rgba(179,91,58,0.10); color: var(--warn); }
-  .inline-actions { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+  .inline-actions { display: flex; gap: 7px; margin-top: 12px; flex-wrap: wrap; }
 
   /* CHECK CHIPS */
-  .check-grid { display: flex; flex-wrap: wrap; gap: 7px; }
+  .check-grid { display: flex; flex-wrap: wrap; gap: 8px; }
   .check-chip { position: relative; }
   .check-chip input { position: absolute; opacity: 0; pointer-events: none; }
   .check-chip span {
     display: inline-flex;
     align-items: center;
-    padding: 7px 13px;
+    padding: 8px 14px;
     border-radius: 999px;
     background: transparent;
     border: 1.5px solid var(--border-strong);
@@ -199,7 +228,7 @@
     color: white;
   }
 
-  /* CHIP BADGE */
+  /* CHIP */
   .chip {
     display: inline-flex;
     align-items: center;
@@ -219,32 +248,34 @@
     justify-content: space-between;
     align-items: flex-start;
     gap: 10px;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
     flex-wrap: wrap;
   }
   .toolbar .actions { margin-top: 0; }
+  .toolbar .section-sub { margin-bottom: 0; }
 
   /* FILTER ROW */
   .filter-row {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
     gap: 10px;
-    margin-bottom: 12px;
-    flex-wrap: wrap;
+    align-items: end;
+    margin-bottom: 14px;
   }
-  .filter-row .field { flex: 1; min-width: 120px; }
-  .filter-row .actions { margin-top: 0; align-items: flex-end; }
+  .filter-row .field { margin: 0; }
+  .filter-row .actions { margin-top: 0; }
 
   /* COMPOSER */
-  .composer { display: none; padding-top: 14px; }
+  .composer { display: none; padding-top: 16px; border-top: 1px solid var(--border); margin-top: 4px; }
   .composer.show { display: block; }
 
   /* CARD LIST */
   .list { display: flex; flex-direction: column; gap: 10px; }
   .list-card {
-    background: var(--white);
+    background: var(--card);
     border: 1px solid var(--border);
     border-radius: 14px;
-    padding: 16px 16px 16px 20px;
+    padding: 16px 16px 14px 20px;
     box-shadow: var(--shadow);
     position: relative;
     overflow: hidden;
@@ -254,8 +285,7 @@
     position: absolute;
     inset: 0 auto 0 0;
     width: 4px;
-    background: linear-gradient(180deg, var(--accent), var(--ink));
-    border-radius: 4px 0 0 4px;
+    background: linear-gradient(180deg, var(--accent) 0%, var(--ink) 100%);
   }
   .card-top {
     display: flex;
@@ -282,7 +312,7 @@
   .details strong { color: var(--ink); font-weight: 600; }
   .meta { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
   .meta span {
-    padding: 3px 8px;
+    padding: 3px 9px;
     border-radius: 999px;
     background: rgba(17,57,70,0.06);
     color: var(--muted);
@@ -292,7 +322,7 @@
   /* OFFER CARDS */
   .offer-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
   .offer-card {
-    background: var(--bg);
+    background: var(--card-inner);
     border: 1px solid var(--border);
     border-radius: 10px;
     padding: 12px;
@@ -310,17 +340,17 @@
   .offer-card-note { font-size: 12px; line-height: 1.5; color: var(--muted); }
 
   /* RESULT CARDS */
-  .result-stack { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+  .result-stack { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
   .result-card {
-    background: var(--white);
+    background: var(--card);
     border: 1px solid var(--border);
     border-radius: 14px;
     padding: 16px;
     box-shadow: var(--shadow);
   }
   .result-card.best {
-    border-color: rgba(176,138,74,0.4);
-    background: linear-gradient(135deg, #fdf8f0, var(--white));
+    border-color: rgba(176,138,74,0.35);
+    background: linear-gradient(160deg, #fef8ed 0%, var(--card) 60%);
   }
   .result-rank {
     font-family: "IBM Plex Mono", monospace;
@@ -328,9 +358,9 @@
     text-transform: uppercase;
     color: var(--muted);
     letter-spacing: 0.08em;
-    margin-bottom: 6px;
+    margin-bottom: 7px;
   }
-  .result-card.best .result-rank { color: var(--accent); }
+  .result-card.best .result-rank { color: var(--accent); font-weight: 500; }
   .result-header {
     display: flex;
     justify-content: space-between;
@@ -369,7 +399,7 @@
     position: fixed;
     left: 0; right: 0; bottom: 0;
     height: var(--tab-h);
-    background: var(--white);
+    background: var(--card);
     border-top: 1px solid var(--border);
     display: flex;
     z-index: 100;
@@ -381,7 +411,7 @@
     bottom: calc(-1 * env(safe-area-inset-bottom, 0px));
     left: 0; right: 0;
     height: env(safe-area-inset-bottom, 0px);
-    background: var(--white);
+    background: var(--card);
   }
   .tab-btn {
     flex: 1;
@@ -395,7 +425,6 @@
     gap: 3px;
     font-family: "IBM Plex Mono", monospace;
     font-size: 10px;
-    font-weight: 500;
     letter-spacing: 0.05em;
     text-transform: uppercase;
     transition: color 0.15s;
@@ -408,7 +437,7 @@
     position: absolute;
     top: 0; left: 25%; right: 25%;
     height: 2px;
-    background: var(--ink);
+    background: var(--accent);
     border-radius: 0 0 2px 2px;
   }
   .tab-icon { width: 22px; height: 22px; }
@@ -431,7 +460,7 @@
     transform: translateX(-50%);
     background: var(--ink);
     color: white;
-    padding: 10px 16px;
+    padding: 10px 18px;
     border-radius: 999px;
     font-size: 13px;
     opacity: 0;
@@ -439,18 +468,18 @@
     transition: opacity 0.2s, transform 0.2s;
     z-index: 200;
     white-space: nowrap;
-    box-shadow: 0 4px 16px rgba(17,57,70,0.2);
+    box-shadow: 0 4px 20px rgba(17,57,70,0.25);
   }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(-2px); }
 
   /* VERSION */
-  .version-bar { max-width: 480px; margin: 0 auto; padding: 4px 14px 10px; }
+  .version-bar { max-width: 480px; margin: 0 auto; padding: 4px 16px 8px; }
   .version-chip {
     display: inline-flex;
     align-items: center;
     padding: 5px 10px;
     border-radius: 999px;
-    background: rgba(17,57,70,0.05);
+    background: transparent;
     border: 1px solid var(--border);
     color: var(--muted);
     font-family: "IBM Plex Mono", monospace;
@@ -460,6 +489,7 @@
 
   @media (max-width: 600px) {
     .grid { grid-template-columns: 1fr; }
+    .filter-row { grid-template-columns: 1fr 1fr; }
     .result-header { flex-direction: column; }
     .card-top { flex-direction: column; }
   }
@@ -469,8 +499,9 @@
 
   <header class="header">
     <div class="header-inner">
+      <div class="header-eyebrow">Spend Smarter</div>
       <div class="header-title">碌卡助手</div>
-      <div class="header-sub">信用卡回贈推薦</div>
+      <div class="header-sub">輸入消費場景，即時計出最值得碌的卡</div>
     </div>
   </header>
 
@@ -479,12 +510,12 @@
       <div class="content">
         <div class="panel">
           <h2 class="section-title">消費推薦器</h2>
-          <p class="section-sub">輸入一句消費描述，再加金額和日期。系統會自動判斷地點和類別，計出當前最值得碌的卡。</p>
+          <p class="section-sub">輸入消費描述、金額和日期，系統自動判斷地點和類別。</p>
           <div class="field">
             <label for="recommend-description">消費描述</label>
             <textarea id="recommend-description" placeholder="例如：今晚喺澳門酒店食自助餐，或者淘寶買耳機"></textarea>
           </div>
-          <div class="grid" style="margin-top:11px;">
+          <div class="field-row">
             <div class="field">
               <label for="recommend-amount">金額</label>
               <input id="recommend-amount" type="number" min="0" step="0.01" placeholder="例如：388">
@@ -496,7 +527,7 @@
           </div>
           <div class="actions">
             <button class="btn btn-primary" id="runRecommendationBtn">立即推薦</button>
-            <button class="btn btn-secondary" id="fillDemoScenarioBtn">載入示例場景</button>
+            <button class="btn btn-secondary" id="fillDemoScenarioBtn">載入示例</button>
           </div>
           <div class="result-stack" id="recommendationResults"></div>
         </div>
@@ -509,7 +540,7 @@
           <div class="toolbar">
             <div>
               <h2 class="section-title">信用卡記錄</h2>
-              <p class="section-sub" style="margin-bottom:0;">管理你的信用卡及回贈規則。</p>
+              <p class="section-sub">管理你的信用卡及回贈規則。</p>
             </div>
             <div class="actions" style="margin-top:0;">
               <button class="btn btn-secondary" id="openCardComposerBtn">新增</button>
@@ -556,22 +587,22 @@
 
         <div class="panel">
           <div class="toolbar">
-            <h2 class="section-title">已儲存信用卡</h2>
-            <div class="field" style="min-width:140px;">
+            <h2 class="section-title" style="margin:0;">已儲存信用卡</h2>
+            <div class="field" style="min-width:130px;margin:0;">
               <label for="card-search">搜尋</label>
-              <input id="card-search" type="text" placeholder="搜尋卡名 / 銀行">
+              <input id="card-search" type="text" placeholder="卡名 / 銀行">
             </div>
           </div>
           <div class="filter-row">
             <div class="field">
               <label for="card-bank-filter">銀行</label>
-              <select id="card-bank-filter"><option value="">全部銀行</option></select>
+              <select id="card-bank-filter"><option value="">全部</option></select>
             </div>
             <div class="field">
-              <label for="card-category-filter">回贈類型</label>
-              <select id="card-category-filter"><option value="">全部類型</option></select>
+              <label for="card-category-filter">類型</label>
+              <select id="card-category-filter"><option value="">全部</option></select>
             </div>
-            <div class="actions">
+            <div class="actions" style="margin-top:0;align-items:flex-end;">
               <button class="btn btn-secondary" id="clearCardFiltersBtn">清除</button>
             </div>
           </div>
@@ -613,7 +644,7 @@
 
 <script>
 const STORAGE_KEY = "credit_card_rewards_v2";
-const APP_VERSION = "v2026.04.18.2";
+const APP_VERSION = "v2026.04.18.3";
 const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
 const CARD_DISPLAY_ORDER = [
   "BOC Chill Card",
