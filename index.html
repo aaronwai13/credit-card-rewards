@@ -618,7 +618,7 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "網上零售 5%",
   "本地餐飲及娛樂 1%"
 ]);
-const APP_VERSION = "v2026.04.19.3";
+const APP_VERSION = "v2026.04.19.4";
 const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
 const CARD_DISPLAY_ORDER = [
   "BOC Chill Card",
@@ -806,7 +806,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
   {
     cardName: "MMPOWER",
     title: "網上娛樂 8%",
-    category: "online",
+    category: "general",
     tags: ["online", "entertainment", "subscription"],
     bonusRate: 7.6,
     minSpend: 0,
@@ -815,7 +815,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
     endDate: "2026-12-31",
     locations: ["網上", "香港"],
     notes: "串流平台：Apple TV / Music、Disney+、HBO Max、HMVOD、JOOX、KKBOX、MOOV、Netflix、Spotify、Viu 及 YouTube。本港戲院：百老匯院線、影藝戲院、Cinema City 院線、英皇戲院、星達院線及 MCL 戲院。票務平台：購票通、HotdogTIX、KKTIX、撲飛、Ticketflap 及城市售票網。本港主題樂園：香港迪士尼樂園及香港海洋公園。以上簽賬高達 8%。",
-    requiresKeywords: ["apple tv", "apple music", "disney+", "hbo max", "hmvod", "joox", "kkbox", "moov", "netflix", "spotify", "viu", "youtube", "百老匯", "影藝", "cinema city", "英皇戲院", "星達", "mcl", "購票通", "hotdogtix", "kktix", "撲飛", "ticketflap", "城市售票網", "迪士尼", "海洋公園"]
+    requiresKeywords: ["apple tv", "apple music", "disney+", "hbo max", "hmvod", "joox", "kkbox", "moov", "netflix", "spotify", "viu", "youtube", "百老匯", "影藝", "cinema city", "英皇", "星達", "mcl", "購票通", "hotdogtix", "kktix", "撲飛", "ticketflap", "城市售票網", "迪士尼", "海洋公園", "睇戲", "電影"]
   },
   {
     cardName: "MMPOWER",
@@ -1545,14 +1545,14 @@ function inferScenarioFromText(text) {
     { location: "澳門", keywords: ["澳門", "macau"] },
     { location: "內地", keywords: ["內地", "大陸", "深圳", "廣州", "上海", "北京", "中國", "china"] },
     { location: "海外", keywords: ["海外", "日本", "台灣", "韓國", "新加坡", "歐洲", "美國", "英國", "泰國", "澳洲", "加拿大", "旅行", "旅遊", "foreign"] },
-    { location: "香港", keywords: ["香港", "hk", "本地"] }
+    { location: "香港", keywords: ["香港", "本地"] }
   ];
   const categoryMatchers = [
     { category: "dining", keywords: ["餐廳", "食", "晚飯", "午飯", "早餐", "cafe", "咖啡", "自助餐", "酒吧", "餐飲", "mcdonald", "麥當勞", "starbucks", "星巴克", "pacific coffee"] },
     { category: "travel", keywords: ["酒店", "機票", "航空", "旅行", "旅遊", "住宿", "訂房", "航班"] },
     { category: "groceries", keywords: ["超市", "買餸", "百佳", "惠康", "groceries"] },
     { category: "transport", keywords: ["地鐵", "的士", "uber", "巴士", "高鐵", "交通", "停車場", "jr", "japan railway", "mrt"] },
-    { category: "entertainment", keywords: ["戲院", "cinema", "concert", "演唱會", "電影", "院線", "mcl", "百老匯院線", "英皇戲院"] },
+    { category: "entertainment", keywords: ["戲院", "睇戲", "睇電影", "看戲", "看電影", "cinema", "concert", "演唱會", "電影", "院線", "mcl", "百老匯", "英皇戲院", "影藝", "星達", "迪士尼", "海洋公園"] },
     { category: "online", keywords: ["網上", "online", "app", "官網", "網站", "淘寶", "amazon", "電商", "netflix", "spotify", "disney+", "youtube", "apple tv", "apple music", "訂閱"] },
     { category: "shopping", keywords: ["購物", "商場", "耳機", "衫", "鞋", "家電", "百貨", "uniqlo", "優衣庫", "ikea", "log-on", "pop mart", "popmart", "唐吉訶德", "松本清", "lululemon", "harrods"] }
   ];
@@ -1578,7 +1578,7 @@ function evaluateCard(card, scenario, rateMode) {
     if (offer.cardId !== card.id) return false;
     if (!isDateInRange(scenario.date, offer.startDate, offer.endDate)) return false;
     if (!rateMode && amount < Number(offer.minSpend || 0)) return false;
-    if (offer.category !== "general" && offer.category !== scenario.category) return false;
+    if (offer.category !== "general" && scenario.category !== "general" && offer.category !== scenario.category) return false;
     if (!locationApplies(offer.locations, scenario.location)) return false;
     if (offer.requiresKeywords && offer.requiresKeywords.length > 0) {
       const desc = scenario.description.toLowerCase();
