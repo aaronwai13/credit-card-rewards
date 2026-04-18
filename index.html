@@ -435,8 +435,8 @@
     left: 50%;
     bottom: calc(var(--tab-h) + env(safe-area-inset-bottom, 0px) + 12px);
     transform: translateX(-50%);
-    background: var(--ink);
-    color: white;
+    background: rgba(28,28,30,0.92);
+    color: #F2F2F0;
     padding: 11px 20px;
     border-radius: 999px;
     font-size: 13px;
@@ -445,7 +445,7 @@
     transition: opacity 0.2s, transform 0.2s;
     z-index: 200;
     white-space: nowrap;
-    box-shadow: 0 4px 20px rgba(17,57,70,0.25);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
   }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(-2px); }
 
@@ -630,7 +630,7 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "網上零售 5%",
   "本地餐飲及娛樂 1%"
 ]);
-const APP_VERSION = "v2026.04.18.18";
+const APP_VERSION = "v2026.04.18.19";
 const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
 const CARD_DISPLAY_ORDER = [
   "BOC Chill Card",
