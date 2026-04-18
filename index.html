@@ -105,7 +105,21 @@
     font-size: 13px;
     color: var(--muted);
     margin-top: 4px;
-    padding-bottom: 16px;
+    padding-bottom: 10px;
+  }
+  .header-version {
+    padding-bottom: 10px;
+  }
+  .header-version .version-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 9px;
+    letter-spacing: 0.05em;
   }
 
   /* MAIN SCROLL */
@@ -428,9 +442,7 @@
   }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(-2px); }
 
-  /* VERSION */
-  .version-bar { max-width: 600px; margin: 0 auto; padding: 8px 20px 16px; }
-  .version-chip { display: inline-flex; align-items: center; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--border); color: var(--muted); font-family: "IBM Plex Mono", monospace; font-size: 10px; letter-spacing: 0.05em; }
+  /* VERSION - moved to header */
 
   @media (max-width: 500px) {
     .grid { grid-template-columns: 1fr; }
@@ -447,6 +459,7 @@
       <div class="header-eyebrow">Spend Smarter</div>
       <div class="header-title">碌卡助手</div>
       <div class="header-sub">輸入消費場景，即時計出最值得碌的卡</div>
+      <div class="header-version"><span class="version-chip">版本 <span id="appVersion"></span></span></div>
     </div>
   </header>
 
@@ -567,9 +580,6 @@
       </div>
     </section>
 
-    <div class="version-bar">
-      <div class="version-chip">版本 <span id="appVersion"></span></div>
-    </div>
   </main>
 
   <nav class="tab-bar" aria-label="Bottom navigation">
@@ -600,7 +610,7 @@
 
 <script>
 const STORAGE_KEY = "credit_card_rewards_v2";
-const APP_VERSION = "v2026.04.18.10";
+const APP_VERSION = "v2026.04.18.11";
 const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
 const CARD_DISPLAY_ORDER = [
   "BOC Chill Card",
@@ -729,7 +739,8 @@ const CANONICAL_OFFER_DEFINITIONS = [
     startDate: "2026-01-01",
     endDate: "2026-06-30",
     locations: ["香港", "網上"],
-    notes: "僅適用指定 Chill 商戶：全港戲院、Apple TV、App Store、Disney+、Netflix、Spotify、McDonald's、Pacific Coffee、Starbucks、Dyson、Samsung、Sony、Uniqlo、GU、IKEA、LOG-ON。"
+    notes: "僅適用指定 Chill 商戶：全港戲院、Apple TV、App Store、Disney+、Netflix、Spotify、McDonald's、Pacific Coffee、Starbucks、Dyson、Samsung、Sony、Uniqlo、GU、IKEA、LOG-ON。",
+    requiresKeywords: ["戲院", "cinema", "apple tv", "app store", "disney+", "netflix", "spotify", "mcdonald", "麥當勞", "pacific coffee", "starbucks", "星巴克", "dyson", "samsung", "sony", "uniqlo", "優衣庫", "gu", "ikea", "log-on", "log on"]
   },
   {
     cardName: "HSBC 金卡",
@@ -786,7 +797,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
   {
     cardName: "MMPOWER",
     title: "網上娛樂 8%",
-    category: "entertainment",
+    category: "online",
     tags: ["online", "entertainment", "subscription"],
     bonusRate: 7.6,
     minSpend: 0,
@@ -794,7 +805,8 @@ const CANONICAL_OFFER_DEFINITIONS = [
     startDate: "2026-01-01",
     endDate: "2026-12-31",
     locations: ["網上"],
-    notes: "指定網上娛樂訂閱簽賬高達 8%，包括 Netflix、Disney+、Apple TV+、Spotify、YouTube Premium。"
+    notes: "指定網上娛樂訂閱簽賬高達 8%，包括 Netflix、Disney+、Apple TV+、Spotify、YouTube Premium。",
+    requiresKeywords: ["netflix", "disney+", "apple tv", "spotify", "youtube premium", "youtube music"]
   },
   {
     cardName: "MMPOWER",
@@ -807,7 +819,8 @@ const CANONICAL_OFFER_DEFINITIONS = [
     startDate: "2026-01-01",
     endDate: "2026-12-31",
     locations: ["網上"],
-    notes: "指定網上服飾簽賬高達 8%，包括 ZARA、H&M、Uniqlo、SHEIN、ASOS 等。"
+    notes: "指定網上服飾簽賬高達 8%，包括 ZARA、H&M、Uniqlo、SHEIN、ASOS 等。",
+    requiresKeywords: ["zara", "h&m", "uniqlo", "優衣庫", "shein", "asos", "服飾", "衫", "fashion"]
   },
   {
     cardName: "MMPOWER",
@@ -1154,6 +1167,13 @@ function normalizeOffer(offer) {
   };
 }
 
+// 已改名或刪除的舊正式優惠標題，migration 時清除
+const DEPRECATED_OFFER_TITLES = new Set([
+  "海外外幣 6%",
+  "網上零售 5%",
+  "本地餐飲及娛樂 1%"
+]);
+
 function migrateStoredData() {
   const existingCards = Array.isArray(state.cards) ? state.cards : [];
   const customCards = existingCards
@@ -1179,7 +1199,11 @@ function migrateStoredData() {
   const existingOffers = Array.isArray(state.offers) ? state.offers : [];
   const customOffers = existingOffers.filter((offer) => {
     const linkedCard = existingCardById[offer.cardId];
-    return !linkedCard || !canonicalCardNames.has(linkedCard.name);
+    // 自訂卡的優惠保留
+    if (!linkedCard || !canonicalCardNames.has(linkedCard.name)) return true;
+    // 已廢棄的正式優惠標題，清除
+    if (DEPRECATED_OFFER_TITLES.has(offer.title)) return false;
+    return true;
   });
 
   const canonicalOffers = CANONICAL_OFFER_DEFINITIONS.map((definition) => {
@@ -1196,7 +1220,8 @@ function migrateStoredData() {
       startDate: definition.startDate,
       endDate: definition.endDate,
       locations: definition.locations,
-      notes: definition.notes
+      notes: definition.notes,
+      requiresKeywords: definition.requiresKeywords
     });
   });
 
@@ -1219,7 +1244,8 @@ function seedDefaultOffers() {
     startDate: definition.startDate,
     endDate: definition.endDate,
     locations: definition.locations,
-    notes: definition.notes
+    notes: definition.notes,
+    requiresKeywords: definition.requiresKeywords
   }));
   saveData();
 }
@@ -1515,19 +1541,20 @@ function runRecommendation() {
 function inferScenarioFromText(text) {
   const normalized = text.toLowerCase();
   const locationMatchers = [
-    { location: "網上", keywords: ["網上", "online", "app", "官網", "網站", "淘寶", "amazon", "hk tvmall", "tvmall", "京東"] },
+    { location: "網上", keywords: ["網上", "online", "app", "官網", "網站", "淘寶", "amazon", "hk tvmall", "tvmall", "京東", "netflix", "spotify", "disney+", "youtube", "apple tv", "apple music", "訂閱"] },
     { location: "澳門", keywords: ["澳門", "macau"] },
     { location: "內地", keywords: ["內地", "大陸", "深圳", "廣州", "上海", "北京", "中國", "china"] },
-    { location: "海外", keywords: ["海外", "日本", "台灣", "韓國", "新加坡", "歐洲", "美國", "英國", "泰國", "旅行", "旅遊", "foreign"] },
+    { location: "海外", keywords: ["海外", "日本", "台灣", "韓國", "新加坡", "歐洲", "美國", "英國", "泰國", "澳洲", "加拿大", "旅行", "旅遊", "foreign"] },
     { location: "香港", keywords: ["香港", "hk", "本地"] }
   ];
   const categoryMatchers = [
-    { category: "dining", keywords: ["餐廳", "食", "晚飯", "午飯", "早餐", "cafe", "咖啡", "自助餐", "酒吧", "餐飲"] },
+    { category: "dining", keywords: ["餐廳", "食", "晚飯", "午飯", "早餐", "cafe", "咖啡", "自助餐", "酒吧", "餐飲", "mcdonald", "麥當勞", "starbucks", "星巴克", "pacific coffee"] },
     { category: "travel", keywords: ["酒店", "機票", "航空", "旅行", "旅遊", "住宿", "訂房", "航班"] },
     { category: "groceries", keywords: ["超市", "買餸", "百佳", "惠康", "groceries"] },
-    { category: "transport", keywords: ["地鐵", "的士", "uber", "巴士", "高鐵", "交通", "停車場"] },
-    { category: "online", keywords: ["網上", "online", "app", "官網", "網站", "淘寶", "amazon", "電商"] },
-    { category: "shopping", keywords: ["買", "購物", "商場", "耳機", "衫", "鞋", "家電", "百貨"] }
+    { category: "transport", keywords: ["地鐵", "的士", "uber", "巴士", "高鐵", "交通", "停車場", "jr", "japan railway", "mrt"] },
+    { category: "entertainment", keywords: ["戲院", "cinema", "concert", "演唱會", "電影", "院線", "mcl", "百老匯院線", "英皇戲院"] },
+    { category: "online", keywords: ["網上", "online", "app", "官網", "網站", "淘寶", "amazon", "電商", "netflix", "spotify", "disney+", "youtube", "apple tv", "apple music", "訂閱"] },
+    { category: "shopping", keywords: ["購物", "商場", "耳機", "衫", "鞋", "家電", "百貨", "uniqlo", "優衣庫", "ikea", "log-on", "pop mart", "popmart", "唐吉訶德", "松本清", "lululemon", "harrods"] }
   ];
 
   const matchedLocation = locationMatchers.find((item) => item.keywords.some((keyword) => normalized.includes(keyword.toLowerCase())));
@@ -1561,8 +1588,13 @@ function evaluateCard(card, scenario, rateMode) {
   });
 
   const offerRewardAmount = matchingOffers.reduce((sum, offer) => {
-    const rawBonus = amount * Number(offer.bonusRate || 0) / 100;
+    const bonusRate = Number(offer.bonusRate || 0);
     const cap = Number(offer.cap || 0);
+    if (bonusRate === 0 && cap > 0) {
+      // 固定金額獎賞（如迎新優惠），直接加上 cap 金額
+      return sum + cap;
+    }
+    const rawBonus = amount * bonusRate / 100;
     return sum + (cap > 0 ? Math.min(rawBonus, cap) : rawBonus);
   }, 0);
 
