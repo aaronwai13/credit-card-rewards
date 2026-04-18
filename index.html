@@ -618,7 +618,7 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "網上零售 5%",
   "本地餐飲及娛樂 1%"
 ]);
-const APP_VERSION = "v2026.04.19.2";
+const APP_VERSION = "v2026.04.19.3";
 const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
 const CARD_DISPLAY_ORDER = [
   "BOC Chill Card",
@@ -792,15 +792,16 @@ const CANONICAL_OFFER_DEFINITIONS = [
   {
     cardName: "MMPOWER",
     title: "指定商戶 8%",
-    category: "dining",
-    tags: ["merchant", "dining", "entertainment"],
+    category: "general",
+    tags: ["merchant", "shopping"],
     bonusRate: 7.6,
     minSpend: 0,
     cap: 0,
     startDate: "2026-01-01",
     endDate: "2026-12-31",
     locations: ["香港", "網上"],
-    notes: "指定商戶簽賬高達 8%。"
+    notes: "指定商戶（Amazon、GU、lululemon、淘寶及 Uniqlo）簽賬高達 8%。",
+    requiresKeywords: ["amazon", "gu", "lululemon", "淘寶", "taobao", "uniqlo", "優衣庫"]
   },
   {
     cardName: "MMPOWER",
@@ -812,9 +813,9 @@ const CANONICAL_OFFER_DEFINITIONS = [
     cap: 0,
     startDate: "2026-01-01",
     endDate: "2026-12-31",
-    locations: ["網上"],
-    notes: "指定網上娛樂訂閱簽賬高達 8%，包括 Netflix、Disney+、Apple TV+、Spotify、YouTube Premium。",
-    requiresKeywords: ["netflix", "disney+", "apple tv", "spotify", "youtube premium", "youtube music"]
+    locations: ["網上", "香港"],
+    notes: "串流平台：Apple TV / Music、Disney+、HBO Max、HMVOD、JOOX、KKBOX、MOOV、Netflix、Spotify、Viu 及 YouTube。本港戲院：百老匯院線、影藝戲院、Cinema City 院線、英皇戲院、星達院線及 MCL 戲院。票務平台：購票通、HotdogTIX、KKTIX、撲飛、Ticketflap 及城市售票網。本港主題樂園：香港迪士尼樂園及香港海洋公園。以上簽賬高達 8%。",
+    requiresKeywords: ["apple tv", "apple music", "disney+", "hbo max", "hmvod", "joox", "kkbox", "moov", "netflix", "spotify", "viu", "youtube", "百老匯", "影藝", "cinema city", "英皇戲院", "星達", "mcl", "購票通", "hotdogtix", "kktix", "撲飛", "ticketflap", "城市售票網", "迪士尼", "海洋公園"]
   },
   {
     cardName: "MMPOWER",
@@ -827,8 +828,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
     startDate: "2026-01-01",
     endDate: "2026-12-31",
     locations: ["網上"],
-    notes: "指定網上服飾簽賬高達 8%，包括 ZARA、H&M、Uniqlo、SHEIN、ASOS 等。",
-    requiresKeywords: ["zara", "h&m", "uniqlo", "優衣庫", "shein", "asos", "服飾", "衫", "fashion"]
+    notes: "由恒生及 Mastercard Asia 按商戶編號界定為服飾類別之合資格網上零售簽賬高達 8%。"
   },
   {
     cardName: "MMPOWER",
@@ -841,7 +841,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
     startDate: "2026-01-01",
     endDate: "2026-12-31",
     locations: ["網上"],
-    notes: "合資格網上購物簽賬高達 5%。"
+    notes: "除網上娛樂及網上服飾以外的其他網上簽賬高達 5%。"
   },
   {
     cardName: "MMPOWER",
@@ -854,7 +854,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
     startDate: "2026-01-01",
     endDate: "2026-12-31",
     locations: ["海外"],
-    notes: "海外外幣簽賬高達 4%。"
+    notes: "於香港以外國家或地區的實體店以外幣進行的合資格零售簽賬高達 4%；以港幣進行的交易不屬此類別。"
   },
   {
     cardName: "恒生多貨幣扣賬卡",
@@ -1629,7 +1629,7 @@ function evaluateCard(card, scenario, rateMode) {
     offerRewardAmount,
     totalRewardAmount,
     bestRate,
-    offerTitles: matchingOffers.map((offer) => offer.title),
+    offerTitles: matchingOffers.map((offer) => offer.minSpend > 0 ? `${offer.title}（需達 HK$${offer.minSpend}）` : offer.title),
     explanation: explanationParts.join("；")
   };
 }
