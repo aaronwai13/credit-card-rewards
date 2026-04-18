@@ -610,7 +610,13 @@
 
 <script>
 const STORAGE_KEY = "credit_card_rewards_v2";
-const APP_VERSION = "v2026.04.18.11";
+// 已改名或刪除的舊正式優惠標題，migration 時清除
+const DEPRECATED_OFFER_TITLES = new Set([
+  "海外外幣 6%",
+  "網上零售 5%",
+  "本地餐飲及娛樂 1%"
+]);
+const APP_VERSION = "v2026.04.18.12";
 const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
 const CARD_DISPLAY_ORDER = [
   "BOC Chill Card",
@@ -1166,13 +1172,6 @@ function normalizeOffer(offer) {
     requiresKeywords: Array.isArray(offer.requiresKeywords) ? offer.requiresKeywords : []
   };
 }
-
-// 已改名或刪除的舊正式優惠標題，migration 時清除
-const DEPRECATED_OFFER_TITLES = new Set([
-  "海外外幣 6%",
-  "網上零售 5%",
-  "本地餐飲及娛樂 1%"
-]);
 
 function migrateStoredData() {
   const existingCards = Array.isArray(state.cards) ? state.cards : [];
