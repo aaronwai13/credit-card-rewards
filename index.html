@@ -616,9 +616,10 @@ const STORAGE_KEY = "credit_card_rewards_v2";
 const DEPRECATED_OFFER_TITLES = new Set([
   "海外外幣 6%",
   "網上零售 5%",
-  "本地餐飲及娛樂 1%"
+  "本地餐飲及娛樂 1%",
+  "網上旅遊/娛樂/訂閱 港幣 5.4%"
 ]);
-const APP_VERSION = "v2026.04.19.5";
+const APP_VERSION = "v2026.04.19.6";
 const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
 const CARD_DISPLAY_ORDER = [
   "BOC Chill Card",
@@ -721,12 +722,12 @@ const CANONICAL_OFFER_DEFINITIONS = [
     startDate: "2026-01-01",
     endDate: "2026-06-30",
     locations: ["海外"],
-    notes: "以外幣交易及支付的合資格海外簽賬可享 4% 現金回贈；以港幣支付外幣簽賬不包括在內。"
+    notes: "合資格海外簽賬（於海外商戶不論實體或網上以外幣交易及支付）可享 4% 現金回贈；以港幣支付的外幣簽賬不包括在內。"
   },
   {
     cardName: "BOC Chill Card",
     title: "網上簽賬 4%",
-    category: "online",
+    category: "general",
     tags: ["online"],
     bonusRate: 3.6,
     minSpend: 0,
@@ -734,7 +735,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
     startDate: "2026-01-01",
     endDate: "2026-06-30",
     locations: ["網上"],
-    notes: "合資格網上簽賬可享 4% 現金回贈；電子錢包簽賬不算。"
+    notes: "合資格網上簽賬（於網上完成之零售簽賬，簽賬地點及貨幣種類不限）可享 4% 現金回贈；電子錢包簽賬不算。"
   },
   {
     cardName: "BOC Chill Card",
@@ -747,7 +748,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
     startDate: "2026-01-01",
     endDate: "2026-06-30",
     locations: ["香港", "網上"],
-    notes: "僅適用指定 Chill 商戶：全港戲院、Apple TV、App Store、Disney+、Netflix、Spotify、McDonald's、Pacific Coffee、Starbucks、Dyson、Samsung、Sony、Uniqlo、GU、IKEA、LOG-ON。",
+    notes: "每月累積合資格簽賬（本地或海外實體商戶以實體卡或 Apple Pay 支付）滿 HK$1,000，Chill 商戶簽賬可享 8% 現金回贈：全港戲院、Apple TV、App Store、Disney+、Netflix、Spotify、McDonald's、Pacific Coffee、Starbucks、Dyson、Samsung、Sony、Uniqlo、GU、IKEA、LOG-ON。",
     requiresKeywords: ["戲院", "睇戲", "電影", "cinema", "apple tv", "app store", "disney+", "netflix", "spotify", "mcdonald", "麥當勞", "pacific coffee", "starbucks", "星巴克", "dyson", "samsung", "sony", "uniqlo", "優衣庫", "gu", "ikea", "log-on", "log on"]
   },
   {
@@ -761,7 +762,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
     startDate: "2026-01-01",
     endDate: "2026-12-31",
     locations: ["澳門", "內地", "海外"],
-    notes: "賞世界：海外、中國內地及澳門簽賬 2.4% 回贈。"
+    notes: "賞世界：於海外、中國內地及澳門簽賬可享 2.4% 回贈；本地簽賬享 0.4% 基礎回贈。"
   },
   {
     cardName: "PayMe 銀聯卡",
@@ -774,7 +775,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
     startDate: "2026-01-01",
     endDate: "2026-04-22",
     locations: ["香港", "澳門", "內地", "海外"],
-    notes: "2026-04-22 前以 Apple Pay 免觸支付，港幣、人民幣或澳門幣付款可享 3% 回贈。"
+    notes: "2026-04-22 前於香港、中國內地、澳門及全球各地，以 PayMe 銀聯卡經 Apple Pay 免觸支付，港幣、人民幣或澳門幣付款可享 3% 回贈。"
   },
   {
     cardName: "PayMe 銀聯卡",
@@ -787,7 +788,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
     startDate: "2026-01-01",
     endDate: "2026-04-22",
     locations: ["海外"],
-    notes: "2026-04-22 前以 Apple Pay 免觸支付，其他貨幣付款可享 10% 回贈。"
+    notes: "2026-04-22 前以 PayMe 銀聯卡經 Apple Pay 免觸支付，以其他貨幣付款可享 10% 回贈。"
   },
   {
     cardName: "MMPOWER",
@@ -800,7 +801,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
     startDate: "2026-01-01",
     endDate: "2026-12-31",
     locations: ["香港", "網上"],
-    notes: "指定商戶（Amazon、GU、lululemon、淘寶及 Uniqlo）簽賬高達 8%。",
+    notes: "指定商戶（Amazon、GU、lululemon、淘寶及 Uniqlo）簽賬高達 8% +FUN Dollars。",
     requiresKeywords: ["amazon", "gu", "lululemon", "淘寶", "taobao", "uniqlo", "優衣庫"]
   },
   {
@@ -814,7 +815,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
     startDate: "2026-01-01",
     endDate: "2026-12-31",
     locations: ["網上", "香港"],
-    notes: "串流平台：Apple TV / Music、Disney+、HBO Max、HMVOD、JOOX、KKBOX、MOOV、Netflix、Spotify、Viu 及 YouTube。本港戲院：百老匯院線、影藝戲院、Cinema City 院線、英皇戲院、星達院線及 MCL 戲院。票務平台：購票通、HotdogTIX、KKTIX、撲飛、Ticketflap 及城市售票網。本港主題樂園：香港迪士尼樂園及香港海洋公園。以上簽賬高達 8%。",
+    notes: "串流平台：Apple TV / Music、Disney+、HBO Max、HMVOD、JOOX、KKBOX、MOOV、Netflix、Spotify、Viu 及 YouTube。本港戲院：百老匯院線、影藝戲院、Cinema City 院線、英皇戲院、星達院線（前嘉禾院線）及 MCL 戲院。票務平台：購票通、HotdogTIX、KKTIX、撲飛、Ticketflap 及城市售票網。本港主題樂園：香港迪士尼樂園及香港海洋公園。以上簽賬高達 8% +FUN Dollars。",
     requiresKeywords: ["apple tv", "apple music", "disney+", "hbo max", "hmvod", "joox", "kkbox", "moov", "netflix", "spotify", "viu", "youtube", "百老匯", "影藝", "cinema city", "英皇", "星達", "mcl", "購票通", "hotdogtix", "kktix", "撲飛", "ticketflap", "城市售票網", "迪士尼", "海洋公園", "睇戲", "電影"]
   },
   {
@@ -828,13 +829,13 @@ const CANONICAL_OFFER_DEFINITIONS = [
     startDate: "2026-01-01",
     endDate: "2026-12-31",
     locations: ["網上"],
-    notes: "由恒生及 Mastercard Asia 按商戶編號界定為服飾類別之合資格網上零售簽賬高達 8%。",
+    notes: "由恒生、Mastercard Asia / Pacific (Hong Kong) Limited 或相關收單銀行根據商戶編號界定為服飾類別之合資格零售簽賬高達 8% +FUN Dollars。",
     requiresKeywords: ["服飾", "衫", "裙", "褲", "外套", "衣服", "fashion", "clothing", "zara", "h&m", "shein", "asos", "farfetch", "gap"]
   },
   {
     cardName: "MMPOWER",
     title: "網購 5%",
-    category: "online",
+    category: "general",
     tags: ["online"],
     bonusRate: 4.6,
     minSpend: 0,
@@ -842,7 +843,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
     startDate: "2026-01-01",
     endDate: "2026-12-31",
     locations: ["網上"],
-    notes: "除網上娛樂及網上服飾以外的其他網上簽賬高達 5%。"
+    notes: "除網上娛樂及網上服飾以外的其他網上簽賬高達 5% +FUN Dollars。"
   },
   {
     cardName: "MMPOWER",
@@ -855,7 +856,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
     startDate: "2026-01-01",
     endDate: "2026-12-31",
     locations: ["海外"],
-    notes: "於香港以外國家或地區的實體店以外幣進行的合資格零售簽賬高達 4%；以港幣進行的交易不屬此類別。"
+    notes: "於香港以外國家或地區的實體店以外幣進行的合資格零售簽賬高達 4% +FUN Dollars；以港幣進行的交易不屬此類別。"
   },
   {
     cardName: "恒生多貨幣扣賬卡",
@@ -868,13 +869,13 @@ const CANONICAL_OFFER_DEFINITIONS = [
     startDate: "2026-01-01",
     endDate: "2026-06-30",
     locations: ["海外"],
-    notes: "指定海外商戶（每個商戶限一次）：【日本】松本清、唐吉訶德、阪急／阪神百貨、大丸松坂屋、樂天免稅店東京銀座店、三越伊勢丹、三井 Outlet Park 爵士之夢長島、三井 Outlet Park 木更津；【英國】Harrods；【加拿大】Lululemon；【澳洲】Coles、Woolworths；【泰國】曼谷 Emporium、Paragon Department Stores。",
+    notes: "30/6 前於指定海外商戶作合資格交易可享 15% 現金回贈，只可於每個指定商戶享現金回贈一次：【日本】松本清、唐吉訶德、阪急／阪神百貨、大丸松坂屋、樂天免稅店東京銀座店、三越伊勢丹、三井 Outlet Park 爵士之夢長島、三井 Outlet Park 木更津；【英國】Harrods；【加拿大】Lululemon；【澳洲】Coles、Woolworths；【泰國】曼谷 Emporium、Paragon Department Stores。",
     requiresKeywords: ["松本清", "唐吉訶德", "阪急", "阪神", "大丸", "松坂屋", "樂天免稅", "三越", "伊勢丹", "三井", "harrods", "lululemon", "coles", "woolworths", "emporium", "paragon"]
   },
   {
     cardName: "恒生多貨幣扣賬卡",
     title: "指定海外交通 20%",
-    category: "transport",
+    category: "general",
     tags: ["overseas", "transport"],
     bonusRate: 19.6,
     minSpend: 0,
@@ -882,7 +883,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
     startDate: "2026-01-01",
     endDate: "2026-06-30",
     locations: ["海外"],
-    notes: "指定海外交通（上限 HK$120）：【澳洲】Transport for NSW TrainLink、Translink；【加拿大】Go Transit；【中國】中國鐵路 12306、北京地鐵、Go 巴出行、上海地鐵、上海磁浮、環島中港通；【日本】Japan Railway；【泰國】Mass Rapid Transit Authority of Thailand；【英國】Lothian Buses、Transport for Greater Manchester、Transport for London。",
+    notes: "30/6 前於指定海外交通作合資格交易可享 20% 現金回贈（上限 HK$120）：【澳洲】Transport for NSW TrainLink、Translink；【加拿大】Go Transit；【中國】中國鐵路 12306、北京地鐵、Go 巴出行、上海地鐵、上海磁浮、環島中港通；【日本】Japan Railway；【泰國】Mass Rapid Transit Authority of Thailand；【英國】Lothian Buses、Transport for Greater Manchester、Transport for London。",
     requiresKeywords: ["translink", "trainlink", "go transit", "中國鐵路", "北京地鐵", "go巴出行", "上海地鐵", "上海磁浮", "環島中港通", "japan railway", "jr", "mass rapid transit", "mrt", "lothian buses", "transport for greater manchester", "transport for london", "tfl"]
   },
   {
@@ -896,13 +897,27 @@ const CANONICAL_OFFER_DEFINITIONS = [
     startDate: "2026-01-01",
     endDate: "2026-06-30",
     locations: ["香港"],
-    notes: "指定本地商戶（上限 HK$120）：POP MART、唐吉訶德、松本清、MCL 戲院、百老匯院線、英皇戲院。",
+    notes: "30/6 前於指定本地商戶作合資格交易可享 20% 現金回贈（上限 HK$120）：POP MART、唐吉訶德、松本清、MCL 戲院、百老匯院線、英皇戲院。",
     requiresKeywords: ["pop mart", "popmart", "唐吉訶德", "松本清", "mcl", "百老匯", "英皇", "睇戲", "電影"]
   },
   {
     cardName: "AEON WAKUWAKU",
+    title: "App Store 迎新 HK$50",
+    category: "general",
+    tags: ["subscription", "online"],
+    bonusRate: 0,
+    minSpend: 0,
+    cap: 50,
+    startDate: "2026-01-01",
+    endDate: "2026-12-31",
+    locations: ["網上"],
+    notes: "✅（待返）發卡後 60 日內於 App Store 作任何簽賬消費可享 HK$50 回贈。",
+    requiresKeywords: ["app store"]
+  },
+  {
+    cardName: "AEON WAKUWAKU",
     title: "網上簽賬 6%",
-    category: "online",
+    category: "general",
     tags: ["online"],
     bonusRate: 5.6,
     minSpend: 0,
@@ -910,7 +925,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
     startDate: "2026-01-01",
     endDate: "2026-12-31",
     locations: ["網上"],
-    notes: "網上簽賬 6% 回贈；電子錢包簽賬不算。"
+    notes: "於網上以港幣或外幣完成簽賬可享 6% 回贈；以電子錢包之簽賬不算。"
   },
   {
     cardName: "AEON WAKUWAKU",
@@ -923,7 +938,8 @@ const CANONICAL_OFFER_DEFINITIONS = [
     startDate: "2026-01-01",
     endDate: "2026-12-31",
     locations: ["海外"],
-    notes: "於日本以日圓完成簽賬可享 3% 回贈。"
+    notes: "於日本以日圓完成簽賬可享 3% 回贈。",
+    requiresKeywords: ["日本", "japan", "日幣", "日圓", "yen", "jpy"]
   },
   {
     cardName: "AEON WAKUWAKU",
@@ -936,20 +952,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
     startDate: "2026-01-01",
     endDate: "2026-12-31",
     locations: ["香港"],
-    notes: "香港酒樓、餐廳、快餐店及酒店餐飲簽賬可享 1% 回贈。"
-  },
-  {
-    cardName: "AEON WAKUWAKU",
-    title: "App Store 迎新 HK$50",
-    category: "online",
-    tags: ["subscription", "online"],
-    bonusRate: 0,
-    minSpend: 0,
-    cap: 50,
-    startDate: "2026-01-01",
-    endDate: "2026-12-31",
-    locations: ["網上"],
-    notes: "發卡後 60 日內於 App Store 作任何簽賬可享 HK$50 回贈。"
+    notes: "於香港之酒樓、餐廳、快餐店及酒店餐飲以港幣完成簽賬可享 1% 回贈。"
   },
   {
     cardName: "DBS Live Fresh",
@@ -962,25 +965,25 @@ const CANONICAL_OFFER_DEFINITIONS = [
     startDate: "2026-01-01",
     endDate: "2026-12-31",
     locations: ["網上", "海外"],
-    notes: "你揀咗網上旅遊商戶、娛樂及指定服務訂閱；外幣簽賬可享 6%。單一淨簽賬須滿 HK$300。"
+    notes: "合資格網上旅遊商戶、娛樂及指定服務訂閱以外幣簽賬可享 6% 回贈；單一淨簽賬須滿 HK$300，DCC 不適用。"
   },
   {
     cardName: "DBS Live Fresh",
-    title: "網上旅遊/娛樂/訂閱 港幣 5.4%",
+    title: "網上旅遊/娛樂/訂閱 港幣 5%",
     category: "general",
     tags: ["travel", "entertainment", "subscription", "online"],
-    bonusRate: 5,
+    bonusRate: 4.6,
     minSpend: 300,
     cap: 0,
     startDate: "2026-01-01",
     endDate: "2026-12-31",
     locations: ["網上"],
-    notes: "你揀咗網上旅遊商戶、娛樂及指定服務訂閱；港幣簽賬可享 5.4%。單一淨簽賬須滿 HK$300。"
+    notes: "合資格網上旅遊商戶、娛樂及指定服務訂閱以港幣簽賬可享 5% 回贈；單一淨簽賬須滿 HK$300，DCC 不適用。"
   },
   {
     cardName: "DBS Live Fresh",
     title: "合資格網上外幣 1%",
-    category: "online",
+    category: "general",
     tags: ["online", "overseas"],
     bonusRate: 0.6,
     minSpend: 0,
@@ -988,7 +991,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
     startDate: "2026-01-01",
     endDate: "2026-12-31",
     locations: ["網上", "海外"],
-    notes: "合資格網上外幣簽賬本身可享 1% 回贈。"
+    notes: "合資格網上外幣簽賬可享 1% 回贈。"
   },
   {
     cardName: "DBS Live Fresh",
@@ -996,25 +999,26 @@ const CANONICAL_OFFER_DEFINITIONS = [
     category: "general",
     tags: ["welcome"],
     bonusRate: 0,
-    minSpend: 8000,
+    minSpend: 5000,
     cap: 500,
     startDate: "2026-01-01",
     endDate: "2026-12-31",
-    locations: ["香港"],
-    notes: "首 3 個月合資格簽賬累計滿 HK$8,000 可享 HK$500 現金回贈迎新優惠。"
+    locations: ["香港", "網上", "海外"],
+    notes: "✅（待返）發卡 3 個月內累積合資格簽賬滿 HK$5,000 可享 HK$500 現金回贈；最遲於完成要求後 6 個月回贈。"
   },
   {
     cardName: "DBS Live Fresh",
     title: "迎新 HK$100",
     category: "general",
-    tags: ["welcome"],
+    tags: ["welcome", "subscription"],
     bonusRate: 0,
-    minSpend: 800,
+    minSpend: 0,
     cap: 100,
     startDate: "2026-01-01",
     endDate: "2026-12-31",
-    locations: ["香港"],
-    notes: "首 3 個月每月合資格簽賬滿 HK$800 可享 HK$100 現金回贈迎新優惠。"
+    locations: ["網上"],
+    notes: "✅（待返）發卡 4 個月內於任何兩個月（3 月 + 4 月）於指定合資格訂閱服務各簽賬任何金額一次可享 HK$100 現金回贈；最遲於完成要求後 6 個月回贈。",
+    requiresKeywords: ["訂閱", "subscription", "netflix", "spotify", "disney+", "apple tv", "apple music", "joox", "kkbox", "viu", "moov", "youtube"]
   }
 ];
 
