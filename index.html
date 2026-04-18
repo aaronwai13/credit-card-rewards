@@ -618,7 +618,7 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "網上零售 5%",
   "本地餐飲及娛樂 1%"
 ]);
-const APP_VERSION = "v2026.04.19.4";
+const APP_VERSION = "v2026.04.19.5";
 const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
 const CARD_DISPLAY_ORDER = [
   "BOC Chill Card",
@@ -748,7 +748,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
     endDate: "2026-06-30",
     locations: ["香港", "網上"],
     notes: "僅適用指定 Chill 商戶：全港戲院、Apple TV、App Store、Disney+、Netflix、Spotify、McDonald's、Pacific Coffee、Starbucks、Dyson、Samsung、Sony、Uniqlo、GU、IKEA、LOG-ON。",
-    requiresKeywords: ["戲院", "cinema", "apple tv", "app store", "disney+", "netflix", "spotify", "mcdonald", "麥當勞", "pacific coffee", "starbucks", "星巴克", "dyson", "samsung", "sony", "uniqlo", "優衣庫", "gu", "ikea", "log-on", "log on"]
+    requiresKeywords: ["戲院", "睇戲", "電影", "cinema", "apple tv", "app store", "disney+", "netflix", "spotify", "mcdonald", "麥當勞", "pacific coffee", "starbucks", "星巴克", "dyson", "samsung", "sony", "uniqlo", "優衣庫", "gu", "ikea", "log-on", "log on"]
   },
   {
     cardName: "HSBC 金卡",
@@ -820,7 +820,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
   {
     cardName: "MMPOWER",
     title: "網上服飾 8%",
-    category: "shopping",
+    category: "general",
     tags: ["online", "shopping"],
     bonusRate: 7.6,
     minSpend: 0,
@@ -828,7 +828,8 @@ const CANONICAL_OFFER_DEFINITIONS = [
     startDate: "2026-01-01",
     endDate: "2026-12-31",
     locations: ["網上"],
-    notes: "由恒生及 Mastercard Asia 按商戶編號界定為服飾類別之合資格網上零售簽賬高達 8%。"
+    notes: "由恒生及 Mastercard Asia 按商戶編號界定為服飾類別之合資格網上零售簽賬高達 8%。",
+    requiresKeywords: ["服飾", "衫", "裙", "褲", "外套", "衣服", "fashion", "clothing", "zara", "h&m", "shein", "asos", "farfetch", "gap"]
   },
   {
     cardName: "MMPOWER",
@@ -887,7 +888,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
   {
     cardName: "恒生多貨幣扣賬卡",
     title: "指定本地商戶 20%",
-    category: "shopping",
+    category: "general",
     tags: ["merchant", "shopping", "entertainment"],
     bonusRate: 19.6,
     minSpend: 0,
@@ -896,7 +897,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
     endDate: "2026-06-30",
     locations: ["香港"],
     notes: "指定本地商戶（上限 HK$120）：POP MART、唐吉訶德、松本清、MCL 戲院、百老匯院線、英皇戲院。",
-    requiresKeywords: ["pop mart", "popmart", "唐吉訶德", "松本清", "mcl", "百老匯", "英皇戲院"]
+    requiresKeywords: ["pop mart", "popmart", "唐吉訶德", "松本清", "mcl", "百老匯", "英皇", "睇戲", "電影"]
   },
   {
     cardName: "AEON WAKUWAKU",
