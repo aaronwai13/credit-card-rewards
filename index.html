@@ -616,7 +616,7 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "網上零售 5%",
   "本地餐飲及娛樂 1%"
 ]);
-const APP_VERSION = "v2026.04.18.12";
+const APP_VERSION = "v2026.04.18.13";
 const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
 const CARD_DISPLAY_ORDER = [
   "BOC Chill Card",
@@ -1197,12 +1197,11 @@ function migrateStoredData() {
   const existingCardById = Object.fromEntries(existingCards.map((card) => [card.id, card]));
   const existingOffers = Array.isArray(state.offers) ? state.offers : [];
   const customOffers = existingOffers.filter((offer) => {
-    const linkedCard = existingCardById[offer.cardId];
-    // 自訂卡的優惠保留
-    if (!linkedCard || !canonicalCardNames.has(linkedCard.name)) return true;
     // 已廢棄的正式優惠標題，清除
     if (DEPRECATED_OFFER_TITLES.has(offer.title)) return false;
-    return true;
+    // 只保留自訂卡（非正式卡）的優惠；正式卡的優惠由 canonicalOffers 重建
+    const linkedCard = existingCardById[offer.cardId];
+    return !linkedCard || !canonicalCardNames.has(linkedCard.name);
   });
 
   const canonicalOffers = CANONICAL_OFFER_DEFINITIONS.map((definition) => {
