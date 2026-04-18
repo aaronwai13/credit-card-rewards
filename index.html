@@ -108,6 +108,9 @@
     padding-bottom: 10px;
   }
   .header-version {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     padding-bottom: 10px;
   }
   .header-version .version-chip {
@@ -121,6 +124,22 @@
     font-size: 9px;
     letter-spacing: 0.05em;
   }
+  .refresh-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: none;
+    color: var(--muted);
+    font-size: 13px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+  }
+  .refresh-btn:active { opacity: 0.6; }
 
   /* MAIN SCROLL */
   main {
@@ -459,7 +478,10 @@
       <div class="header-eyebrow">Spend Smarter</div>
       <div class="header-title">碌卡助手</div>
       <div class="header-sub">輸入消費場景，即時計出最值得碌的卡</div>
-      <div class="header-version"><span class="version-chip">版本 <span id="appVersion"></span></span></div>
+      <div class="header-version">
+        <span class="version-chip"><span id="appVersion"></span></span>
+        <button class="refresh-btn" onclick="location.reload(true)" aria-label="重新載入">↺</button>
+      </div>
     </div>
   </header>
 
@@ -616,7 +638,7 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "網上零售 5%",
   "本地餐飲及娛樂 1%"
 ]);
-const APP_VERSION = "v2026.04.18.13";
+const APP_VERSION = "v2026.04.18.14";
 const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
 const CARD_DISPLAY_ORDER = [
   "BOC Chill Card",
