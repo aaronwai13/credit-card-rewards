@@ -127,19 +127,16 @@
   .refresh-btn {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
+    padding: 3px 8px;
     border-radius: 999px;
     border: 1px solid var(--border);
     background: none;
     color: var(--muted);
-    font-size: 13px;
+    font-size: 11px;
     cursor: pointer;
     line-height: 1;
-    padding: 0;
   }
-  .refresh-btn:active { opacity: 0.6; }
+  .refresh-btn:active { opacity: 0.5; }
 
   /* MAIN SCROLL */
   main {
@@ -480,7 +477,7 @@
       <div class="header-sub">輸入消費場景，即時計出最值得碌的卡</div>
       <div class="header-version">
         <span class="version-chip"><span id="appVersion"></span></span>
-        <button class="refresh-btn" onclick="location.reload(true)" aria-label="重新載入">↺</button>
+        <button class="refresh-btn" id="refreshBtn" aria-label="重新載入">↺</button>
       </div>
     </div>
   </header>
@@ -638,7 +635,7 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "網上零售 5%",
   "本地餐飲及娛樂 1%"
 ]);
-const APP_VERSION = "v2026.04.18.14";
+const APP_VERSION = "v2026.04.18.15";
 const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
 const CARD_DISPLAY_ORDER = [
   "BOC Chill Card",
@@ -1100,6 +1097,7 @@ function bindEvents() {
   document.getElementById("card-bank-filter").addEventListener("change", renderCards);
   document.getElementById("card-category-filter").addEventListener("change", renderCards);
   document.getElementById("clearCardFiltersBtn").addEventListener("click", clearCardFilters);
+  document.getElementById("refreshBtn").addEventListener("click", () => window.location.reload());
 }
 
 function switchPage(page) {
