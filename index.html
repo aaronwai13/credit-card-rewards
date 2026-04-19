@@ -619,7 +619,7 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "本地餐飲及娛樂 1%",
   "網上旅遊/娛樂/訂閱 港幣 5.4%"
 ]);
-const APP_VERSION = "v2026.04.19.6";
+const APP_VERSION = "v2026.04.20.1";
 const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
 const CARD_DISPLAY_ORDER = [
   "BOC Chill Card",
@@ -1503,6 +1503,7 @@ function runRecommendation() {
 
   const scenario = { description, amount, currency, date };
   Object.assign(scenario, inferScenarioFromText(description));
+  scenario.currencyBucket = inferCurrencyBucket(currency, scenario.locations, description);
 
   const rateMode = amount === null || amount <= 0;
 
@@ -1521,7 +1522,7 @@ function runRecommendation() {
           <div class="meta">
             <span>${escapeHtml(result.card.bank)}</span>
             <span>${escapeHtml(CATEGORY_LABELS[scenario.category] || scenario.category)}</span>
-            <span>${escapeHtml(scenario.location)}</span>
+            <span>${escapeHtml(formatScenarioLocations(scenario.locations))}</span>
           </div>
         </div>
         <div class="result-value">${rateMode ? formatPercent(result.bestRate) : formatCurrencyWithCode(result.totalRewardAmount, currency)}</div>
@@ -1530,13 +1531,15 @@ function runRecommendation() {
         ${rateMode ? `
           <div><strong>最高回贈率：</strong>${formatPercent(result.bestRate)}</div>
           <div><strong>命中活動：</strong>${escapeHtml(result.offerTitles.length ? result.offerTitles.join(" / ") : "無")}</div>
+          <div><strong>優惠處理：</strong>${escapeHtml(result.offerSelectionSummary)}</div>
         ` : `
           <div><strong>基礎回贈：</strong>${formatCurrencyWithCode(result.baseRewardAmount, currency)} (${formatPercent(result.baseRateApplied)})</div>
           <div><strong>分類倍率：</strong>${formatNumber(result.categoryMultiplier)}x</div>
           <div><strong>活動加碼：</strong>${formatCurrencyWithCode(result.offerRewardAmount, currency)}</div>
           <div><strong>命中活動：</strong>${escapeHtml(result.offerTitles.length ? result.offerTitles.join(" / ") : "無")}</div>
+          <div><strong>優惠處理：</strong>${escapeHtml(result.offerSelectionSummary)}</div>
         `}
-        <div><strong>解析結果：</strong>${escapeHtml(scenario.description)} → ${escapeHtml(scenario.location)} / ${escapeHtml(CATEGORY_LABELS[scenario.category] || scenario.category)}</div>
+        <div><strong>解析結果：</strong>${escapeHtml(scenario.description)} → ${escapeHtml(formatScenarioLocations(scenario.locations))} / ${escapeHtml(CATEGORY_LABELS[scenario.category] || scenario.category)}</div>
       </div>
       <p class="result-note">${escapeHtml(result.explanation)}</p>
     </article>
@@ -1545,12 +1548,14 @@ function runRecommendation() {
 
 function inferScenarioFromText(text) {
   const normalized = text.toLowerCase();
+  const applePayMentioned = /\bapple\s*pay\b/i.test(text);
+  const appStoreMentioned = /\bapp\s*store\b/i.test(text);
   const locationMatchers = [
-    { location: "網上", keywords: ["網上", "online", "app", "官網", "網站", "淘寶", "amazon", "hk tvmall", "tvmall", "京東", "netflix", "spotify", "disney+", "youtube", "apple tv", "apple music", "訂閱"] },
     { location: "澳門", keywords: ["澳門", "macau"] },
     { location: "內地", keywords: ["內地", "大陸", "深圳", "廣州", "上海", "北京", "中國", "china"] },
     { location: "海外", keywords: ["海外", "日本", "台灣", "韓國", "新加坡", "歐洲", "美國", "英國", "泰國", "澳洲", "加拿大", "旅行", "旅遊", "foreign"] },
-    { location: "香港", keywords: ["香港", "本地"] }
+    { location: "網上", keywords: ["網上", "online", "官網", "網站", "淘寶", "amazon", "hk tvmall", "tvmall", "京東", "netflix", "spotify", "disney+", "youtube", "apple tv", "apple music", "訂閱", "app store"] },
+    { location: "香港", keywords: ["香港", "hk", "本地"] }
   ];
   const categoryMatchers = [
     { category: "dining", keywords: ["餐廳", "食", "晚飯", "午飯", "早餐", "cafe", "咖啡", "自助餐", "酒吧", "餐飲", "mcdonald", "麥當勞", "starbucks", "星巴克", "pacific coffee"] },
@@ -1558,22 +1563,41 @@ function inferScenarioFromText(text) {
     { category: "groceries", keywords: ["超市", "買餸", "百佳", "惠康", "groceries"] },
     { category: "transport", keywords: ["地鐵", "的士", "uber", "巴士", "高鐵", "交通", "停車場", "jr", "japan railway", "mrt"] },
     { category: "entertainment", keywords: ["戲院", "睇戲", "睇電影", "看戲", "看電影", "cinema", "concert", "演唱會", "電影", "院線", "mcl", "百老匯", "英皇戲院", "影藝", "星達", "迪士尼", "海洋公園"] },
-    { category: "online", keywords: ["網上", "online", "app", "官網", "網站", "淘寶", "amazon", "電商", "netflix", "spotify", "disney+", "youtube", "apple tv", "apple music", "訂閱"] },
+    { category: "online", keywords: ["網上", "online", "官網", "網站", "淘寶", "amazon", "電商", "netflix", "spotify", "disney+", "youtube", "apple tv", "apple music", "訂閱", "app store"] },
     { category: "shopping", keywords: ["購物", "商場", "耳機", "衫", "鞋", "家電", "百貨", "uniqlo", "優衣庫", "ikea", "log-on", "pop mart", "popmart", "唐吉訶德", "松本清", "lululemon", "harrods"] }
   ];
 
-  const matchedLocation = locationMatchers.find((item) => item.keywords.some((keyword) => normalized.includes(keyword.toLowerCase())));
   const matchedCategory = categoryMatchers.find((item) => item.keywords.some((keyword) => normalized.includes(keyword.toLowerCase())));
+  const matchedLocations = locationMatchers
+    .filter((item) => item.keywords.some((keyword) => normalized.includes(keyword.toLowerCase())))
+    .map((item) => item.location);
+  const uniqueLocations = [...new Set(matchedLocations)];
+  const scenarioTags = new Set();
+
+  if (uniqueLocations.includes("網上")) scenarioTags.add("online");
+  if (uniqueLocations.includes("海外")) scenarioTags.add("overseas");
+  if (matchedCategory) scenarioTags.add(matchedCategory.category);
+  if (normalized.includes("日本")) scenarioTags.add("japan");
+  if (appStoreMentioned || normalized.includes("netflix") || normalized.includes("spotify") || normalized.includes("disney+") || normalized.includes("apple tv") || normalized.includes("apple music") || normalized.includes("訂閱")) {
+    scenarioTags.add("subscription");
+  }
+  if (normalized.includes("戲院") || normalized.includes("睇戲") || normalized.includes("電影") || normalized.includes("mcl") || normalized.includes("百老匯") || normalized.includes("英皇戲院")) {
+    scenarioTags.add("entertainment");
+  }
 
   return {
-    location: matchedLocation ? matchedLocation.location : "香港",
-    category: matchedCategory ? matchedCategory.category : "general"
+    location: uniqueLocations[0] || "香港",
+    locations: uniqueLocations.length ? uniqueLocations : ["香港"],
+    category: matchedCategory ? matchedCategory.category : "general",
+    paymentMethod: applePayMentioned ? "applepay" : "",
+    scenarioTags: [...scenarioTags],
+    merchantTokens: collectMerchantTokens(normalized)
   };
 }
 
 function evaluateCard(card, scenario, rateMode) {
   const categoryMultiplier = getCategoryMultiplier(card, scenario.category);
-  const locationMatched = locationApplies(card.locations, scenario.location);
+  const locationMatched = locationApplies(card.locations, scenario.locations);
   const effectiveMultiplier = locationMatched ? categoryMultiplier : 0;
   const baseRateApplied = card.baseRate * effectiveMultiplier;
   const amount = scenario.amount || 0;
@@ -1581,32 +1605,26 @@ function evaluateCard(card, scenario, rateMode) {
 
   const matchingOffers = state.offers.filter((offer) => {
     if (offer.cardId !== card.id) return false;
+    if (shouldIgnoreOfferForRecommendation(offer)) return false;
     if (!isDateInRange(scenario.date, offer.startDate, offer.endDate)) return false;
     if (!rateMode && amount < Number(offer.minSpend || 0)) return false;
     if (offer.category !== "general" && scenario.category !== "general" && offer.category !== scenario.category) return false;
-    if (!locationApplies(offer.locations, scenario.location)) return false;
-    if (offer.requiresKeywords && offer.requiresKeywords.length > 0) {
-      const desc = scenario.description.toLowerCase();
-      if (!offer.requiresKeywords.some((kw) => desc.includes(kw.toLowerCase()))) return false;
-    }
+    if (!locationApplies(offer.locations, scenario.locations)) return false;
+    if (!offerRuleMatchesScenario(offer, scenario)) return false;
+    if (!merchantOfferMatchesScenario(offer, scenario)) return false;
     return true;
   });
 
-  const offerRewardAmount = matchingOffers.reduce((sum, offer) => {
-    const bonusRate = Number(offer.bonusRate || 0);
-    const cap = Number(offer.cap || 0);
-    if (bonusRate === 0 && cap > 0) {
-      // 固定金額獎賞（如迎新優惠），直接加上 cap 金額
-      return sum + cap;
-    }
-    const rawBonus = amount * bonusRate / 100;
-    return sum + (cap > 0 ? Math.min(rawBonus, cap) : rawBonus);
-  }, 0);
+  const {
+    selectedOffers,
+    skippedOffers,
+    offerRewardAmount,
+    offerSelectionSummary
+  } = selectBestOfferCombination(card, scenario, matchingOffers, amount);
 
   const totalRewardAmount = baseRewardAmount + offerRewardAmount;
 
-  // Best rate = base rate + best single offer rate
-  const bestOfferRate = matchingOffers.reduce((max, offer) => Math.max(max, Number(offer.bonusRate || 0)), 0);
+  const bestOfferRate = selectedOffers.reduce((max, offer) => Math.max(max, Number(offer.bonusRate || 0)), 0);
   const bestRate = baseRateApplied + bestOfferRate;
 
   const explanationParts = [];
@@ -1620,8 +1638,11 @@ function evaluateCard(card, scenario, rateMode) {
   } else {
     explanationParts.push("沒有額外類別加成，按基礎回贈計算");
   }
-  if (matchingOffers.length) {
-    explanationParts.push("同時命中 " + matchingOffers.length + " 個活動");
+  if (selectedOffers.length) {
+    explanationParts.push("命中 " + selectedOffers.length + " 個已採用活動");
+    if (skippedOffers.length) {
+      explanationParts.push("同組優惠已自動擇優，不重複相加");
+    }
   } else {
     explanationParts.push("沒有命中可疊加活動");
   }
@@ -1634,7 +1655,8 @@ function evaluateCard(card, scenario, rateMode) {
     offerRewardAmount,
     totalRewardAmount,
     bestRate,
-    offerTitles: matchingOffers.map((offer) => offer.minSpend > 0 ? `${offer.title}（需達 HK$${offer.minSpend}）` : offer.title),
+    offerTitles: selectedOffers.map((offer) => offer.minSpend > 0 ? `${offer.title}（需達 HK$${offer.minSpend}）` : offer.title),
+    offerSelectionSummary,
     explanation: explanationParts.join("；")
   };
 }
@@ -1646,7 +1668,178 @@ function getCategoryMultiplier(card, category) {
 
 function locationApplies(locations, scenarioLocation) {
   if (!Array.isArray(locations) || locations.length === 0) return true;
-  return locations.includes(scenarioLocation);
+  const scenarioLocations = Array.isArray(scenarioLocation) ? scenarioLocation : [scenarioLocation];
+  return scenarioLocations.some((location) => locations.includes(location));
+}
+
+function selectBestOfferCombination(card, scenario, offers, amount) {
+  if (!offers.length) {
+    return {
+      selectedOffers: [],
+      skippedOffers: [],
+      offerRewardAmount: 0,
+      offerSelectionSummary: "沒有命中活動"
+    };
+  }
+
+  const buckets = new Map();
+  offers.forEach((offer) => {
+    const key = getOfferSelectionKey(card, offer);
+    if (!buckets.has(key)) buckets.set(key, []);
+    buckets.get(key).push(offer);
+  });
+
+  const selectedOffers = [];
+  const skippedOffers = [];
+
+  buckets.forEach((bucketOffers) => {
+    const ranked = [...bucketOffers].sort((left, right) => {
+      const valueDiff = calculateOfferRewardAmount(right, amount) - calculateOfferRewardAmount(left, amount);
+      if (valueDiff !== 0) return valueDiff;
+      return Number(right.bonusRate || 0) - Number(left.bonusRate || 0);
+    });
+    selectedOffers.push(ranked[0]);
+    skippedOffers.push(...ranked.slice(1));
+  });
+
+  const offerRewardAmount = selectedOffers.reduce((sum, offer) => sum + calculateOfferRewardAmount(offer, amount), 0);
+  return {
+    selectedOffers,
+    skippedOffers,
+    offerRewardAmount,
+    offerSelectionSummary: buildOfferSelectionSummary(selectedOffers, skippedOffers)
+  };
+}
+
+function getOfferSelectionKey(card, offer) {
+  const title = offer.title || "";
+  if (isFixedValueOffer(offer)) return `stackable:${offer.id}`;
+  if ((offer.tags || []).includes("applepay") || /Apple Pay/i.test(title)) return `exclusive:${card.id}:applepay`;
+  if (card.name === "DBS Live Fresh" && (/網上旅遊\/娛樂\/訂閱/.test(title) || /合資格網上外幣 1%/.test(title))) {
+    return `exclusive:${card.id}:dbs-live-fresh-online`;
+  }
+  if (card.name === "MMPOWER" && (/指定商戶 8%|網上娛樂 8%|網上服飾 8%|網購 5%/.test(title))) {
+    return `exclusive:${card.id}:mmpower-primary`;
+  }
+  return `stackable:${offer.id}`;
+}
+
+function calculateOfferRewardAmount(offer, amount) {
+  const bonusRate = Number(offer.bonusRate || 0);
+  const cap = Number(offer.cap || 0);
+  if (bonusRate === 0 && cap > 0) return cap;
+  const rawBonus = amount * bonusRate / 100;
+  return cap > 0 ? Math.min(rawBonus, cap) : rawBonus;
+}
+
+function isFixedValueOffer(offer) {
+  return Number(offer.bonusRate || 0) === 0 && Number(offer.cap || 0) > 0;
+}
+
+function shouldIgnoreOfferForRecommendation(offer) {
+  if (isFixedValueOffer(offer)) return true;
+  return /迎新/.test(offer.title || "") || /迎新/.test(offer.notes || "");
+}
+
+function buildOfferSelectionSummary(selectedOffers, skippedOffers) {
+  if (!selectedOffers.length) return "沒有命中活動";
+  if (!skippedOffers.length) return "全部命中活動已計入";
+  return `已計入 ${selectedOffers.length} 個活動，並對 ${skippedOffers.length} 個互斥活動擇優`;
+}
+
+function merchantOfferMatchesScenario(offer, scenario) {
+  const keywords = Array.isArray(offer.requiresKeywords) ? offer.requiresKeywords : [];
+  const isMerchant = (offer.tags || []).includes("merchant");
+  if (!keywords.length && !isMerchant) return true;
+  const merchantTokens = scenario.merchantTokens || [];
+  const text = `${offer.title || ""} ${offer.notes || ""}`.toLowerCase();
+  const fallbackKeywords = !keywords.length ? extractMerchantKeywords(text) : keywords.map((keyword) => keyword.toLowerCase());
+  if (!fallbackKeywords.length) return false;
+  return fallbackKeywords.some((keyword) => merchantTokens.includes(keyword));
+}
+
+function offerRuleMatchesScenario(offer, scenario) {
+  const text = `${offer.title || ""} ${offer.notes || ""}`;
+  const scenarioTags = new Set(scenario.scenarioTags || []);
+
+  if (/Apple Pay/i.test(text) && scenario.paymentMethod !== "applepay") return false;
+  if (/港幣\/人民幣\/澳門幣/.test(text) && !["HKD", "CNY", "MOP"].includes(scenario.currency)) return false;
+  if ((/其他貨幣/.test(text) || /外幣/.test(text)) && scenario.currencyBucket !== "foreign") return false;
+  if ((/日本/.test(text) || /日圓/.test(text)) && !scenarioTags.has("japan")) return false;
+  if (/網上旅遊\/娛樂\/訂閱/.test(text) && !scenarioTags.has("online")) return false;
+  if (/網上旅遊\/娛樂\/訂閱/.test(text) && !["travel", "entertainment", "subscription"].some((tag) => scenarioTags.has(tag))) return false;
+  if (/合資格網上外幣 1%/.test(text) && (!scenarioTags.has("online") || scenario.currencyBucket !== "foreign")) return false;
+  return true;
+}
+
+function extractMerchantKeywords(text) {
+  const matches = text.match(/[A-Za-z0-9+&'.-]{2,}|[\u3400-\u9FFF]{2,}/gu) || [];
+  const blocked = new Set(["apple", "pay", "指定", "商戶", "海外", "本地", "交通", "簽賬", "現金回贈", "可享", "上限", "合資格"]);
+  return [...new Set(matches
+    .map((keyword) => keyword.trim().toLowerCase())
+    .filter((keyword) => keyword.length >= 2)
+    .filter((keyword) => !/^\d/.test(keyword))
+    .filter((keyword) => !blocked.has(keyword)))];
+}
+
+function formatScenarioLocations(locations) {
+  return (locations || []).join(" / ") || "香港";
+}
+
+function collectMerchantTokens(normalizedText) {
+  const aliases = [
+    ["app store", ["app store"]],
+    ["apple tv", ["apple tv"]],
+    ["netflix", ["netflix"]],
+    ["spotify", ["spotify"]],
+    ["disney+", ["disney+"]],
+    ["mcdonald", ["mcdonald", "麥當勞"]],
+    ["pacific coffee", ["pacific coffee"]],
+    ["starbucks", ["starbucks", "星巴克"]],
+    ["dyson", ["dyson"]],
+    ["samsung", ["samsung"]],
+    ["sony", ["sony"]],
+    ["uniqlo", ["uniqlo", "優衣庫"]],
+    ["gu", [" gu ", "gu "]],
+    ["ikea", ["ikea"]],
+    ["log-on", ["log-on", "log on"]],
+    ["amazon", ["amazon"]],
+    ["lululemon", ["lululemon"]],
+    ["pop mart", ["pop mart", "popmart"]],
+    ["唐吉訶德", ["唐吉訶德"]],
+    ["松本清", ["松本清"]],
+    ["mcl", ["mcl"]],
+    ["百老匯", ["百老匯"]],
+    ["英皇", ["英皇"]],
+    ["jr", ["jr", "japan railway"]],
+    ["translink", ["translink"]],
+    ["trainlink", ["trainlink"]],
+    ["go transit", ["go transit"]],
+    ["中國鐵路", ["中國鐵路"]],
+    ["北京地鐵", ["北京地鐵"]],
+    ["上海地鐵", ["上海地鐵"]],
+    ["上海磁浮", ["上海磁浮"]],
+    ["環島中港通", ["環島中港通"]],
+    ["tfl", ["tfl", "transport for london"]]
+  ];
+  const tokens = [];
+  aliases.forEach(([canonical, variants]) => {
+    if (variants.some((variant) => normalizedText.includes(variant.trim().toLowerCase()))) {
+      tokens.push(canonical);
+    }
+  });
+  return [...new Set(tokens)];
+}
+
+function inferCurrencyBucket(currency, locations, description) {
+  const normalized = description.toLowerCase();
+  if (currency === "HKD") {
+    if (normalized.includes("港幣")) return "HKD";
+    if (normalized.includes("人民幣")) return "CNY";
+    if (normalized.includes("澳門幣")) return "MOP";
+  }
+  if (currency === "HKD" && !normalized.includes("外幣") && !(locations || []).includes("海外")) return "HKD";
+  return currency === "HKD" ? "foreign" : currency;
 }
 
 function parseCategoryMap(text) {
@@ -1709,7 +1902,9 @@ function isDateInRange(date, startDate, endDate) {
 }
 
 function todayString() {
-  return new Date().toISOString().slice(0, 10);
+  const now = new Date();
+  const local = new Date(now.getTime() - now.getTimezoneOffset() * 60 * 1000);
+  return local.toISOString().slice(0, 10);
 }
 
 function showToast(message) {
@@ -1723,7 +1918,7 @@ function showToast(message) {
 function maybeRegisterServiceWorker() {
   if (!("serviceWorker" in navigator)) return;
   let refreshing = false;
-  navigator.serviceWorker.register("./sw.js").then((reg) => {
+  navigator.serviceWorker.register(`./sw.js?${APP_VERSION}`).then((reg) => {
     reg.addEventListener("updatefound", () => {
       const newWorker = reg.installing;
       newWorker.addEventListener("statechange", () => {

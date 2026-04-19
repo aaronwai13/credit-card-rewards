@@ -1,11 +1,11 @@
-const CACHE_NAME = "credit-card-rewards-v4";
+const CACHE_NAME = "credit-card-rewards-v2026-04-20-1";
 const ASSETS = [
   "./",
   "./index.html",
-  "./manifest.json",
-  "./icon.svg",
-  "./icon-192.png",
-  "./apple-touch-icon.png"
+  "./manifest.json?v=2026-04-20-1",
+  "./icon.svg?v=2026-04-20-1",
+  "./icon-192.png?v=2026-04-20-1",
+  "./apple-touch-icon.png?v=2026-04-20-1"
 ];
 
 self.addEventListener("install", (event) => {
@@ -46,5 +46,12 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  event.respondWith(caches.match(event.request).then((cached) => cached || fetch(event.request)));
+  event.respondWith(
+    caches.match(event.request).then((cached) => cached || fetch(event.request).then((response) => {
+      if (!isSameOrigin || !response.ok) return response;
+      const copy = response.clone();
+      caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+      return response;
+    }))
+  );
 });
