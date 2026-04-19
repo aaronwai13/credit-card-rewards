@@ -51,15 +51,15 @@
     }
   }
   * { box-sizing: border-box; max-width: 100%; -webkit-tap-highlight-color: transparent; }
-  html, body { height: 100%; margin: 0; overflow: hidden; }
+  html, body { margin: 0; min-height: 100%; overflow-x: hidden; }
   html { scroll-behavior: smooth; background: var(--bg); }
   body {
-    display: flex;
-    flex-direction: column;
+    min-height: 100vh;
     background: var(--bg);
     color: var(--text);
     font-family: "IBM Plex Sans", sans-serif;
     font-size: 15px;
+    padding-bottom: calc(var(--tab-h) + env(safe-area-inset-bottom, 0px));
   }
   button, input, select, textarea { font: inherit; }
   button { cursor: pointer; }
@@ -124,9 +124,7 @@
 
   /* MAIN SCROLL */
   main {
-    flex: 1;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    min-height: 100%;
   }
 
   /* PAGES */
@@ -496,6 +494,17 @@
           </div>
         </div>
 
+        <div class="form-group">
+          <label>Chill 額外條件</label>
+          <div class="check-grid">
+            <label class="check-chip">
+              <input id="recommend-chill-monthly-qualified" type="checkbox">
+              <span>今月合資格簽賬已滿 HK$1,000</span>
+            </label>
+          </div>
+          <p class="field-hint">只影響 BOC Chill 指定商戶 8% 判斷。</p>
+        </div>
+
         <div class="actions">
           <button class="btn btn-primary" id="runRecommendationBtn">立即推薦</button>
           <button class="btn btn-secondary" id="fillDemoScenarioBtn">載入示例</button>
@@ -624,7 +633,6 @@ const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
 const CARD_DISPLAY_ORDER = [
   "BOC Chill Card",
   "HSBC 金卡",
-  "PayMe 銀聯卡",
   "MMPOWER",
   "恒生多貨幣扣賬卡",
   "AEON WAKUWAKU",
@@ -646,17 +654,6 @@ const CANONICAL_CARD_DEFINITIONS = [
     name: "HSBC 金卡",
     bank: "匯豐",
     baseRate: 0.4,
-    currency: "HKD",
-    categories: {
-      general: 1
-    },
-    locations: ["香港", "澳門", "內地", "海外"],
-    notes: ""
-  },
-  {
-    name: "PayMe 銀聯卡",
-    bank: "匯豐",
-    baseRate: 0,
     currency: "HKD",
     categories: {
       general: 1
@@ -721,7 +718,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
     cap: 0,
     startDate: "2026-01-01",
     endDate: "2026-06-30",
-    locations: ["海外"],
+    locations: ["澳門", "內地", "海外", "網上"],
     notes: "合資格海外簽賬（於海外商戶不論實體或網上以外幣交易及支付）可享 4% 現金回贈；以港幣支付的外幣簽賬不包括在內。"
   },
   {
@@ -734,7 +731,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
     cap: 0,
     startDate: "2026-01-01",
     endDate: "2026-06-30",
-    locations: ["網上"],
+    locations: ["香港", "澳門", "內地", "海外", "網上"],
     notes: "合資格網上簽賬（於網上完成之零售簽賬，簽賬地點及貨幣種類不限）可享 4% 現金回贈；電子錢包簽賬不算。"
   },
   {
@@ -747,7 +744,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
     cap: 0,
     startDate: "2026-01-01",
     endDate: "2026-06-30",
-    locations: ["香港", "網上"],
+    locations: ["香港", "澳門", "內地", "海外", "網上"],
     notes: "每月累積合資格簽賬（本地或海外實體商戶以實體卡或 Apple Pay 支付）滿 HK$1,000，Chill 商戶簽賬可享 8% 現金回贈：全港戲院、Apple TV、App Store、Disney+、Netflix、Spotify、McDonald's、Pacific Coffee、Starbucks、Dyson、Samsung、Sony、Uniqlo、GU、IKEA、LOG-ON。",
     requiresKeywords: ["戲院", "睇戲", "電影", "cinema", "apple tv", "app store", "disney+", "netflix", "spotify", "mcdonald", "麥當勞", "pacific coffee", "starbucks", "星巴克", "dyson", "samsung", "sony", "uniqlo", "優衣庫", "gu", "ikea", "log-on", "log on"]
   },
@@ -761,34 +758,8 @@ const CANONICAL_OFFER_DEFINITIONS = [
     cap: 0,
     startDate: "2026-01-01",
     endDate: "2026-12-31",
-    locations: ["澳門", "內地", "海外"],
+    locations: ["海外", "內地", "澳門"],
     notes: "賞世界：於海外、中國內地及澳門簽賬可享 2.4% 回贈；本地簽賬享 0.4% 基礎回贈。"
-  },
-  {
-    cardName: "PayMe 銀聯卡",
-    title: "Apple Pay 港幣/人民幣/澳門幣 3%",
-    category: "general",
-    tags: ["applepay"],
-    bonusRate: 3,
-    minSpend: 0,
-    cap: 0,
-    startDate: "2026-01-01",
-    endDate: "2026-04-22",
-    locations: ["香港", "澳門", "內地", "海外"],
-    notes: "2026-04-22 前於香港、中國內地、澳門及全球各地，以 PayMe 銀聯卡經 Apple Pay 免觸支付，港幣、人民幣或澳門幣付款可享 3% 回贈。"
-  },
-  {
-    cardName: "PayMe 銀聯卡",
-    title: "Apple Pay 其他貨幣 10%",
-    category: "general",
-    tags: ["applepay", "overseas"],
-    bonusRate: 10,
-    minSpend: 0,
-    cap: 0,
-    startDate: "2026-01-01",
-    endDate: "2026-04-22",
-    locations: ["海外"],
-    notes: "2026-04-22 前以 PayMe 銀聯卡經 Apple Pay 免觸支付，以其他貨幣付款可享 10% 回贈。"
   },
   {
     cardName: "MMPOWER",
@@ -1094,7 +1065,7 @@ function switchPage(page) {
   document.querySelectorAll(".tab-btn").forEach((button) => {
     button.classList.toggle("active", button.dataset.page === page);
   });
-  document.querySelector("main").scrollTo({ top: 0, behavior: "smooth" });
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function loadData() {
@@ -1325,7 +1296,7 @@ function renderCards() {
       return best;
     }, null);
     const highestRewardText = strongestOffer
-      ? `${formatPercent(Number(strongestOffer.bonusRate || 0) + Number(card.baseRate || 0))} (${strongestOffer.title})`
+      ? formatPercent(Number(strongestOffer.bonusRate || 0) + Number(card.baseRate || 0))
       : formatPercent(card.baseRate);
     const restrictionText = card.notes ? card.notes.trim() : "";
     const offerMarkup = cardOffers.length ? `
@@ -1339,7 +1310,7 @@ function renderCards() {
                 <div class="offer-card-date">${escapeHtml(formatOfferDate(offer))}</div>
               </div>
               <div class="offer-card-meta">
-                <span class="chip">${escapeHtml((offer.locations || []).join(" / ") || "不限地點")}</span>
+                <span class="chip">${escapeHtml(formatOfferLocationLabel(offer))}</span>
                 ${Number(offer.minSpend || 0) > 0 ? `<span class="chip">門檻 ${escapeHtml(formatCurrency(offer.minSpend))}</span>` : ""}
                 ${Number(offer.cap || 0) > 0 ? `<span class="chip">上限 ${escapeHtml(formatCurrency(offer.cap))}</span>` : ""}
               </div>
@@ -1478,6 +1449,7 @@ function clearRecommendForm() {
   document.getElementById("recommend-amount").value = "";
   document.getElementById("recommend-currency").value = "HKD";
   document.getElementById("recommend-date").value = todayString();
+  document.getElementById("recommend-chill-monthly-qualified").checked = false;
   document.getElementById("recommendationResults").innerHTML = "";
 }
 
@@ -1486,6 +1458,7 @@ function fillDemoScenario() {
   document.getElementById("recommend-amount").value = "680";
   document.getElementById("recommend-currency").value = "HKD";
   document.getElementById("recommend-date").value = "2026-04-16";
+  document.getElementById("recommend-chill-monthly-qualified").checked = false;
   runRecommendation();
 }
 
@@ -1504,6 +1477,9 @@ function runRecommendation() {
   const scenario = { description, amount, currency, date };
   Object.assign(scenario, inferScenarioFromText(description));
   scenario.currencyBucket = inferCurrencyBucket(currency, scenario.locations, description);
+  scenario.flags = {
+    chillMonthlyQualified: document.getElementById("recommend-chill-monthly-qualified").checked
+  };
 
   const rateMode = amount === null || amount <= 0;
 
@@ -1765,6 +1741,10 @@ function offerRuleMatchesScenario(offer, scenario) {
   const text = `${offer.title || ""} ${offer.notes || ""}`;
   const scenarioTags = new Set(scenario.scenarioTags || []);
 
+  if (/Chill 商戶 8%|指定商戶 8%/.test(offer.title || "")) {
+    return Boolean(scenario.flags?.chillMonthlyQualified);
+  }
+
   if (/Apple Pay/i.test(text) && scenario.paymentMethod !== "applepay") return false;
   if (/港幣\/人民幣\/澳門幣/.test(text) && !["HKD", "CNY", "MOP"].includes(scenario.currency)) return false;
   if ((/其他貨幣/.test(text) || /外幣/.test(text)) && scenario.currencyBucket !== "foreign") return false;
@@ -1845,6 +1825,30 @@ function inferCurrencyBucket(currency, locations, description) {
   return currency === "HKD" ? "foreign" : currency;
 }
 
+function formatOfferLocationLabel(offer) {
+  if (offer.cardName === "BOC Chill Card" && offer.title === "指定商戶 8%") {
+    return "Chill 名單商戶（香港實體商戶 + 網上商戶）";
+  }
+  if (offer.cardName === "BOC Chill Card" && offer.title === "海外簽賬 4%") {
+    return "澳門 / 內地 / 海外（實體或網上外幣）";
+  }
+  if (offer.cardName === "BOC Chill Card" && offer.title === "網上簽賬 4%") {
+    return "不限地點（網上）";
+  }
+  return formatOfferLocations(offer.locations);
+}
+
+function formatOfferLocations(locations) {
+  if (!Array.isArray(locations) || locations.length === 0) return "不限地點";
+  const ordered = LOCATION_OPTIONS.filter((location) => locations.includes(location));
+  if (ordered.length === LOCATION_OPTIONS.length) return "不限地點";
+  const withoutOnline = ordered.filter((location) => location !== "網上");
+  if (ordered.includes("網上") && withoutOnline.length > 0) {
+    return `${withoutOnline.join(" / ")}（網上）`;
+  }
+  return ordered.join(" / ");
+}
+
 function parseCategoryMap(text) {
   const map = {};
   parseList(text).forEach((entry) => {
@@ -1859,7 +1863,10 @@ function parseCategoryMap(text) {
 }
 
 function formatCategoryMap(map) {
-  return Object.entries(map || {}).map(([key, value]) => `${key}:${value}`).join(", ");
+  return Object.entries(map || {})
+    .filter(([key, value]) => !(key === "general" && Number(value || 0) === 1))
+    .map(([key, value]) => `${key}:${value}`)
+    .join(", ");
 }
 
 function parseList(text) {
