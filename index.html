@@ -54,12 +54,13 @@
   html, body { margin: 0; min-height: 100%; overflow-x: hidden; }
   html { scroll-behavior: smooth; background: var(--bg); }
   body {
-    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
     background: var(--bg);
     color: var(--text);
     font-family: "IBM Plex Sans", sans-serif;
     font-size: 15px;
-    padding-bottom: calc(var(--tab-h) + env(safe-area-inset-bottom, 0px));
   }
   button, input, select, textarea { font: inherit; }
   button { cursor: pointer; }
@@ -124,7 +125,8 @@
 
   /* MAIN SCROLL */
   main {
-    min-height: 100%;
+    flex: 1 0 auto;
+    min-height: 0;
   }
 
   /* PAGES */
@@ -360,6 +362,17 @@
   .offer-card-date { font-size: 11px; color: var(--muted); white-space: nowrap; flex-shrink: 0; }
   .offer-card-meta { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 6px; }
   .offer-card-note { font-size: 12px; line-height: 1.5; color: var(--muted); }
+  .offer-setting {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+  }
+  .offer-setting .check-chip span {
+    background: transparent;
+  }
+  .offer-setting .field-hint {
+    margin-bottom: 0;
+  }
 
   /* RESULT CARDS */
   .result-stack { display: flex; flex-direction: column; gap: 12px; margin-top: 32px; }
@@ -492,17 +505,6 @@
             <label for="recommend-date">消費日期</label>
             <input id="recommend-date" type="date">
           </div>
-        </div>
-
-        <div class="form-group">
-          <label>Chill 額外條件</label>
-          <div class="check-grid">
-            <label class="check-chip">
-              <input id="recommend-chill-monthly-qualified" type="checkbox">
-              <span>今月合資格簽賬已滿 HK$1,000</span>
-            </label>
-          </div>
-          <p class="field-hint">只影響 BOC Chill 指定商戶 8% 判斷。</p>
         </div>
 
         <div class="actions">
@@ -1010,7 +1012,10 @@ const CATEGORY_LABELS = {
 
 const DEFAULT_STATE = {
   cards: [],
-  offers: []
+  offers: [],
+  settings: {
+    chillMonthlyQualified: false
+  }
 };
 
 let state = loadData();
@@ -1019,6 +1024,10 @@ let editingCardId = null;
 bootstrap();
 
 function bootstrap() {
+  state.settings = {
+    ...structuredClone(DEFAULT_STATE.settings),
+    ...(state.settings || {})
+  };
   state.cards = state.cards.map(normalizeCard);
   state.offers = state.offers.map(normalizeOffer);
   if (!state.cards.length) {
@@ -1315,6 +1324,17 @@ function renderCards() {
                 ${Number(offer.cap || 0) > 0 ? `<span class="chip">上限 ${escapeHtml(formatCurrency(offer.cap))}</span>` : ""}
               </div>
               ${offer.notes ? `<div class="offer-card-note">${escapeHtml(offer.notes)}</div>` : ""}
+              ${card.name === "BOC Chill Card" && offer.title === "指定商戶 8%" ? `
+                <div class="offer-setting">
+                  <div class="check-grid">
+                    <label class="check-chip">
+                      <input type="checkbox" ${state.settings?.chillMonthlyQualified ? "checked" : ""} onchange="setChillMonthlyQualified(this.checked)">
+                      <span>今月合資格簽賬已滿 HK$1,000</span>
+                    </label>
+                  </div>
+                  <p class="field-hint">只影響呢個 8% 指定商戶判斷，推薦時計入。</p>
+                </div>
+              ` : ""}
             </article>
           `).join("")}
         </div>
@@ -1449,7 +1469,6 @@ function clearRecommendForm() {
   document.getElementById("recommend-amount").value = "";
   document.getElementById("recommend-currency").value = "HKD";
   document.getElementById("recommend-date").value = todayString();
-  document.getElementById("recommend-chill-monthly-qualified").checked = false;
   document.getElementById("recommendationResults").innerHTML = "";
 }
 
@@ -1458,8 +1477,12 @@ function fillDemoScenario() {
   document.getElementById("recommend-amount").value = "680";
   document.getElementById("recommend-currency").value = "HKD";
   document.getElementById("recommend-date").value = "2026-04-16";
-  document.getElementById("recommend-chill-monthly-qualified").checked = false;
   runRecommendation();
+}
+
+function setChillMonthlyQualified(checked) {
+  state.settings.chillMonthlyQualified = Boolean(checked);
+  saveData();
 }
 
 function runRecommendation() {
@@ -1478,7 +1501,7 @@ function runRecommendation() {
   Object.assign(scenario, inferScenarioFromText(description));
   scenario.currencyBucket = inferCurrencyBucket(currency, scenario.locations, description);
   scenario.flags = {
-    chillMonthlyQualified: document.getElementById("recommend-chill-monthly-qualified").checked
+    chillMonthlyQualified: Boolean(state.settings?.chillMonthlyQualified)
   };
 
   const rateMode = amount === null || amount <= 0;
