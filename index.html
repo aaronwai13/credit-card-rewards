@@ -1718,8 +1718,11 @@ function getOfferSelectionKey(card, offer) {
   if (card.name === "DBS Live Fresh" && (/網上旅遊\/娛樂\/訂閱/.test(title) || /合資格網上外幣 1%/.test(title))) {
     return `exclusive:${card.id}:dbs-live-fresh-online`;
   }
-  if (card.name === "MMPOWER" && (/指定商戶 8%|網上娛樂 8%|網上服飾 8%|網購 5%/.test(title))) {
+  if (card.name === "MMPOWER" && (/指定商戶 8%|網上娛樂 8%|網上服飾 8%|網購 5%|外幣 4%/.test(title))) {
     return `exclusive:${card.id}:mmpower-primary`;
+  }
+  if (card.name === "BOC Chill Card" && (/海外簽賬 4%|網上簽賬 4%/.test(title))) {
+    return `exclusive:${card.id}:boc-chill-4pct`;
   }
   return `stackable:${offer.id}`;
 }
