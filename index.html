@@ -19,6 +19,7 @@
 <style>
   :root {
     --ink: #113946;
+    --ink-contrast: #FFFFFF;
     --accent: #b08a4a;
     --accent-soft: #f0e6d2;
     --bg: #FDFAF5;
@@ -36,6 +37,7 @@
   @media (prefers-color-scheme: dark) {
     :root {
       --ink: #E8E3DC;
+      --ink-contrast: #161311;
       --accent: #c9a55f;
       --accent-soft: #2a2010;
       --bg: #111112;
@@ -61,6 +63,7 @@
     color: var(--text);
     font-family: "IBM Plex Sans", sans-serif;
     font-size: 15px;
+    padding-bottom: calc(var(--tab-h) + env(safe-area-inset-bottom, 0px));
   }
   button, input, select, textarea { font: inherit; }
   button { cursor: pointer; }
@@ -277,7 +280,7 @@
   .check-chip input:checked + span {
     background: var(--ink);
     border-color: var(--ink);
-    color: white;
+    color: var(--ink-contrast);
   }
 
   /* CHIP */
@@ -392,9 +395,12 @@
   /* EMPTY STATE */
   .empty-state { text-align: center; padding: 48px 16px; color: var(--muted); font-size: 13px; line-height: 1.9; }
 
-  /* TAB BAR — flex child, not fixed */
+  /* TAB BAR */
   .tab-bar {
-    flex-shrink: 0;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
     height: calc(var(--tab-h) + env(safe-area-inset-bottom, 0px));
     background: var(--card);
     border-top: 1px solid var(--border);
@@ -630,7 +636,7 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "本地餐飲及娛樂 1%",
   "網上旅遊/娛樂/訂閱 港幣 5.4%"
 ]);
-const APP_VERSION = "v2026.04.20.2";
+const APP_VERSION = "v2026.04.21.1";
 const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
 const CARD_DISPLAY_ORDER = [
   "BOC Chill Card",
@@ -1853,7 +1859,7 @@ function formatOfferLocationLabel(offer) {
     return "Chill 名單商戶（香港實體商戶 + 網上商戶）";
   }
   if (offer.cardName === "BOC Chill Card" && offer.title === "海外簽賬 4%") {
-    return "澳門 / 內地 / 海外（實體或網上外幣）";
+    return "澳門 / 內地 / 海外";
   }
   if (offer.cardName === "BOC Chill Card" && offer.title === "網上簽賬 4%") {
     return "不限地點（網上）";
