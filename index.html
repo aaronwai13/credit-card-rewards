@@ -296,8 +296,24 @@
     letter-spacing: 0.03em;
     white-space: nowrap;
   }
+  .chip-threshold {
+    background: rgba(176,138,74,0.14);
+    color: #8b6a2f;
+  }
+  .chip-cap {
+    background: rgba(107,124,129,0.16);
+    color: #55666b;
+  }
   @media (prefers-color-scheme: dark) {
     .chip { color: var(--accent); }
+    .chip-threshold {
+      background: rgba(201,165,95,0.14);
+      color: #d8bc82;
+    }
+    .chip-cap {
+      background: rgba(142,142,147,0.18);
+      color: #d1d1d6;
+    }
   }
 
   /* DIVIDER */
@@ -364,7 +380,7 @@
   .offer-card-title { font-size: 13px; font-weight: 600; color: var(--ink); margin: 0; }
   .offer-card-date { font-size: 11px; color: var(--muted); white-space: nowrap; flex-shrink: 0; }
   .offer-card-meta { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 6px; }
-  .offer-card-note { font-size: 12px; line-height: 1.5; color: var(--muted); }
+  .offer-card-note { font-size: 12px; line-height: 1.5; color: var(--muted); white-space: pre-line; }
   .offer-setting {
     margin-top: 10px;
     padding-top: 10px;
@@ -530,48 +546,49 @@
         <div class="toolbar">
           <div>
             <h2 class="section-title">信用卡記錄</h2>
-            <p class="section-sub">管理你的信用卡及回贈規則。</p>
-          </div>
-          <div class="actions" style="margin-top:0;">
-            <button class="btn btn-secondary" id="openCardComposerBtn">新增</button>
+            <p class="section-sub">查看各張卡的回贈規則，並直接編輯每條優惠內容。</p>
           </div>
         </div>
 
-        <div class="composer" id="cardComposer">
+        <div class="composer" id="offerComposer">
           <div class="grid">
-            <div class="field">
-              <label for="card-name">卡名</label>
-              <input id="card-name" type="text" placeholder="例如：HSBC Red">
-            </div>
-            <div class="field">
-              <label for="card-bank">銀行</label>
-              <input id="card-bank" type="text" placeholder="例如：匯豐">
-            </div>
-            <div class="field">
-              <label for="card-base-rate">一般回贈 %</label>
-              <input id="card-base-rate" type="number" min="0" step="0.1" placeholder="例如：0.4">
-            </div>
-            <div class="field">
-              <label for="card-currency">貨幣</label>
-              <input id="card-currency" type="text" placeholder="例如：HKD">
-            </div>
             <div class="field full">
-              <label for="card-categories">較高回贈類別</label>
-              <input id="card-categories" type="text" placeholder="例如：online:6, travel:2.4">
-              <p class="field-hint">格式：類別:倍率，例如 online:6 即 6 倍一般回贈。</p>
+              <label for="offer-title">優惠名稱</label>
+              <input id="offer-title" type="text" placeholder="例如：指定商戶 8%">
+            </div>
+            <div class="field">
+              <label for="offer-start-date">開始日期</label>
+              <input id="offer-start-date" type="date">
+            </div>
+            <div class="field">
+              <label for="offer-end-date">結束日期</label>
+              <input id="offer-end-date" type="date">
             </div>
             <div class="field full">
               <label>適用地點</label>
-              <div class="check-grid" id="card-location-options"></div>
+              <div class="check-grid" id="offer-location-options"></div>
+            </div>
+            <div class="field">
+              <label for="offer-min-spend">門檻金額</label>
+              <input id="offer-min-spend" type="number" min="0" step="0.01" placeholder="例如：1000">
+            </div>
+            <div class="field">
+              <label for="offer-cap">回贈上限</label>
+              <input id="offer-cap" type="number" min="0" step="0.01" placeholder="例如：200">
             </div>
             <div class="field full">
-              <label for="card-notes">限制 / 注意事項</label>
-              <textarea id="card-notes" placeholder="例如：電子錢包唔計、指定商戶先有、要先登記"></textarea>
+              <label for="offer-notes">規則說明</label>
+              <textarea id="offer-notes" placeholder="例如：電子錢包簽賬不算、海外 DCC 港幣不包括在內"></textarea>
+            </div>
+            <div class="field full">
+              <label for="offer-keywords">關鍵字</label>
+              <input id="offer-keywords" type="text" placeholder="例如：netflix, spotify, app store">
+              <p class="field-hint">用逗號分隔，只影響指定商戶／指定關鍵字類規則判斷。</p>
             </div>
           </div>
           <div class="actions">
-            <button class="btn btn-primary" id="saveCardBtn">新增信用卡</button>
-            <button class="btn btn-secondary" id="resetCardFormBtn">收起</button>
+            <button class="btn btn-primary" id="saveOfferBtn">儲存規則</button>
+            <button class="btn btn-secondary" id="resetOfferFormBtn">收起</button>
           </div>
           <hr class="divider">
         </div>
@@ -646,6 +663,11 @@ const CARD_DISPLAY_ORDER = [
   "AEON WAKUWAKU",
   "DBS Live Fresh"
 ];
+
+function canonicalOfferKey(cardName, title) {
+  return `${cardName}::${title}`;
+}
+
 const CANONICAL_CARD_DEFINITIONS = [
   {
     name: "BOC Chill Card",
@@ -758,7 +780,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
   },
   {
     cardName: "HSBC 金卡",
-    title: "海外/內地/澳門 2.4%",
+    title: "澳門/內地/海外 2.4%",
     category: "general",
     tags: ["overseas"],
     bonusRate: 2.0,
@@ -766,8 +788,8 @@ const CANONICAL_OFFER_DEFINITIONS = [
     cap: 0,
     startDate: "2026-01-01",
     endDate: "2026-12-31",
-    locations: ["海外", "內地", "澳門"],
-    notes: "賞世界：於海外、中國內地及澳門簽賬可享 2.4% 回贈；本地簽賬享 0.4% 基礎回贈。"
+    locations: ["澳門", "內地", "海外"],
+    notes: "賞世界：澳門、內地及海外合資格簽賬可享 2.4% 回贈；香港簽賬及港幣交易不包括在內。較適合實體簽賬，網上簽賬不建議預設按 2.4% 計。"
   },
   {
     cardName: "MMPOWER",
@@ -794,7 +816,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
     startDate: "2026-01-01",
     endDate: "2026-12-31",
     locations: ["網上", "香港"],
-    notes: "串流平台：Apple TV / Music、Disney+、HBO Max、HMVOD、JOOX、KKBOX、MOOV、Netflix、Spotify、Viu 及 YouTube。本港戲院：百老匯院線、影藝戲院、Cinema City 院線、英皇戲院、星達院線（前嘉禾院線）及 MCL 戲院。票務平台：購票通、HotdogTIX、KKTIX、撲飛、Ticketflap 及城市售票網。本港主題樂園：香港迪士尼樂園及香港海洋公園。以上簽賬高達 8% +FUN Dollars。",
+    notes: "串流平台：Apple TV / Music、Disney+、HBO Max、HMVOD、JOOX、KKBOX、MOOV、Netflix、Spotify、Viu 及 YouTube。\n本港戲院：百老匯院線、影藝戲院、Cinema City 院線、英皇戲院、星達院線（前嘉禾院線）及 MCL 戲院。\n票務平台：購票通、HotdogTIX、KKTIX、撲飛、Ticketflap 及城市售票網。\n本港主題樂園：香港迪士尼樂園及香港海洋公園。\n以上簽賬高達 8% +FUN Dollars。",
     requiresKeywords: ["apple tv", "apple music", "disney+", "hbo max", "hmvod", "joox", "kkbox", "moov", "netflix", "spotify", "viu", "youtube", "百老匯", "影藝", "cinema city", "英皇", "星達", "mcl", "購票通", "hotdogtix", "kktix", "撲飛", "ticketflap", "城市售票網", "迪士尼", "海洋公園", "睇戲", "電影"]
   },
   {
@@ -813,7 +835,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
   },
   {
     cardName: "MMPOWER",
-    title: "網購 5%",
+    title: "網上簽賬 5%",
     category: "general",
     tags: ["online"],
     bonusRate: 4.6,
@@ -822,11 +844,11 @@ const CANONICAL_OFFER_DEFINITIONS = [
     startDate: "2026-01-01",
     endDate: "2026-12-31",
     locations: ["網上"],
-    notes: "除網上娛樂及網上服飾以外的其他網上簽賬高達 5% +FUN Dollars。"
+    notes: "除網上服飾及網上娛樂以外的其他網上簽賬高達 5% +FUN Dollars。"
   },
   {
     cardName: "MMPOWER",
-    title: "外幣 4%",
+    title: "海外實體外幣簽賬 4%",
     category: "general",
     tags: ["overseas"],
     bonusRate: 3.6,
@@ -834,8 +856,8 @@ const CANONICAL_OFFER_DEFINITIONS = [
     cap: 0,
     startDate: "2026-01-01",
     endDate: "2026-12-31",
-    locations: ["海外"],
-    notes: "於香港以外國家或地區的實體店以外幣進行的合資格零售簽賬高達 4% +FUN Dollars；以港幣進行的交易不屬此類別。"
+    locations: ["澳門", "內地", "海外"],
+    notes: "合資格外幣簽賬指於香港以外國家或地區的實體店以外幣進行的合資格零售簽賬。以港幣進行的交易不屬此類別。"
   },
   {
     cardName: "恒生多貨幣扣賬卡",
@@ -861,8 +883,8 @@ const CANONICAL_OFFER_DEFINITIONS = [
     cap: 120,
     startDate: "2026-01-01",
     endDate: "2026-06-30",
-    locations: ["海外"],
-    notes: "30/6 前於指定海外交通作合資格交易可享 20% 現金回贈（上限 HK$120）：【澳洲】Transport for NSW TrainLink、Translink；【加拿大】Go Transit；【中國】中國鐵路 12306、北京地鐵、Go 巴出行、上海地鐵、上海磁浮、環島中港通；【日本】Japan Railway；【泰國】Mass Rapid Transit Authority of Thailand；【英國】Lothian Buses、Transport for Greater Manchester、Transport for London。",
+    locations: ["內地", "海外", "網上"],
+    notes: "30/6 前於指定海外交通作合資格交易可享 20% 現金回贈（上限 HK$120）：【澳洲】Transport for NSW TrainLink、Translink；【加拿大】Go Transit；【內地】中國鐵路 12306、北京地鐵、Go 巴出行、上海地鐵、上海磁浮、環島中港通；【日本】Japan Railway；【泰國】Mass Rapid Transit Authority of Thailand；【英國】Lothian Buses、Transport for Greater Manchester、Transport for London。部分指定商戶網站/網上交易亦適用。",
     requiresKeywords: ["translink", "trainlink", "go transit", "中國鐵路", "北京地鐵", "go巴出行", "上海地鐵", "上海磁浮", "環島中港通", "japan railway", "jr", "mass rapid transit", "mrt", "lothian buses", "transport for greater manchester", "transport for london", "tfl"]
   },
   {
@@ -875,8 +897,8 @@ const CANONICAL_OFFER_DEFINITIONS = [
     cap: 120,
     startDate: "2026-01-01",
     endDate: "2026-06-30",
-    locations: ["香港"],
-    notes: "30/6 前於指定本地商戶作合資格交易可享 20% 現金回贈（上限 HK$120）：POP MART、唐吉訶德、松本清、MCL 戲院、百老匯院線、英皇戲院。",
+    locations: ["香港", "網上"],
+    notes: "30/6 前於指定本地商戶作合資格交易可享 20% 現金回贈（上限 HK$120）。優惠只適用於指定商戶之香港零售分店及指定網站：POP MART（popmart.com/hk）、MCL 戲院（mclcinema.com）、百老匯院線（cinema.com.hk/tc）、英皇戲院（emperorcinemas.com/zh）；唐吉訶德及松本清只限香港零售分店。",
     requiresKeywords: ["pop mart", "popmart", "唐吉訶德", "松本清", "mcl", "百老匯", "英皇", "睇戲", "電影"]
   },
   {
@@ -1025,7 +1047,7 @@ const DEFAULT_STATE = {
 };
 
 let state = loadData();
-let editingCardId = null;
+let editingOfferId = null;
 
 bootstrap();
 
@@ -1044,7 +1066,7 @@ function bootstrap() {
   }
   migrateStoredData();
   seedDefaultOffers();
-  renderLocationCheckboxGroups();
+  renderOfferLocationCheckboxes();
   bindEvents();
   document.getElementById("recommend-date").value = todayString();
   renderAll();
@@ -1059,14 +1081,8 @@ function bindEvents() {
   document.getElementById("runRecommendationBtn").addEventListener("click", runRecommendation);
   document.getElementById("fillDemoScenarioBtn").addEventListener("click", fillDemoScenario);
   document.getElementById("clearRecommendBtn").addEventListener("click", clearRecommendForm);
-  document.getElementById("saveCardBtn").addEventListener("click", saveCard);
-  document.getElementById("resetCardFormBtn").addEventListener("click", () => resetCardForm());
-  document.getElementById("openCardComposerBtn").addEventListener("click", () => {
-    editingCardId = null;
-    document.getElementById("saveCardBtn").textContent = "新增信用卡";
-    resetCardForm(false);
-    openCardComposer();
-  });
+  document.getElementById("saveOfferBtn").addEventListener("click", saveOffer);
+  document.getElementById("resetOfferFormBtn").addEventListener("click", () => resetOfferForm());
   document.getElementById("card-search").addEventListener("input", renderCards);
   document.getElementById("card-bank-filter").addEventListener("change", renderCards);
   document.getElementById("card-category-filter").addEventListener("change", renderCards);
@@ -1105,8 +1121,6 @@ function normalizeCard(card) {
     bank: card.bank || "未分類",
     baseRate: Number(card.baseRate || 0),
     currency: card.currency || "HKD",
-    categories: card.categories || { general: 1 },
-    locations: Array.isArray(card.locations) ? card.locations : [],
     notes: card.notes || "",
     tags: Array.isArray(card.tags) ? card.tags : []
   };
@@ -1152,6 +1166,7 @@ function normalizeOffer(offer) {
   return {
     id: offer.id || crypto.randomUUID(),
     cardId: offer.cardId || "",
+    canonicalKey: offer.canonicalKey || "",
     title,
     category,
     bonusRate: Number(offer.bonusRate || 0),
@@ -1166,8 +1181,14 @@ function normalizeOffer(offer) {
   };
 }
 
+function isLegacyPayMeCard(card) {
+  const text = `${card?.name || ""} ${card?.bank || ""} ${card?.notes || ""}`.toLowerCase();
+  return text.includes("payme");
+}
+
 function migrateStoredData() {
-  const existingCards = Array.isArray(state.cards) ? state.cards : [];
+  const existingCards = (Array.isArray(state.cards) ? state.cards : [])
+    .filter((card) => !isLegacyPayMeCard(card));
   const customCards = existingCards
     .filter((card) => !CANONICAL_CARD_DEFINITIONS.some((item) => item.name === card.name))
     .map((card) => ({
@@ -1188,7 +1209,8 @@ function migrateStoredData() {
   const cardIdByName = Object.fromEntries(state.cards.map((card) => [card.name, card.id]));
   const canonicalCardNames = new Set(CANONICAL_CARD_DEFINITIONS.map((card) => card.name));
   const existingCardById = Object.fromEntries(existingCards.map((card) => [card.id, card]));
-  const existingOffers = Array.isArray(state.offers) ? state.offers : [];
+  const existingOffers = (Array.isArray(state.offers) ? state.offers : [])
+    .filter((offer) => !`${offer?.title || ""} ${offer?.notes || ""}`.toLowerCase().includes("payme"));
   const customOffers = existingOffers.filter((offer) => {
     // 已廢棄的正式優惠標題，清除
     if (DEPRECATED_OFFER_TITLES.has(offer.title)) return false;
@@ -1198,9 +1220,12 @@ function migrateStoredData() {
   });
 
   const canonicalOffers = CANONICAL_OFFER_DEFINITIONS.map((definition) => {
-    const existing = existingOffers.find((offer) => offer.title === definition.title);
+    const key = canonicalOfferKey(definition.cardName, definition.title);
+    const existing = existingOffers.find((offer) => offer.canonicalKey === key)
+      || existingOffers.find((offer) => offer.title === definition.title);
     return normalizeOffer({
       id: existing?.id || crypto.randomUUID(),
+      canonicalKey: key,
       cardId: cardIdByName[definition.cardName] || "",
       title: definition.title,
       category: definition.category,
@@ -1225,6 +1250,7 @@ function seedDefaultOffers() {
   const cardIdByName = Object.fromEntries(state.cards.map((card) => [card.name, card.id]));
   state.offers = CANONICAL_OFFER_DEFINITIONS.map((definition) => normalizeOffer({
     id: crypto.randomUUID(),
+    canonicalKey: canonicalOfferKey(definition.cardName, definition.title),
     cardId: cardIdByName[definition.cardName] || "",
     title: definition.title,
     category: definition.category,
@@ -1246,26 +1272,22 @@ function renderAll() {
   renderCards();
 }
 
-function openCardComposer() {
-  document.getElementById("cardComposer").classList.add("show");
-  document.getElementById("card-name").focus();
-}
-
-function closeCardComposer() {
-  document.getElementById("cardComposer").classList.remove("show");
-}
-
-function renderLocationCheckboxGroups() {
-  document.getElementById("card-location-options").innerHTML = buildLocationCheckboxes("card-location");
-}
-
-function buildLocationCheckboxes(name) {
-  return LOCATION_OPTIONS.map((location) => `
+function renderOfferLocationCheckboxes() {
+  document.getElementById("offer-location-options").innerHTML = LOCATION_OPTIONS.map((location) => `
     <label class="check-chip">
-      <input type="checkbox" name="${name}" value="${location}">
+      <input type="checkbox" name="offer-location" value="${location}">
       <span>${location}</span>
     </label>
   `).join("");
+}
+
+function openOfferComposer() {
+  document.getElementById("offerComposer").classList.add("show");
+  document.getElementById("offer-title").focus();
+}
+
+function closeOfferComposer() {
+  document.getElementById("offerComposer").classList.remove("show");
 }
 
 function renderCards() {
@@ -1273,13 +1295,10 @@ function renderCards() {
   const bankFilter = document.getElementById("card-bank-filter").value.trim();
   const categoryFilter = document.getElementById("card-category-filter").value.trim();
   const filtered = state.cards.filter((card) => {
-    const haystack = [card.name, card.bank, card.notes, ...(card.locations || [])].join(" ").toLowerCase();
+    const haystack = [card.name, card.bank, card.notes].join(" ").toLowerCase();
     const matchesQuery = !query || haystack.includes(query);
     const matchesBank = !bankFilter || card.bank === bankFilter;
     const cardCategories = new Set([
-      ...Object.entries(card.categories || {})
-        .filter(([, value]) => Number(value || 0) > 1)
-        .map(([key]) => key),
       ...((card.tags || []).filter(Boolean)),
       ...state.offers
         .filter((offer) => offer.cardId === card.id)
@@ -1321,14 +1340,21 @@ function renderCards() {
           ${cardOffers.map((offer) => `
             <article class="offer-card">
               <div class="offer-card-header">
-                <h4 class="offer-card-title">${escapeHtml(offer.title)}</h4>
-                <div class="offer-card-date">${escapeHtml(formatOfferDate(offer))}</div>
+                <div>
+                  <h4 class="offer-card-title">${escapeHtml(offer.title)}</h4>
+                </div>
+                <div style="display:flex;align-items:flex-start;gap:8px;flex-shrink:0;">
+                  <div class="offer-card-date">${escapeHtml(formatOfferDate(offer))}</div>
+                  <button class="tiny-btn" onclick="editOffer('${offer.id}')">編輯規則</button>
+                </div>
               </div>
-              <div class="offer-card-meta">
-                <span class="chip">${escapeHtml(formatOfferLocationLabel(offer))}</span>
-                ${Number(offer.minSpend || 0) > 0 ? `<span class="chip">門檻 ${escapeHtml(formatCurrency(offer.minSpend))}</span>` : ""}
-                ${Number(offer.cap || 0) > 0 ? `<span class="chip">上限 ${escapeHtml(formatCurrency(offer.cap))}</span>` : ""}
-              </div>
+              ${/迎新/.test(`${offer.title || ""} ${offer.notes || ""}`) ? "" : `
+                <div class="offer-card-meta">
+                  ${renderOfferLocationChip(offer, card.name)}
+                  ${Number(offer.minSpend || 0) > 0 ? `<span class="chip chip-threshold">門檻 ${escapeHtml(formatCurrency(offer.minSpend))}</span>` : ""}
+                  ${Number(offer.cap || 0) > 0 ? `<span class="chip chip-cap">上限 ${escapeHtml(formatCurrency(offer.cap))}</span>` : ""}
+                </div>
+              `}
               ${offer.notes ? `<div class="offer-card-note">${escapeHtml(offer.notes)}</div>` : ""}
               ${card.name === "BOC Chill Card" && offer.title === "指定商戶 8%" ? `
                 <div class="offer-setting">
@@ -1358,13 +1384,9 @@ function renderCards() {
           ${restrictionText ? `<div><strong>限制：</strong>${escapeHtml(restrictionText)}</div>` : ""}
         </div>
         ${offerMarkup}
-        <div class="inline-actions">
-          <button class="tiny-btn" onclick="editCard('${card.id}')">編輯</button>
-          <button class="tiny-btn danger" onclick="deleteCard('${card.id}')">刪除</button>
-        </div>
       </article>
     `;
-  }).join("") : `<div class="empty-state">還沒有符合條件的信用卡資料。先新增一張卡，推薦器才會開始有意義。</div>`;
+  }).join("") : `<div class="empty-state">暫時未有可顯示的信用卡資料。</div>`;
 }
 
 function renderCardFilters() {
@@ -1375,9 +1397,6 @@ function renderCardFilters() {
   const banks = [...new Set(state.cards.map((card) => card.bank).filter(Boolean))]
     .sort((a, b) => a.localeCompare(b, "zh-Hant"));
   const categories = [...new Set([
-    ...state.cards.flatMap((card) => Object.entries(card.categories || {})
-      .filter(([, value]) => Number(value || 0) > 1)
-      .map(([key]) => key)),
     ...state.cards.flatMap((card) => card.tags || []),
     ...state.offers.flatMap((offer) => [offer.category, ...(offer.tags || [])].filter(Boolean))
   ])].filter((category) => category !== "general");
@@ -1395,79 +1414,73 @@ function clearCardFilters() {
   renderCards();
 }
 
-function saveCard() {
-  const payload = {
-    name: document.getElementById("card-name").value.trim(),
-    bank: document.getElementById("card-bank").value.trim(),
-    baseRate: Number(document.getElementById("card-base-rate").value),
-    currency: document.getElementById("card-currency").value.trim() || "HKD",
-    categories: parseCategoryMap(document.getElementById("card-categories").value),
-    locations: getCheckedValues("card-location"),
-    notes: document.getElementById("card-notes").value.trim()
-  };
-
-  if (!payload.name || !payload.bank || Number.isNaN(payload.baseRate)) {
-    showToast("請先填好卡名、銀行和基礎回贈率。");
+function saveOffer() {
+  if (!editingOfferId) {
+    showToast("請由優惠卡上的編輯規則按鈕進入。");
     return;
   }
 
-  if (!payload.categories.general) {
-    payload.categories.general = 1;
+  const offer = state.offers.find((item) => item.id === editingOfferId);
+  if (!offer) return;
+
+  const title = document.getElementById("offer-title").value.trim();
+  const startDate = document.getElementById("offer-start-date").value;
+  const endDate = document.getElementById("offer-end-date").value;
+  const minSpend = Number(document.getElementById("offer-min-spend").value || 0);
+  const cap = Number(document.getElementById("offer-cap").value || 0);
+
+  if (!title || !startDate || !endDate) {
+    showToast("請先填好優惠名稱和日期。");
+    return;
   }
 
-  if (editingCardId) {
-    const card = state.cards.find((item) => item.id === editingCardId);
-    Object.assign(card, payload);
-    showToast("信用卡資料已更新。");
-  } else {
-    state.cards.unshift({
-      id: crypto.randomUUID(),
-      ...payload
-    });
-    showToast("已新增信用卡。");
+  if (endDate < startDate) {
+    showToast("結束日期不可早過開始日期。");
+    return;
   }
+
+  Object.assign(offer, normalizeOffer({
+    ...offer,
+    title,
+    startDate,
+    endDate,
+    locations: getCheckedValues("offer-location"),
+    minSpend: Number.isNaN(minSpend) ? 0 : minSpend,
+    cap: Number.isNaN(cap) ? 0 : cap,
+    notes: document.getElementById("offer-notes").value.trim(),
+    requiresKeywords: parseList(document.getElementById("offer-keywords").value)
+  }));
 
   saveData();
-  editingCardId = null;
-  document.getElementById("saveCardBtn").textContent = "新增信用卡";
-  resetCardForm(false);
+  resetOfferForm(false);
   renderAll();
+  showToast("優惠規則已更新。");
 }
 
-function resetCardForm(announce = true) {
-  ["card-name", "card-bank", "card-base-rate", "card-currency", "card-categories", "card-notes"].forEach((id) => {
+function resetOfferForm(announce = true) {
+  ["offer-title", "offer-start-date", "offer-end-date", "offer-min-spend", "offer-cap", "offer-notes", "offer-keywords"].forEach((id) => {
     document.getElementById(id).value = "";
   });
-  setCheckedValues("card-location", []);
-  document.getElementById("card-currency").value = "HKD";
-  editingCardId = null;
-  document.getElementById("saveCardBtn").textContent = "新增信用卡";
-  closeCardComposer();
-  if (announce) showToast("已收起信用卡表單。");
+  setCheckedValues("offer-location", []);
+  editingOfferId = null;
+  closeOfferComposer();
+  if (announce) showToast("已收起規則表單。");
 }
 
-function editCard(cardId) {
-  const card = state.cards.find((item) => item.id === cardId);
-  if (!card) return;
-  openCardComposer();
-  editingCardId = cardId;
-  document.getElementById("card-name").value = card.name || "";
-  document.getElementById("card-bank").value = card.bank || "";
-  document.getElementById("card-base-rate").value = card.baseRate ?? "";
-  document.getElementById("card-currency").value = card.currency || "HKD";
-  document.getElementById("card-categories").value = formatCategoryMap(card.categories);
-  setCheckedValues("card-location", card.locations || []);
-  document.getElementById("card-notes").value = card.notes || "";
-  document.getElementById("saveCardBtn").textContent = "儲存修改";
+function editOffer(offerId) {
+  const offer = state.offers.find((item) => item.id === offerId);
+  if (!offer) return;
+  editingOfferId = offerId;
+  openOfferComposer();
+  document.getElementById("offer-title").value = offer.title || "";
+  document.getElementById("offer-start-date").value = offer.startDate || "";
+  document.getElementById("offer-end-date").value = offer.endDate || "";
+  document.getElementById("offer-min-spend").value = Number(offer.minSpend || 0) > 0 ? Number(offer.minSpend || 0) : "";
+  document.getElementById("offer-cap").value = Number(offer.cap || 0) > 0 ? Number(offer.cap || 0) : "";
+  document.getElementById("offer-notes").value = offer.notes || "";
+  document.getElementById("offer-keywords").value = (offer.requiresKeywords || []).join(", ");
+  setCheckedValues("offer-location", offer.locations || []);
   switchPage("cards");
-}
-
-function deleteCard(cardId) {
-  state.cards = state.cards.filter((item) => item.id !== cardId);
-  state.offers = state.offers.filter((offer) => offer.cardId !== cardId);
-  saveData();
-  renderAll();
-  showToast("信用卡及其關聯活動已刪除。");
 }
 
 function clearRecommendForm() {
@@ -1539,7 +1552,6 @@ function runRecommendation() {
           <div><strong>優惠處理：</strong>${escapeHtml(result.offerSelectionSummary)}</div>
         ` : `
           <div><strong>基礎回贈：</strong>${formatCurrencyWithCode(result.baseRewardAmount, currency)} (${formatPercent(result.baseRateApplied)})</div>
-          <div><strong>分類倍率：</strong>${formatNumber(result.categoryMultiplier)}x</div>
           <div><strong>活動加碼：</strong>${formatCurrencyWithCode(result.offerRewardAmount, currency)}</div>
           <div><strong>命中活動：</strong>${escapeHtml(result.offerTitles.length ? result.offerTitles.join(" / ") : "無")}</div>
           <div><strong>優惠處理：</strong>${escapeHtml(result.offerSelectionSummary)}</div>
@@ -1601,10 +1613,7 @@ function inferScenarioFromText(text) {
 }
 
 function evaluateCard(card, scenario, rateMode) {
-  const categoryMultiplier = getCategoryMultiplier(card, scenario.category);
-  const locationMatched = locationApplies(card.locations, scenario.locations);
-  const effectiveMultiplier = locationMatched ? categoryMultiplier : 0;
-  const baseRateApplied = card.baseRate * effectiveMultiplier;
+  const baseRateApplied = Number(card.baseRate || 0);
   const amount = scenario.amount || 0;
   const baseRewardAmount = amount * baseRateApplied / 100;
 
@@ -1633,16 +1642,7 @@ function evaluateCard(card, scenario, rateMode) {
   const bestRate = baseRateApplied + bestOfferRate;
 
   const explanationParts = [];
-  if (locationMatched) {
-    explanationParts.push("地點符合這張卡的適用範圍");
-  } else {
-    explanationParts.push("地點未命中卡片適用範圍，基礎回贈按 0 處理");
-  }
-  if (categoryMultiplier > 1) {
-    explanationParts.push(`${CATEGORY_LABELS[scenario.category] || scenario.category} 類別有 ${formatNumber(categoryMultiplier)}x 倍率`);
-  } else {
-    explanationParts.push("沒有額外類別加成，按基礎回贈計算");
-  }
+  explanationParts.push("基礎回贈按卡片基本回贈率計算");
   if (selectedOffers.length) {
     explanationParts.push("命中 " + selectedOffers.length + " 個已採用活動");
     if (skippedOffers.length) {
@@ -1654,7 +1654,6 @@ function evaluateCard(card, scenario, rateMode) {
 
   return {
     card,
-    categoryMultiplier,
     baseRateApplied,
     baseRewardAmount,
     offerRewardAmount,
@@ -1664,11 +1663,6 @@ function evaluateCard(card, scenario, rateMode) {
     offerSelectionSummary,
     explanation: explanationParts.join("；")
   };
-}
-
-function getCategoryMultiplier(card, category) {
-  const categories = card.categories || {};
-  return Number(categories[category] || categories.general || 1);
 }
 
 function locationApplies(locations, scenarioLocation) {
@@ -1723,7 +1717,7 @@ function getOfferSelectionKey(card, offer) {
   if (card.name === "DBS Live Fresh" && (/網上旅遊\/娛樂\/訂閱/.test(title) || /合資格網上外幣 1%/.test(title))) {
     return `exclusive:${card.id}:dbs-live-fresh-online`;
   }
-  if (card.name === "MMPOWER" && (/指定商戶 8%|網上娛樂 8%|網上服飾 8%|網購 5%|外幣 4%/.test(title))) {
+  if (card.name === "MMPOWER" && (/指定商戶 8%|網上娛樂 8%|網上服飾 8%|網上簽賬 5%|海外實體外幣簽賬 4%/.test(title))) {
     return `exclusive:${card.id}:mmpower-primary`;
   }
   if (card.name === "BOC Chill Card" && (/海外簽賬 4%|網上簽賬 4%/.test(title))) {
@@ -1773,10 +1767,14 @@ function offerRuleMatchesScenario(offer, scenario) {
   if (/Chill 商戶 8%|指定商戶 8%/.test(offer.title || "")) {
     return Boolean(scenario.flags?.chillMonthlyQualified);
   }
+  if (offer.title === "澳門/內地/海外 2.4%" && scenario.currency === "HKD") {
+    return false;
+  }
 
   if (/Apple Pay/i.test(text) && scenario.paymentMethod !== "applepay") return false;
   if (/港幣\/人民幣\/澳門幣/.test(text) && !["HKD", "CNY", "MOP"].includes(scenario.currency)) return false;
   if ((/其他貨幣/.test(text) || /外幣/.test(text)) && scenario.currencyBucket !== "foreign") return false;
+  if (/實體店/.test(text) && scenarioTags.has("online")) return false;
   if ((/日本/.test(text) || /日圓/.test(text)) && !scenarioTags.has("japan")) return false;
   if (/網上旅遊\/娛樂\/訂閱/.test(text) && !scenarioTags.has("online")) return false;
   if (/網上旅遊\/娛樂\/訂閱/.test(text) && !["travel", "entertainment", "subscription"].some((tag) => scenarioTags.has(tag))) return false;
@@ -1854,48 +1852,90 @@ function inferCurrencyBucket(currency, locations, description) {
   return currency === "HKD" ? "foreign" : currency;
 }
 
-function formatOfferLocationLabel(offer) {
-  if (offer.cardName === "BOC Chill Card" && offer.title === "指定商戶 8%") {
-    return "Chill 名單商戶（香港實體商戶 + 網上商戶）";
+function formatOfferLocationLabel(offer, cardName = "") {
+  if (cardName === "BOC Chill Card" && offer.title === "指定商戶 8%") {
+    return { main: "香港商戶 / 指定網上服務" };
   }
-  if (offer.cardName === "BOC Chill Card" && offer.title === "海外簽賬 4%") {
-    return "澳門 / 內地 / 海外";
+  if (cardName === "BOC Chill Card" && offer.title === "海外簽賬 4%") {
+    return { main: "澳門 / 內地 / 海外", sub: "實體或網上" };
   }
-  if (offer.cardName === "BOC Chill Card" && offer.title === "網上簽賬 4%") {
-    return "不限地點（網上）";
+  if (cardName === "BOC Chill Card" && offer.title === "網上簽賬 4%") {
+    return { main: "不限地點", sub: "網上" };
   }
-  return formatOfferLocations(offer.locations);
+  if (cardName === "MMPOWER" && offer.title === "指定商戶 8%") {
+    return { chips: ["香港實體", "網上"] };
+  }
+  if (cardName === "MMPOWER" && offer.title === "網上娛樂 8%") {
+    return { main: "指定娛樂商戶", sub: "網上" };
+  }
+  if (cardName === "MMPOWER" && offer.title === "網上服飾 8%") {
+    return { main: "不限地點", sub: "網上" };
+  }
+  if (cardName === "MMPOWER" && offer.title === "網上簽賬 5%") {
+    return { main: "不限地點", sub: "網上" };
+  }
+  if (cardName === "MMPOWER" && offer.title === "海外實體外幣簽賬 4%") {
+    return { main: "澳門 / 內地 / 海外", sub: "實體" };
+  }
+  if (cardName === "恒生多貨幣扣賬卡" && offer.title === "指定海外商戶 15%") {
+    return { main: "海外", sub: "實體" };
+  }
+  if (cardName === "HSBC 金卡" && offer.title === "澳門/內地/海外 2.4%") {
+    return { main: "澳門 / 內地 / 海外", sub: "實體" };
+  }
+  if (cardName === "恒生多貨幣扣賬卡" && offer.title === "指定本地商戶 20%") {
+    return { main: "香港" };
+  }
+  if (cardName === "恒生多貨幣扣賬卡" && offer.title === "指定海外交通 20%") {
+    return { main: "內地 / 海外" };
+  }
+  if (cardName === "AEON WAKUWAKU" && offer.title === "網上簽賬 6%") {
+    return { main: "不限地點", sub: "網上" };
+  }
+  if (cardName === "AEON WAKUWAKU" && offer.title === "日本簽賬 3%") {
+    return { main: "海外", sub: "實體或網上" };
+  }
+  if (cardName === "AEON WAKUWAKU" && offer.title === "本地餐飲 1%") {
+    return { main: "香港", sub: "實體或網上" };
+  }
+  if (cardName === "DBS Live Fresh" && offer.title === "網上旅遊/娛樂/訂閱 外幣 6%") {
+    return { main: "不限地點", sub: "網上" };
+  }
+  if (cardName === "DBS Live Fresh" && offer.title === "網上旅遊/娛樂/訂閱 港幣 5%") {
+    return { main: "不限地點", sub: "網上" };
+  }
+  if (cardName === "DBS Live Fresh" && offer.title === "合資格網上外幣 1%") {
+    return { main: "海外", sub: "網上" };
+  }
+  return { main: formatOfferLocations(offer.locations) };
+}
+
+function renderOfferLocationChip(offer, cardName = "") {
+  const label = formatOfferLocationLabel(offer, cardName);
+  if (Array.isArray(label.chips) && label.chips.length) {
+    return label.chips.map((chip) => `<span class="chip">${escapeHtml(chip)}</span>`).join("");
+  }
+  if (label.sub) {
+    return `<span class="chip">${escapeHtml(label.main)}</span><span class="chip">${escapeHtml(label.sub)}</span>`;
+  }
+  return `<span class="chip">${escapeHtml(label.main)}</span>`;
 }
 
 function formatOfferLocations(locations) {
   if (!Array.isArray(locations) || locations.length === 0) return "不限地點";
   const ordered = LOCATION_OPTIONS.filter((location) => locations.includes(location));
   if (ordered.length === LOCATION_OPTIONS.length) return "不限地點";
+  if (ordered.length === 1 && ordered[0] === "網上") {
+    return "不限地點 / 網上";
+  }
   const withoutOnline = ordered.filter((location) => location !== "網上");
+  if (ordered.length === 2 && ordered.includes("網上") && withoutOnline.length === 1) {
+    return `${withoutOnline[0]} / 網上`;
+  }
   if (ordered.includes("網上") && withoutOnline.length > 0) {
-    return `${withoutOnline.join(" / ")}（網上）`;
+    return `${withoutOnline.join(" / ")} / 網上`;
   }
   return ordered.join(" / ");
-}
-
-function parseCategoryMap(text) {
-  const map = {};
-  parseList(text).forEach((entry) => {
-    const [rawKey, rawValue] = entry.split(":");
-    if (!rawKey || !rawValue) return;
-    const value = Number(rawValue.trim());
-    if (!Number.isNaN(value)) {
-      map[rawKey.trim()] = value;
-    }
-  });
-  return map;
-}
-
-function formatCategoryMap(map) {
-  return Object.entries(map || {})
-    .filter(([key, value]) => !(key === "general" && Number(value || 0) === 1))
-    .map(([key, value]) => `${key}:${value}`)
-    .join(", ");
 }
 
 function parseList(text) {
@@ -1985,8 +2025,7 @@ function escapeHtml(value) {
     .replaceAll("'", "&#39;");
 }
 
-window.editCard = editCard;
-window.deleteCard = deleteCard;
+window.editOffer = editOffer;
 </script>
 </body>
 </html>
