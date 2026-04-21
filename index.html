@@ -198,6 +198,15 @@
   }
   textarea { min-height: 110px; resize: vertical; }
   input[type="date"] { min-height: 50px; display: block; text-align: center; }
+  input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
   input:focus, select:focus, textarea:focus {
     border-color: var(--ink);
     box-shadow: 0 0 0 3px rgba(17,57,70,0.08);
@@ -407,6 +416,21 @@
   .result-note { color: var(--muted); font-size: 13px; line-height: 1.5; margin-top: 10px; }
   .breakdown { display: flex; flex-direction: column; gap: 4px; font-size: 13px; line-height: 1.55; }
   .breakdown strong { color: var(--ink); font-weight: 600; }
+  .scenario-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: var(--shadow);
+    margin-top: 18px;
+  }
+  .scenario-title { font-family: "Fraunces", serif; font-size: 18px; color: var(--ink); margin: 0 0 6px; }
+  .scenario-sub { font-size: 13px; color: var(--muted); line-height: 1.6; margin: 0 0 14px; }
+  .scenario-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .scenario-summary { margin-top: 12px; font-size: 12px; color: var(--muted); line-height: 1.6; }
+  @media (max-width: 640px) {
+    .scenario-grid { grid-template-columns: 1fr; }
+  }
 
   /* EMPTY STATE */
   .empty-state { text-align: center; padding: 48px 16px; color: var(--muted); font-size: 13px; line-height: 1.9; }
@@ -535,6 +559,7 @@
           <button class="btn btn-secondary" id="clearRecommendBtn">清除</button>
         </div>
 
+        <div id="recommendClarifications"></div>
         <div class="result-stack" id="recommendationResults"></div>
 
       </div>
@@ -666,6 +691,16 @@ const CARD_DISPLAY_ORDER = [
 
 function canonicalOfferKey(cardName, title) {
   return `${cardName}::${title}`;
+}
+
+function isCanonicalOfferRule(card, offer, cardName, offerTitle) {
+  return card.name === cardName
+    && (offer.canonicalKey === canonicalOfferKey(cardName, offerTitle) || offer.title === offerTitle);
+}
+
+function getCanonicalRecommendationRule(card, offer) {
+  const key = offer.canonicalKey || canonicalOfferKey(card.name, offer.title || "");
+  return CANONICAL_RECOMMENDATION_RULES[key] || null;
 }
 
 const CANONICAL_CARD_DEFINITIONS = [
@@ -1024,7 +1059,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
 ];
 
 const CATEGORY_LABELS = {
-  general: "一般消費",
+  general: "購物",
   online: "網上",
   dining: "餐飲",
   entertainment: "娛樂",
@@ -1038,6 +1073,158 @@ const CATEGORY_LABELS = {
   merchant: "指定商戶"
 };
 
+const CATEGORY_FILTER_ORDER = [
+  "online",
+  "shopping",
+  "dining",
+  "entertainment",
+  "travel",
+  "transport",
+  "subscription",
+  "groceries",
+  "overseas"
+];
+
+const SCENARIO_CATEGORY_OPTIONS = [
+  "shopping",
+  "dining",
+  "entertainment",
+  "travel",
+  "transport",
+  "subscription"
+];
+
+const CANONICAL_RECOMMENDATION_RULES = {
+  [canonicalOfferKey("BOC Chill Card", "海外簽賬 4%")]: {
+    group: "boc-chill-primary",
+    channel: "either",
+    regions: ["澳門", "內地", "海外"],
+    currency: "foreign"
+  },
+  [canonicalOfferKey("BOC Chill Card", "網上簽賬 4%")]: {
+    group: "boc-chill-primary",
+    channel: "online",
+    regions: "any",
+    currency: "any"
+  },
+  [canonicalOfferKey("BOC Chill Card", "指定商戶 8%")]: {
+    group: "boc-chill-primary",
+    channel: "either",
+    regions: "mixed",
+    currency: "any",
+    merchantMode: "chill-merchant",
+    minSpendType: "monthlyQualified",
+    titleSuffix: "monthlyQualified"
+  },
+  [canonicalOfferKey("HSBC 金卡", "澳門/內地/海外 2.4%")]: {
+    group: null,
+    channel: "offline",
+    regions: ["澳門", "內地", "海外"],
+    currency: "foreign"
+  },
+  [canonicalOfferKey("MMPOWER", "指定商戶 8%")]: {
+    group: "mmpower-primary",
+    channel: "either",
+    regions: "mixed",
+    currency: "any",
+    merchantMode: "mmpower-merchant"
+  },
+  [canonicalOfferKey("MMPOWER", "網上娛樂 8%")]: {
+    group: "mmpower-primary",
+    channel: "online",
+    regions: "any",
+    currency: "any",
+    merchantMode: "listed"
+  },
+  [canonicalOfferKey("MMPOWER", "網上服飾 8%")]: {
+    group: "mmpower-primary",
+    channel: "online",
+    regions: "any",
+    currency: "any",
+    merchantMode: "listed"
+  },
+  [canonicalOfferKey("MMPOWER", "網上簽賬 5%")]: {
+    group: "mmpower-primary",
+    channel: "online",
+    regions: "any",
+    currency: "any",
+    excludeWhenMatchedGroups: ["mmpower-merchant", "mmpower-entertainment", "mmpower-fashion"]
+  },
+  [canonicalOfferKey("MMPOWER", "海外實體外幣簽賬 4%")]: {
+    group: "mmpower-primary",
+    channel: "offline",
+    regions: ["澳門", "內地", "海外"],
+    currency: "foreign"
+  },
+  [canonicalOfferKey("恒生多貨幣扣賬卡", "指定海外商戶 15%")]: {
+    group: null,
+    channel: "offline",
+    regions: ["海外"],
+    currency: "any",
+    merchantMode: "listed"
+  },
+  [canonicalOfferKey("恒生多貨幣扣賬卡", "指定海外交通 20%")]: {
+    group: null,
+    channel: "either",
+    regions: ["內地", "海外"],
+    currency: "any",
+    merchantMode: "listed",
+    categoryAnyOf: ["transport"]
+  },
+  [canonicalOfferKey("恒生多貨幣扣賬卡", "指定本地商戶 20%")]: {
+    group: null,
+    channel: "either",
+    regions: ["香港"],
+    currency: "any",
+    merchantMode: "listed"
+  },
+  [canonicalOfferKey("AEON WAKUWAKU", "網上簽賬 6%")]: {
+    group: null,
+    channel: "online",
+    regions: "any",
+    currency: "any"
+  },
+  [canonicalOfferKey("AEON WAKUWAKU", "日本簽賬 3%")]: {
+    group: null,
+    channel: "either",
+    regions: ["海外"],
+    currency: "JPY",
+    requireTags: ["japan"]
+  },
+  [canonicalOfferKey("AEON WAKUWAKU", "本地餐飲 1%")]: {
+    group: null,
+    channel: "either",
+    regions: ["香港"],
+    currency: "HKD",
+    categoryAnyOf: ["dining"]
+  },
+  [canonicalOfferKey("DBS Live Fresh", "網上旅遊/娛樂/訂閱 外幣 6%")]: {
+    group: "dbs-live-fresh-online",
+    channel: "online",
+    regions: "any",
+    currency: "foreign",
+    categoryAnyOf: ["travel", "entertainment", "subscription"],
+    minSpendType: "single",
+    payoutTiming: "instant"
+  },
+  [canonicalOfferKey("DBS Live Fresh", "網上旅遊/娛樂/訂閱 港幣 5%")]: {
+    group: "dbs-live-fresh-online",
+    channel: "online",
+    regions: "any",
+    currency: "HKD",
+    categoryAnyOf: ["travel", "entertainment", "subscription"],
+    minSpendType: "single",
+    payoutTiming: "instant"
+  },
+  [canonicalOfferKey("DBS Live Fresh", "合資格網上外幣 1%")]: {
+    group: "dbs-live-fresh-online",
+    channel: "online",
+    regions: ["澳門", "內地", "海外"],
+    currency: "foreign",
+    payoutTiming: "instant"
+  }
+};
+
 const DEFAULT_STATE = {
   cards: [],
   offers: [],
@@ -1048,6 +1235,15 @@ const DEFAULT_STATE = {
 
 let state = loadData();
 let editingOfferId = null;
+let recommendOverrides = {
+  region: "",
+  channel: "",
+  category: "",
+  merchant: ""
+};
+let recommendationConfirmed = false;
+let recommendCurrencyTouched = false;
+let recommendAmountTouched = false;
 
 bootstrap();
 
@@ -1081,6 +1277,10 @@ function bindEvents() {
   document.getElementById("runRecommendationBtn").addEventListener("click", runRecommendation);
   document.getElementById("fillDemoScenarioBtn").addEventListener("click", fillDemoScenario);
   document.getElementById("clearRecommendBtn").addEventListener("click", clearRecommendForm);
+  document.getElementById("recommend-description").addEventListener("input", handleRecommendDescriptionInput);
+  document.getElementById("recommend-amount").addEventListener("input", handleRecommendAmountInput);
+  document.getElementById("recommend-currency").addEventListener("change", handleRecommendCurrencyChange);
+  document.getElementById("recommend-date").addEventListener("change", handleRecommendDateChange);
   document.getElementById("saveOfferBtn").addEventListener("click", saveOffer);
   document.getElementById("resetOfferFormBtn").addEventListener("click", () => resetOfferForm());
   document.getElementById("card-search").addEventListener("input", renderCards);
@@ -1097,6 +1297,48 @@ function switchPage(page) {
     button.classList.toggle("active", button.dataset.page === page);
   });
   window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function handleRecommendDescriptionInput() {
+  resetRecommendationOverrides();
+  applySuggestedCurrencyFromDescription();
+  applySuggestedAmountFromDescription();
+}
+
+function handleRecommendAmountInput() {
+  recommendAmountTouched = true;
+  resetRecommendationOverrides();
+}
+
+function handleRecommendCurrencyChange() {
+  recommendCurrencyTouched = true;
+  resetRecommendationOverrides();
+}
+
+function handleRecommendDateChange() {
+  resetRecommendationOverrides();
+}
+
+function applySuggestedCurrencyFromDescription() {
+  if (recommendCurrencyTouched) return;
+  const description = document.getElementById("recommend-description").value.trim();
+  const suggestedCurrency = inferSuggestedCurrencyFromDescription(description);
+  if (!suggestedCurrency) return;
+  document.getElementById("recommend-currency").value = suggestedCurrency;
+}
+
+function applySuggestedAmountFromDescription() {
+  if (recommendAmountTouched) return;
+  const description = document.getElementById("recommend-description").value.trim();
+  const suggestedAmount = inferSuggestedAmountFromDescription(description);
+  document.getElementById("recommend-amount").value = suggestedAmount === null ? "" : suggestedAmount;
+}
+
+function resetRecommendationOverrides() {
+  recommendOverrides = { region: "", channel: "", category: "", merchant: "" };
+  recommendationConfirmed = false;
+  document.getElementById("recommendClarifications").innerHTML = "";
+  document.getElementById("recommendationResults").innerHTML = "";
 }
 
 function loadData() {
@@ -1141,7 +1383,7 @@ function normalizeOffer(offer) {
   if ((offer.locations || []).some((location) => ["海外", "澳門", "內地"].includes(location)) || title.includes("海外") || notes.includes("海外") || notes.includes("外幣")) {
     tags.add("overseas");
   }
-  if (title.includes("Apple Pay") || notes.includes("Apple Pay")) {
+  if (title.includes("Apple Pay")) {
     tags.add("applepay");
   }
   if (title.includes("指定") || notes.includes("指定") || notes.includes("僅適用")) {
@@ -1394,12 +1636,24 @@ function renderCardFilters() {
   const categorySelect = document.getElementById("card-category-filter");
   const currentBank = bankSelect.value;
   const currentCategory = categorySelect.value;
-  const banks = [...new Set(state.cards.map((card) => card.bank).filter(Boolean))]
-    .sort((a, b) => a.localeCompare(b, "zh-Hant"));
-  const categories = [...new Set([
-    ...state.cards.flatMap((card) => card.tags || []),
-    ...state.offers.flatMap((offer) => [offer.category, ...(offer.tags || [])].filter(Boolean))
-  ])].filter((category) => category !== "general");
+  const orderedCards = [...state.cards].sort((left, right) => {
+    const leftIndex = CARD_DISPLAY_ORDER.indexOf(left.name);
+    const rightIndex = CARD_DISPLAY_ORDER.indexOf(right.name);
+    if (leftIndex !== -1 && rightIndex !== -1 && leftIndex !== rightIndex) return leftIndex - rightIndex;
+    if (leftIndex !== -1) return -1;
+    if (rightIndex !== -1) return 1;
+    return left.name.localeCompare(right.name, "zh-Hant");
+  });
+  const banks = [...new Set(orderedCards.map((card) => card.bank).filter(Boolean))];
+  const categories = CATEGORY_FILTER_ORDER.filter((category) => state.cards.some((card) => {
+    const cardCategories = new Set([
+      ...((card.tags || []).filter(Boolean)),
+      ...state.offers
+        .filter((offer) => offer.cardId === card.id)
+        .flatMap((offer) => [offer.category, ...(offer.tags || [])].filter(Boolean))
+    ]);
+    return cardCategories.has(category);
+  }));
 
   bankSelect.innerHTML = `<option value="">全部銀行</option>${banks.map((bank) => `<option value="${escapeHtml(bank)}">${escapeHtml(bank)}</option>`).join("")}`;
   categorySelect.innerHTML = `<option value="">全部類型</option>${categories.map((category) => `<option value="${escapeHtml(category)}">${escapeHtml(CATEGORY_LABELS[category] || category)}</option>`).join("")}`;
@@ -1488,6 +1742,11 @@ function clearRecommendForm() {
   document.getElementById("recommend-amount").value = "";
   document.getElementById("recommend-currency").value = "HKD";
   document.getElementById("recommend-date").value = todayString();
+  recommendCurrencyTouched = false;
+  recommendAmountTouched = false;
+  recommendOverrides = { region: "", channel: "", category: "", merchant: "" };
+  recommendationConfirmed = false;
+  document.getElementById("recommendClarifications").innerHTML = "";
   document.getElementById("recommendationResults").innerHTML = "";
 }
 
@@ -1495,13 +1754,19 @@ function fillDemoScenario() {
   document.getElementById("recommend-description").value = "今晚喺香港網上買家電";
   document.getElementById("recommend-amount").value = "680";
   document.getElementById("recommend-currency").value = "HKD";
-  document.getElementById("recommend-date").value = "2026-04-16";
+  document.getElementById("recommend-date").value = todayString();
+  recommendCurrencyTouched = false;
+  recommendAmountTouched = false;
+  recommendOverrides = { region: "", channel: "", category: "", merchant: "" };
+  recommendationConfirmed = false;
   runRecommendation();
 }
 
 function setChillMonthlyQualified(checked) {
   state.settings.chillMonthlyQualified = Boolean(checked);
   saveData();
+  const hasScenario = document.getElementById("recommend-description").value.trim() && document.getElementById("recommend-date").value;
+  if (hasScenario) runRecommendation();
 }
 
 function runRecommendation() {
@@ -1518,17 +1783,27 @@ function runRecommendation() {
 
   const scenario = { description, amount, currency, date };
   Object.assign(scenario, inferScenarioFromText(description));
+  applyRecommendationOverrides(scenario);
   scenario.currencyBucket = inferCurrencyBucket(currency, scenario.locations, description);
   scenario.flags = {
     chillMonthlyQualified: Boolean(state.settings?.chillMonthlyQualified)
   };
 
+  renderRecommendClarifications(scenario);
+
+  if (!recommendationConfirmed) {
+    document.getElementById("recommendationResults").innerHTML = `
+      <div class="empty-state">請先確認上面場景設定，再顯示最終推薦。</div>
+    `;
+    return;
+  }
+
   const rateMode = amount === null || amount <= 0;
 
   const results = state.cards.map((card) => evaluateCard(card, scenario, rateMode))
     .sort((a, b) => rateMode
-      ? b.bestRate - a.bestRate
-      : b.totalRewardAmount - a.totalRewardAmount
+      ? b.rankingScore - a.rankingScore
+      : b.rankingScore - a.rankingScore
     );
 
   document.getElementById("recommendationResults").innerHTML = results.length ? results.map((result, index) => `
@@ -1541,6 +1816,7 @@ function runRecommendation() {
             <span>${escapeHtml(result.card.bank)}</span>
             <span>${escapeHtml(CATEGORY_LABELS[scenario.category] || scenario.category)}</span>
             <span>${escapeHtml(formatScenarioLocations(scenario.locations))}</span>
+            ${result.hasInstantPayout ? `<span>即時回贈</span>` : ""}
           </div>
         </div>
         <div class="result-value">${rateMode ? formatPercent(result.bestRate) : formatCurrencyWithCode(result.totalRewardAmount, currency)}</div>
@@ -1561,6 +1837,112 @@ function runRecommendation() {
       <p class="result-note">${escapeHtml(result.explanation)}</p>
     </article>
   `).join("") : `<div class="empty-state">還沒有信用卡資料，暫時無法推薦。</div>`;
+}
+
+function applyRecommendationOverrides(scenario) {
+  if (recommendOverrides.region) {
+    const baseLocations = (scenario.locations || []).filter((location) => location !== "香港" && location !== "澳門" && location !== "內地" && location !== "海外");
+    scenario.regions = [recommendOverrides.region];
+    scenario.location = recommendOverrides.region;
+    scenario.locations = [...baseLocations, recommendOverrides.region];
+  }
+  if (recommendOverrides.channel) {
+    scenario.channel = recommendOverrides.channel;
+    const nonOnline = (scenario.locations || []).filter((location) => location !== "網上");
+    scenario.locations = recommendOverrides.channel === "online" ? [...nonOnline, "網上"] : nonOnline;
+    if (!scenario.locations.length) scenario.locations = [...(scenario.regions || ["香港"])];
+  }
+  if (recommendOverrides.category) {
+    scenario.category = recommendOverrides.category;
+    const tags = new Set(scenario.scenarioTags || []);
+    ["online", "dining", "entertainment", "shopping", "transport", "travel", "subscription", "groceries"].forEach((tag) => tags.delete(tag));
+    if (recommendOverrides.category !== "general") tags.add(recommendOverrides.category);
+    scenario.scenarioTags = [...tags];
+  }
+  if (recommendOverrides.merchant.trim()) {
+    const merchantText = recommendOverrides.merchant.trim().toLowerCase();
+    scenario.confirmedMerchant = merchantText;
+    scenario.merchantTokens = collectMerchantTokens(merchantText);
+    if (!scenario.merchantTokens.length) {
+      scenario.merchantTokens = [merchantText];
+    }
+  }
+}
+
+function renderRecommendClarifications(scenario) {
+  const container = document.getElementById("recommendClarifications");
+  if (!scenario.description?.trim()) {
+    container.innerHTML = "";
+    return;
+  }
+
+  const currentRegion = recommendOverrides.region || (scenario.regions?.[0] || "香港");
+  const currentChannel = recommendOverrides.channel || (scenario.channel || "offline");
+  const currentCategory = recommendOverrides.category || (scenario.category || "general");
+  const currentMerchant = recommendOverrides.merchant || scenario.merchantTokens?.[0] || "";
+  const summaryBits = [
+    `地點：${currentRegion}`,
+    `方式：${currentChannel === "online" ? "網上" : "實體"}`,
+    `類別：${CATEGORY_LABELS[currentCategory] || currentCategory}`,
+    `貨幣：${scenario.currency}`,
+    `商戶：${currentMerchant || "未指定"}`
+  ];
+
+  container.innerHTML = `
+    <section class="scenario-card">
+      <h3 class="scenario-title">確認場景</h3>
+      <p class="scenario-sub">推薦會以你喺下面確認嘅欄位為準。修改任何欄位後，需要再按一次確認先會重新計算。</p>
+      <div class="scenario-grid" style="grid-template-columns: repeat(2, minmax(0, 1fr));">
+        <div class="field" style="margin-bottom:0;">
+          <label for="scenario-region">地點</label>
+          <select id="scenario-region" onchange="setRecommendationOverride('region', this.value)">
+            ${["香港", "澳門", "內地", "海外"].map((region) => `<option value="${region}" ${currentRegion === region ? "selected" : ""}>${region}</option>`).join("")}
+          </select>
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label for="scenario-channel">方式</label>
+          <select id="scenario-channel" onchange="setRecommendationOverride('channel', this.value)">
+            <option value="offline" ${currentChannel === "offline" ? "selected" : ""}>實體</option>
+            <option value="online" ${currentChannel === "online" ? "selected" : ""}>網上</option>
+          </select>
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label for="scenario-category">類別</label>
+          <select id="scenario-category" onchange="setRecommendationOverride('category', this.value)">
+            ${SCENARIO_CATEGORY_OPTIONS.map((category) => `<option value="${category}" ${currentCategory === category ? "selected" : ""}>${escapeHtml(CATEGORY_LABELS[category] || category)}</option>`).join("")}
+          </select>
+        </div>
+        <div class="field full" style="margin-bottom:0; grid-column: 1 / -1;">
+          <label for="scenario-merchant">商戶 / 品牌</label>
+          <input id="scenario-merchant" type="text" value="${escapeHtml(currentMerchant)}" placeholder="例如：Netflix、三星、Starbucks" oninput="setRecommendationMerchant(this.value)">
+        </div>
+      </div>
+      <div class="scenario-summary">目前按 ${escapeHtml(summaryBits.join(" / "))} 計算。</div>
+      <div class="actions" style="margin-top:14px;">
+        <button class="btn btn-primary" type="button" onclick="confirmRecommendationScenario()">確認場景並推薦</button>
+      </div>
+    </section>
+  `;
+}
+
+function setRecommendationOverride(key, value) {
+  recommendOverrides[key] = value;
+  recommendationConfirmed = false;
+  runRecommendation();
+}
+
+function setRecommendationMerchant(value) {
+  recommendOverrides.merchant = value;
+  recommendationConfirmed = false;
+}
+
+function confirmRecommendationScenario() {
+  const merchantInput = document.getElementById("scenario-merchant");
+  if (merchantInput) {
+    recommendOverrides.merchant = merchantInput.value;
+  }
+  recommendationConfirmed = true;
+  runRecommendation();
 }
 
 function inferScenarioFromText(text) {
@@ -1590,11 +1972,21 @@ function inferScenarioFromText(text) {
     .map((item) => item.location);
   const uniqueLocations = [...new Set(matchedLocations)];
   const scenarioTags = new Set();
+  const merchantTokens = collectMerchantTokens(normalized);
+  const merchantSignals = inferMerchantSignals(merchantTokens);
+  const inferredRegions = [...new Set([...uniqueLocations.filter((location) => location !== "網上"), ...merchantSignals.regions])];
+  const offlineCue = /商場|門市|實體|店舖|店铺|店內|店内|餐廳|餐厅|戲院|戏院|咖啡店|百貨|百货|專櫃|专柜|地鐵|地铁|高鐵|高铁|巴士|酒店/.test(normalized);
+  const channel = uniqueLocations.includes("網上") || merchantSignals.forceOnline ? "online" : "offline";
+  const channelExplicit = uniqueLocations.includes("網上") || merchantSignals.forceOnline || offlineCue || merchantSignals.forceOffline;
+  const regionExplicit = inferredRegions.length > 0;
 
-  if (uniqueLocations.includes("網上")) scenarioTags.add("online");
-  if (uniqueLocations.includes("海外")) scenarioTags.add("overseas");
+  if (channel === "online") scenarioTags.add("online");
+  if (inferredRegions.includes("海外")) scenarioTags.add("overseas");
   if (matchedCategory) scenarioTags.add(matchedCategory.category);
+  if (merchantSignals.category) scenarioTags.add(merchantSignals.category);
+  if (!matchedCategory && merchantSignals.category) scenarioTags.add(merchantSignals.category);
   if (normalized.includes("日本")) scenarioTags.add("japan");
+  if (merchantSignals.japan) scenarioTags.add("japan");
   if (appStoreMentioned || normalized.includes("netflix") || normalized.includes("spotify") || normalized.includes("disney+") || normalized.includes("apple tv") || normalized.includes("apple music") || normalized.includes("訂閱")) {
     scenarioTags.add("subscription");
   }
@@ -1603,13 +1995,50 @@ function inferScenarioFromText(text) {
   }
 
   return {
-    location: uniqueLocations[0] || "香港",
+    location: inferredRegions[0] || "香港",
     locations: uniqueLocations.length ? uniqueLocations : ["香港"],
-    category: matchedCategory ? matchedCategory.category : "general",
+    regions: inferredRegions.length
+      ? inferredRegions
+      : ["香港"],
+    channel,
+    channelExplicit,
+    regionExplicit,
+    category: matchedCategory ? matchedCategory.category : (merchantSignals.category || "general"),
+    normalizedDescription: normalized,
     paymentMethod: applePayMentioned ? "applepay" : "",
     scenarioTags: [...scenarioTags],
-    merchantTokens: collectMerchantTokens(normalized)
+    merchantTokens
   };
+}
+
+function inferSuggestedCurrencyFromDescription(text) {
+  const normalized = String(text || "").toLowerCase();
+  if (!normalized.trim()) return "HKD";
+  if (/(澳門|macau|macao)/.test(normalized)) return "MOP";
+  if (/(日本|tokyo|osaka|kyoto|japan|日圓|日元|yen)/.test(normalized)) return "JPY";
+  if (/(泰國|bangkok|thailand|thai|泰銖)/.test(normalized)) return "THB";
+  if (/(台灣|taiwan|taipei|台幣|台币)/.test(normalized)) return "TWD";
+  if (/(美國|美國|usa|united states|美金|美元|usd)/.test(normalized)) return "USD";
+  if (/(內地|大陸|中國|china|廣州|深圳|上海|北京|人民幣|人民币)/.test(normalized)) return "CNY";
+  if (/(香港|hk|hkd|港幣|港币|本地)/.test(normalized)) return "HKD";
+  return "";
+}
+
+function inferSuggestedAmountFromDescription(text) {
+  const raw = String(text || "");
+  if (!raw.trim()) return null;
+  const normalized = raw.replace(/,/g, "");
+  const patterns = [
+    /(?:hk\$|\$|hkd|cny|rmb|mop\$|jpy|usd|thb|twd|¥|￥)\s*(\d+(?:\.\d{1,2})?)/i,
+    /(\d+(?:\.\d{1,2})?)\s*(?:蚊|元|塊|块|銀|银|港紙|港币|港幣|人民幣|人民币|美金|美元|日圓|日元|泰銖|台幣|台币)/i
+  ];
+  for (const pattern of patterns) {
+    const match = normalized.match(pattern);
+    if (!match) continue;
+    const amount = Number(match[1]);
+    if (Number.isFinite(amount) && amount > 0) return String(amount);
+  }
+  return null;
 }
 
 function evaluateCard(card, scenario, rateMode) {
@@ -1621,10 +2050,9 @@ function evaluateCard(card, scenario, rateMode) {
     if (offer.cardId !== card.id) return false;
     if (shouldIgnoreOfferForRecommendation(offer)) return false;
     if (!isDateInRange(scenario.date, offer.startDate, offer.endDate)) return false;
-    if (!rateMode && amount < Number(offer.minSpend || 0)) return false;
-    if (offer.category !== "general" && scenario.category !== "general" && offer.category !== scenario.category) return false;
-    if (!locationApplies(offer.locations, scenario.locations)) return false;
-    if (!offerRuleMatchesScenario(offer, scenario)) return false;
+    if (!rateMode && !isOfferMinSpendSatisfied(card, offer, amount, scenario)) return false;
+    if (!offerScopeMatchesScenario(card, offer, scenario)) return false;
+    if (!offerRuleMatchesScenario(card, offer, scenario)) return false;
     if (!merchantOfferMatchesScenario(offer, scenario)) return false;
     return true;
   });
@@ -1640,6 +2068,10 @@ function evaluateCard(card, scenario, rateMode) {
 
   const bestOfferRate = selectedOffers.reduce((max, offer) => Math.max(max, Number(offer.bonusRate || 0)), 0);
   const bestRate = baseRateApplied + bestOfferRate;
+  const hasInstantPayout = selectedOffers.some((offer) => getCanonicalRecommendationRule(card, offer)?.payoutTiming === "instant");
+  const rankingScore = rateMode
+    ? bestRate + getInstantPayoutRateBonus(hasInstantPayout)
+    : totalRewardAmount + getInstantPayoutValueBonus(hasInstantPayout, amount);
 
   const explanationParts = [];
   explanationParts.push("基礎回贈按卡片基本回贈率計算");
@@ -1647,6 +2079,9 @@ function evaluateCard(card, scenario, rateMode) {
     explanationParts.push("命中 " + selectedOffers.length + " 個已採用活動");
     if (skippedOffers.length) {
       explanationParts.push("同組優惠已自動擇優，不重複相加");
+    }
+    if (hasInstantPayout) {
+      explanationParts.push("即時回贈於排序時有輕微加分");
     }
   } else {
     explanationParts.push("沒有命中可疊加活動");
@@ -1659,16 +2094,93 @@ function evaluateCard(card, scenario, rateMode) {
     offerRewardAmount,
     totalRewardAmount,
     bestRate,
-    offerTitles: selectedOffers.map((offer) => offer.minSpend > 0 ? `${offer.title}（需達 HK$${offer.minSpend}）` : offer.title),
+    hasInstantPayout,
+    rankingScore,
+    offerTitles: selectedOffers.map((offer) => formatRecommendationOfferTitle(card, offer)),
     offerSelectionSummary,
     explanation: explanationParts.join("；")
   };
 }
 
-function locationApplies(locations, scenarioLocation) {
-  if (!Array.isArray(locations) || locations.length === 0) return true;
-  const scenarioLocations = Array.isArray(scenarioLocation) ? scenarioLocation : [scenarioLocation];
-  return scenarioLocations.some((location) => locations.includes(location));
+function getInstantPayoutRateBonus(hasInstantPayout) {
+  return hasInstantPayout ? 0.2 : 0;
+}
+
+function getInstantPayoutValueBonus(hasInstantPayout, amount) {
+  if (!hasInstantPayout) return 0;
+  return Math.max(2, (Number(amount || 0) * 0.003));
+}
+
+function isOfferMinSpendSatisfied(card, offer, amount, scenario) {
+  const rule = getCanonicalRecommendationRule(card, offer);
+  if (rule?.minSpendType === "monthlyQualified") {
+    return Boolean(scenario.flags?.chillMonthlyQualified);
+  }
+  return amount >= Number(offer.minSpend || 0);
+}
+
+function formatRecommendationOfferTitle(card, offer) {
+  const rule = getCanonicalRecommendationRule(card, offer);
+  if (rule?.titleSuffix === "monthlyQualified") {
+    return `${offer.title}（今月累積需達 HK$${formatNumber(offer.minSpend)}）`;
+  }
+  return offer.minSpend > 0 ? `${offer.title}（需達 HK$${formatNumber(offer.minSpend)}）` : offer.title;
+}
+
+function offerScopeMatchesScenario(card, offer, scenario) {
+  const rule = getCanonicalRecommendationRule(card, offer);
+  if (rule) {
+    if (!ruleCategoryMatches(rule, scenario)) return false;
+    if (!ruleChannelMatches(rule, scenario)) return false;
+    if (!ruleRegionMatches(rule, scenario, card, offer)) return false;
+    if (!ruleCurrencyMatches(rule, scenario)) return false;
+    return true;
+  }
+  if (!categoryMatchesOffer(offer, scenario)) return false;
+  if ((offer.tags || []).includes("online") && scenario.channel !== "online") return false;
+  const offerRegions = (offer.locations || []).filter((location) => location !== "網上");
+  if (offerRegions.length && !scenario.regions.some((region) => offerRegions.includes(region))) return false;
+  return true;
+}
+
+function ruleCategoryMatches(rule, scenario) {
+  if (!rule.categoryAnyOf || !rule.categoryAnyOf.length) return true;
+  return rule.categoryAnyOf.includes(scenario.category) || rule.categoryAnyOf.some((category) => (scenario.scenarioTags || []).includes(category));
+}
+
+function categoryMatchesOffer(offer, scenario) {
+  if (offer.category === "general") return true;
+  return offer.category === scenario.category;
+}
+
+function ruleChannelMatches(rule, scenario) {
+  if (rule.channel === "either") return true;
+  return scenario.channel === rule.channel;
+}
+
+function ruleRegionMatches(rule, scenario, card, offer) {
+  const regions = Array.isArray(scenario.regions) && scenario.regions.length ? scenario.regions : ["香港"];
+  if (rule.regions === "any") return true;
+  if (rule.regions === "mixed") {
+    if (rule.merchantMode === "chill-merchant") {
+      return chillMerchantRegionMatches(scenario);
+    }
+    if (rule.merchantMode === "mmpower-merchant") {
+      return scenario.channel === "online" || regions.includes("香港");
+    }
+  }
+  if (Array.isArray(rule.regions)) {
+    return regions.some((region) => rule.regions.includes(region));
+  }
+  return true;
+}
+
+function ruleCurrencyMatches(rule, scenario) {
+  if (!rule.currency || rule.currency === "any") return true;
+  if (rule.currency === "foreign") return scenario.currencyBucket === "foreign";
+  if (rule.currency === "HKD") return scenario.currency === "HKD";
+  if (rule.currency === "JPY") return scenario.currency === "JPY";
+  return true;
 }
 
 function selectBestOfferCombination(card, scenario, offers, amount) {
@@ -1711,18 +2223,10 @@ function selectBestOfferCombination(card, scenario, offers, amount) {
 }
 
 function getOfferSelectionKey(card, offer) {
-  const title = offer.title || "";
+  const rule = getCanonicalRecommendationRule(card, offer);
   if (isFixedValueOffer(offer)) return `stackable:${offer.id}`;
-  if ((offer.tags || []).includes("applepay") || /Apple Pay/i.test(title)) return `exclusive:${card.id}:applepay`;
-  if (card.name === "DBS Live Fresh" && (/網上旅遊\/娛樂\/訂閱/.test(title) || /合資格網上外幣 1%/.test(title))) {
-    return `exclusive:${card.id}:dbs-live-fresh-online`;
-  }
-  if (card.name === "MMPOWER" && (/指定商戶 8%|網上娛樂 8%|網上服飾 8%|網上簽賬 5%|海外實體外幣簽賬 4%/.test(title))) {
-    return `exclusive:${card.id}:mmpower-primary`;
-  }
-  if (card.name === "BOC Chill Card" && (/海外簽賬 4%|網上簽賬 4%/.test(title))) {
-    return `exclusive:${card.id}:boc-chill-4pct`;
-  }
+  if (rule?.group) return `exclusive:${card.id}:${rule.group}`;
+  if ((offer.tags || []).includes("applepay")) return `exclusive:${card.id}:applepay`;
   return `stackable:${offer.id}`;
 }
 
@@ -1750,36 +2254,86 @@ function buildOfferSelectionSummary(selectedOffers, skippedOffers) {
 }
 
 function merchantOfferMatchesScenario(offer, scenario) {
+  const linkedCard = state.cards.find((card) => card.id === offer.cardId);
+  const rule = linkedCard ? getCanonicalRecommendationRule(linkedCard, offer) : null;
+  if (rule) {
+    return rule.merchantMode ? ruleMerchantMatches(rule, offer, scenario) : true;
+  }
   const keywords = Array.isArray(offer.requiresKeywords) ? offer.requiresKeywords : [];
   const isMerchant = (offer.tags || []).includes("merchant");
   if (!keywords.length && !isMerchant) return true;
   const merchantTokens = scenario.merchantTokens || [];
+  const normalizedDescription = String(scenario.normalizedDescription || "").toLowerCase();
   const text = `${offer.title || ""} ${offer.notes || ""}`.toLowerCase();
   const fallbackKeywords = !keywords.length ? extractMerchantKeywords(text) : keywords.map((keyword) => keyword.toLowerCase());
   if (!fallbackKeywords.length) return false;
-  return fallbackKeywords.some((keyword) => merchantTokens.includes(keyword));
+  return fallbackKeywords.some((keyword) => merchantTokens.includes(keyword) || keywordMatchesDescription(keyword, normalizedDescription));
 }
 
-function offerRuleMatchesScenario(offer, scenario) {
+function ruleMerchantMatches(rule, offer, scenario) {
+  const merchantTokens = scenario.merchantTokens || [];
+  const normalizedDescription = String(scenario.normalizedDescription || "").toLowerCase();
+  const keywords = Array.isArray(offer.requiresKeywords) ? offer.requiresKeywords.map((keyword) => keyword.toLowerCase()) : [];
+
+  if (rule.merchantMode === "listed") {
+    return !keywords.length || keywords.some((keyword) => merchantTokens.includes(keyword) || keywordMatchesDescription(keyword, normalizedDescription));
+  }
+  if (rule.merchantMode === "listed-or-category") {
+    const listedMatch = !keywords.length || keywords.some((keyword) => merchantTokens.includes(keyword) || keywordMatchesDescription(keyword, normalizedDescription));
+    return listedMatch || ruleCategoryMatches(rule, scenario);
+  }
+  if (rule.merchantMode === "chill-merchant") {
+    if (!keywords.length) return false;
+    return keywords.some((keyword) => merchantTokens.includes(keyword) || keywordMatchesDescription(keyword, normalizedDescription));
+  }
+  if (rule.merchantMode === "mmpower-merchant") {
+    if (!keywords.length) return false;
+    return keywords.some((keyword) => merchantTokens.includes(keyword) || keywordMatchesDescription(keyword, normalizedDescription));
+  }
+  return true;
+}
+
+function offerRuleMatchesScenario(card, offer, scenario) {
+  const rule = getCanonicalRecommendationRule(card, offer);
   const text = `${offer.title || ""} ${offer.notes || ""}`;
   const scenarioTags = new Set(scenario.scenarioTags || []);
 
-  if (/Chill 商戶 8%|指定商戶 8%/.test(offer.title || "")) {
-    return Boolean(scenario.flags?.chillMonthlyQualified);
-  }
-  if (offer.title === "澳門/內地/海外 2.4%" && scenario.currency === "HKD") {
-    return false;
+  if (rule) {
+    if (rule.requireTags && !rule.requireTags.every((tag) => scenarioTags.has(tag))) return false;
+    if (rule.excludeWhenMatchedGroups?.length) {
+      const matchedExcluded = state.offers.some((candidate) => {
+        if (candidate.cardId !== offer.cardId || candidate.id === offer.id) return false;
+        const candidateRule = getCanonicalRecommendationRule(card, candidate);
+        if (!candidateRule || !rule.excludeWhenMatchedGroups.includes(candidateRule.group)) return false;
+        if (!isDateInRange(scenario.date, candidate.startDate, candidate.endDate)) return false;
+        if (!offerScopeMatchesScenario(card, candidate, scenario)) return false;
+        if (!offerRuleMatchesScenario(card, candidate, scenario)) return false;
+        if (!merchantOfferMatchesScenario(candidate, scenario)) return false;
+        return true;
+      });
+      if (matchedExcluded) return false;
+    }
+    return true;
   }
 
-  if (/Apple Pay/i.test(text) && scenario.paymentMethod !== "applepay") return false;
+  if ((offer.tags || []).includes("applepay") && scenario.paymentMethod !== "applepay") return false;
   if (/港幣\/人民幣\/澳門幣/.test(text) && !["HKD", "CNY", "MOP"].includes(scenario.currency)) return false;
   if ((/其他貨幣/.test(text) || /外幣/.test(text)) && scenario.currencyBucket !== "foreign") return false;
-  if (/實體店/.test(text) && scenarioTags.has("online")) return false;
-  if ((/日本/.test(text) || /日圓/.test(text)) && !scenarioTags.has("japan")) return false;
-  if (/網上旅遊\/娛樂\/訂閱/.test(text) && !scenarioTags.has("online")) return false;
+  if (/實體店/.test(text) && scenario.channel === "online") return false;
+  if (/網上旅遊\/娛樂\/訂閱/.test(text) && scenario.channel !== "online") return false;
   if (/網上旅遊\/娛樂\/訂閱/.test(text) && !["travel", "entertainment", "subscription"].some((tag) => scenarioTags.has(tag))) return false;
-  if (/合資格網上外幣 1%/.test(text) && (!scenarioTags.has("online") || scenario.currencyBucket !== "foreign")) return false;
+  if (/合資格網上外幣 1%/.test(text) && (scenario.channel !== "online" || scenario.currencyBucket !== "foreign")) return false;
   return true;
+}
+
+function isChillOnlineServiceScenario(scenario) {
+  const normalizedDescription = String(scenario.normalizedDescription || "").toLowerCase();
+  return ["app store", "apple tv", "netflix", "spotify", "disney+"].some((keyword) => normalizedDescription.includes(keyword));
+}
+
+function chillMerchantRegionMatches(scenario) {
+  if (isChillOnlineServiceScenario(scenario)) return scenario.channel === "online";
+  return (scenario.regions || []).includes("香港");
 }
 
 function extractMerchantKeywords(text) {
@@ -1790,6 +2344,69 @@ function extractMerchantKeywords(text) {
     .filter((keyword) => keyword.length >= 2)
     .filter((keyword) => !/^\d/.test(keyword))
     .filter((keyword) => !blocked.has(keyword)))];
+}
+
+function keywordMatchesDescription(keyword, normalizedDescription) {
+  if (!keyword || !normalizedDescription) return false;
+  if (/[\u3400-\u9FFF]/u.test(keyword)) {
+    return normalizedDescription.includes(keyword);
+  }
+  if (/^[a-z0-9+&'. -]+$/i.test(keyword)) {
+    const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return new RegExp(`(^|[^a-z0-9])${escaped}([^a-z0-9]|$)`, "i").test(normalizedDescription);
+  }
+  return normalizedDescription.includes(keyword);
+}
+
+function inferMerchantSignals(merchantTokens) {
+  const regionMap = new Map([
+    ["中國鐵路", "內地"],
+    ["北京地鐵", "內地"],
+    ["上海地鐵", "內地"],
+    ["上海磁浮", "內地"],
+    ["環島中港通", "內地"],
+    ["go transit", "海外"],
+    ["tfl", "海外"],
+    ["translink", "海外"],
+    ["trainlink", "海外"],
+    ["jr", "海外"],
+    ["harrods", "海外"],
+    ["coles", "海外"],
+    ["woolworths", "海外"],
+    ["emporium", "海外"],
+    ["paragon", "海外"],
+    ["lululemon", "海外"],
+    ["松本清", "海外"],
+    ["唐吉訶德", "海外"],
+    ["三越", "海外"],
+    ["伊勢丹", "海外"],
+    ["大丸", "海外"],
+    ["松坂屋", "海外"],
+    ["阪急", "海外"],
+    ["阪神", "海外"]
+  ]);
+  const categoryMap = new Map([
+    ["中國鐵路", "transport"],
+    ["北京地鐵", "transport"],
+    ["上海地鐵", "transport"],
+    ["上海磁浮", "transport"],
+    ["環島中港通", "transport"],
+    ["go transit", "transport"],
+    ["tfl", "transport"],
+    ["translink", "transport"],
+    ["trainlink", "transport"],
+    ["jr", "transport"],
+    ["mcdonald", "dining"],
+    ["pacific coffee", "dining"],
+    ["starbucks", "dining"]
+  ]);
+  const japanTokens = new Set(["jr", "松本清", "唐吉訶德", "三越", "伊勢丹", "大丸", "松坂屋", "阪急", "阪神"]);
+  const onlineOnlyTokens = new Set(["app store", "apple tv", "netflix", "spotify", "disney+"]);
+  const regions = [...new Set(merchantTokens.map((token) => regionMap.get(token)).filter(Boolean))];
+  const category = merchantTokens.map((token) => categoryMap.get(token)).find(Boolean) || "";
+  const japan = merchantTokens.some((token) => japanTokens.has(token));
+  const forceOnline = merchantTokens.some((token) => onlineOnlyTokens.has(token));
+  return { regions, category, japan, forceOnline, forceOffline: false };
 }
 
 function formatScenarioLocations(locations) {
@@ -1804,16 +2421,16 @@ function collectMerchantTokens(normalizedText) {
     ["spotify", ["spotify"]],
     ["disney+", ["disney+"]],
     ["mcdonald", ["mcdonald", "麥當勞"]],
-    ["pacific coffee", ["pacific coffee"]],
+    ["pacific coffee", ["pacific coffee", "太平洋咖啡"]],
     ["starbucks", ["starbucks", "星巴克"]],
-    ["dyson", ["dyson"]],
-    ["samsung", ["samsung"]],
-    ["sony", ["sony"]],
+    ["dyson", ["dyson", "戴森"]],
+    ["samsung", ["samsung", "三星"]],
+    ["sony", ["sony", "索尼"]],
     ["uniqlo", ["uniqlo", "優衣庫"]],
     ["gu", [" gu ", "gu "]],
-    ["ikea", ["ikea"]],
+    ["ikea", ["ikea", "宜家"]],
     ["log-on", ["log-on", "log on"]],
-    ["amazon", ["amazon"]],
+    ["amazon", ["amazon", "亞馬遜"]],
     ["lululemon", ["lululemon"]],
     ["pop mart", ["pop mart", "popmart"]],
     ["唐吉訶德", ["唐吉訶德"]],
@@ -1825,7 +2442,7 @@ function collectMerchantTokens(normalizedText) {
     ["translink", ["translink"]],
     ["trainlink", ["trainlink"]],
     ["go transit", ["go transit"]],
-    ["中國鐵路", ["中國鐵路"]],
+    ["中國鐵路", ["中國鐵路", "12306"]],
     ["北京地鐵", ["北京地鐵"]],
     ["上海地鐵", ["上海地鐵"]],
     ["上海磁浮", ["上海磁浮"]],
@@ -1834,7 +2451,7 @@ function collectMerchantTokens(normalizedText) {
   ];
   const tokens = [];
   aliases.forEach(([canonical, variants]) => {
-    if (variants.some((variant) => normalizedText.includes(variant.trim().toLowerCase()))) {
+    if (variants.some((variant) => keywordMatchesDescription(variant.trim().toLowerCase(), normalizedText))) {
       tokens.push(canonical);
     }
   });
@@ -1849,7 +2466,7 @@ function inferCurrencyBucket(currency, locations, description) {
     if (normalized.includes("澳門幣")) return "MOP";
   }
   if (currency === "HKD" && !normalized.includes("外幣") && !(locations || []).includes("海外")) return "HKD";
-  return currency === "HKD" ? "foreign" : currency;
+  return currency === "HKD" ? "foreign" : "foreign";
 }
 
 function formatOfferLocationLabel(offer, cardName = "") {
