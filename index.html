@@ -2462,10 +2462,14 @@ function renderRecommendationResults(results, scenario, rateMode, currency) {
       <button class="btn btn-secondary ${recommendResultScope === "cn" ? "active" : ""}" type="button" onclick="setRecommendationResultScope('cn')">大陸卡</button>
     </div>
   `;
+  const amountRequiredNote = rateMode ? `
+    <div class="empty-state" style="margin-bottom:14px;">Apple Pay 首幾筆返現、立減、固定金額優惠需要輸入金額先可以同百分比回贈比較。</div>
+  ` : "";
 
   if (!filtered.length) {
     document.getElementById("recommendationResults").innerHTML = `
       ${scopeControls}
+      ${amountRequiredNote}
       <div class="empty-state">呢個篩選下暫時冇結果。</div>
     `;
     return;
@@ -2473,6 +2477,7 @@ function renderRecommendationResults(results, scenario, rateMode, currency) {
 
   document.getElementById("recommendationResults").innerHTML = `
     ${scopeControls}
+    ${amountRequiredNote}
     ${filtered.map((result) => {
       const globalIndex = results.findIndex((item) => item.card.id === result.card.id);
       return `
@@ -2642,7 +2647,6 @@ function confirmRecommendationScenario() {
 
 function inferScenarioFromText(text) {
   const normalized = text.toLowerCase();
-  const applePayMentioned = /\bapple\s*pay\b/i.test(text);
   const appStoreMentioned = /\bapp\s*store\b/i.test(text);
   const locationMatchers = [
     { location: "澳門", keywords: ["澳門", "macau"] },
@@ -2700,7 +2704,7 @@ function inferScenarioFromText(text) {
     regionExplicit,
     category: matchedCategory ? matchedCategory.category : (merchantSignals.category || "general"),
     normalizedDescription: normalized,
-    paymentMethod: applePayMentioned ? "applepay" : "",
+    paymentMethod: "applepay",
     scenarioTags: [...scenarioTags],
     merchantTokens
   };

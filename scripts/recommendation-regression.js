@@ -165,6 +165,13 @@ const cases = [
     rateMode: true,
     expectedCard: "BOC Chill Card",
     expectedOffer: "網上簽賬 4%"
+  },
+  {
+    description: "香港買咖啡",
+    amount: 50,
+    currency: "HKD",
+    expectedCard: "長城萬事達 YOU 卡",
+    expectedOffer: "Apple Pay 首3筆 100%返現"
   }
 ];
 
