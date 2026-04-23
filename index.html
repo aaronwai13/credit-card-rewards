@@ -2746,7 +2746,7 @@ function evaluateCard(card, scenario, rateMode) {
     if (shouldIgnoreOfferForRecommendation(offer)) return false;
     if (rateMode && isFixedValueOffer(offer)) return false;
     if (!isDateInRange(scenario.date, offer.startDate, offer.endDate)) return false;
-    if (!rateMode && !isOfferMinSpendSatisfied(card, offer, amount, scenario)) return false;
+    if (!isOfferMinSpendSatisfied(card, offer, amount, scenario, { ignoreAmount: rateMode })) return false;
     if (!offerScopeMatchesScenario(card, offer, scenario)) return false;
     if (!offerRuleMatchesScenario(card, offer, scenario)) return false;
     if (!merchantOfferMatchesScenario(offer, scenario)) return false;
@@ -2808,11 +2808,12 @@ function getInstantPayoutValueBonus(hasInstantPayout, amount) {
   return Math.max(2, (Number(amount || 0) * 0.003));
 }
 
-function isOfferMinSpendSatisfied(card, offer, amount, scenario) {
+function isOfferMinSpendSatisfied(card, offer, amount, scenario, options = {}) {
   const rule = getCanonicalRecommendationRule(card, offer);
   if (rule?.minSpendType === "monthlyQualified") {
     return Boolean(scenario.flags?.chillMonthlyQualified);
   }
+  if (options.ignoreAmount) return true;
   return amount >= Number(offer.minSpend || 0);
 }
 

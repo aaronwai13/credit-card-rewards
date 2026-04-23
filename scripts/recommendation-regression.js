@@ -29,14 +29,14 @@ global.structuredClone = (value) => JSON.parse(JSON.stringify(value));
 
 eval(code);
 
-function runScenario(description, amount, currency, chillMonthlyQualified = false) {
+function runScenario(description, amount, currency, chillMonthlyQualified = false, rateMode = false) {
   const scenario = { description, amount, currency, date: "2026-04-21" };
   Object.assign(scenario, inferScenarioFromText(description));
   scenario.currencyBucket = inferCurrencyBucket(currency, scenario.locations, description);
   scenario.flags = { chillMonthlyQualified };
 
   return state.cards
-    .map((card) => evaluateCard(card, scenario, false))
+    .map((card) => evaluateCard(card, scenario, rateMode))
     .sort((left, right) => right.totalRewardAmount - left.totalRewardAmount);
 }
 
@@ -157,6 +157,14 @@ const cases = [
     currency: "JPY",
     expectedCard: "長城萬事達 YOU 卡",
     expectedOffer: "Apple Pay 首3筆 100%返現"
+  },
+  {
+    description: "App Store 買 app",
+    amount: null,
+    currency: "HKD",
+    rateMode: true,
+    expectedCard: "BOC Chill Card",
+    expectedOffer: "網上簽賬 4%"
   }
 ];
 
@@ -167,7 +175,8 @@ cases.forEach((testCase) => {
     testCase.description,
     testCase.amount,
     testCase.currency,
-    Boolean(testCase.chillMonthlyQualified)
+    Boolean(testCase.chillMonthlyQualified),
+    Boolean(testCase.rateMode)
   );
   const best = ranked[0];
   const bestOffer = best.offerTitles[0] || "";
