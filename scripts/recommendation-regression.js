@@ -21,6 +21,7 @@ const get = (id) => {
 };
 
 global.document = { getElementById: get, querySelectorAll() { return []; } };
+global.document.querySelector = () => ({ dataset: { regionScope: "" }, classList: { add() {}, remove() {} } });
 global.window = { scrollTo() {}, addEventListener() {} };
 global.localStorage = { getItem() { return null; }, setItem() {} };
 global.crypto = { randomUUID() { return `id-${Math.random().toString(16).slice(2)}`; } };
@@ -60,8 +61,8 @@ const cases = [
     amount: 300,
     currency: "HKD",
     chillMonthlyQualified: true,
-    expectedCard: "BOC Chill Card",
-    expectedOffer: "指定商戶 8%"
+    expectedCard: "農行萬事達白金卡",
+    expectedOffer: "境外精選商戶 10%"
   },
   {
     description: "12306 買高鐵飛",
@@ -121,6 +122,41 @@ const cases = [
     currency: "HKD",
     expectedCard: "BOC Chill Card",
     expectedOffer: ""
+  },
+  {
+    description: "香港線下買嘢",
+    amount: 250,
+    currency: "HKD",
+    expectedCard: "中信i享銀聯卡",
+    expectedOffer: "香港線下滿 HK$200 減 HK$20"
+  },
+  {
+    description: "booking.com 訂酒店",
+    amount: 2000,
+    currency: "HKD",
+    expectedCard: "農行萬事達白金卡",
+    expectedOffer: "境外精選商戶 10%"
+  },
+  {
+    description: "東京搭地鐵",
+    amount: 1000,
+    currency: "JPY",
+    expectedCard: "工行星座Visa卡",
+    expectedOffer: "境外實體交通 10%"
+  },
+  {
+    description: "香港 Apple Pay 買咖啡",
+    amount: 50,
+    currency: "HKD",
+    expectedCard: "長城萬事達 YOU 卡",
+    expectedOffer: "Apple Pay 首3筆 100%返現"
+  },
+  {
+    description: "東京 Apple Pay 搭地鐵",
+    amount: 20,
+    currency: "JPY",
+    expectedCard: "長城萬事達 YOU 卡",
+    expectedOffer: "Apple Pay 首3筆 100%返現"
   }
 ];
 

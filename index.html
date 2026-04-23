@@ -308,20 +308,56 @@
   .chip-threshold {
     background: rgba(176,138,74,0.14);
     color: #8b6a2f;
+    font-family: "Noto Sans TC", sans-serif;
+    letter-spacing: 0;
   }
   .chip-cap {
     background: rgba(107,124,129,0.16);
     color: #55666b;
+    font-family: "Noto Sans TC", sans-serif;
+    letter-spacing: 0;
+  }
+  .chip-status {
+    background: rgba(120,120,128,0.14);
+    color: var(--muted);
+    font-family: "Noto Sans TC", sans-serif;
+    letter-spacing: 0;
+    border: 1px dashed rgba(120,120,128,0.34);
+    box-shadow: none;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+  }
+  .chip-status-static {
+    cursor: default;
+  }
+  .chip-status:active {
+    opacity: 0.85;
+    transform: scale(0.98);
   }
   @media (prefers-color-scheme: dark) {
     .chip { color: var(--accent); }
     .chip-threshold {
       background: rgba(201,165,95,0.14);
       color: #d8bc82;
+      font-family: "Noto Sans TC", sans-serif;
+      letter-spacing: 0;
     }
     .chip-cap {
       background: rgba(142,142,147,0.18);
       color: #d1d1d6;
+      font-family: "Noto Sans TC", sans-serif;
+      letter-spacing: 0;
+    }
+    .chip-status {
+      background: rgba(142,142,147,0.18);
+      color: #c7c7cc;
+      font-family: "Noto Sans TC", sans-serif;
+      letter-spacing: 0;
+      border: 1px dashed rgba(199,199,204,0.28);
+      box-shadow: none;
+      appearance: none;
+      -webkit-appearance: none;
     }
   }
 
@@ -349,6 +385,22 @@
   }
   .filter-row .field { margin: 0; }
   .filter-row .actions { margin-top: 0; }
+  .segmented-toggle {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .segmented-toggle .btn {
+    padding: 9px 14px;
+    min-width: 0;
+    font-size: 13px;
+    box-shadow: none;
+  }
+  .segmented-toggle .btn.active {
+    background: linear-gradient(135deg, var(--accent) 0%, #c9a55f 100%);
+    color: #2a1800;
+    border-color: transparent;
+  }
 
   /* COMPOSER */
   .composer { display: none; padding-top: 20px; border-top: 1px solid var(--border); margin-top: 4px; }
@@ -409,6 +461,30 @@
   @media (prefers-color-scheme: dark) {
     .result-card.best { background: linear-gradient(160deg, #2a1e08 0%, var(--card) 60%); }
   }
+  .result-offer-details {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .result-offer-detail {
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: var(--card-inner);
+    border: 1px solid var(--border);
+  }
+  .result-offer-detail-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+  .result-offer-detail-note {
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--muted);
+    white-space: pre-line;
+  }
   .result-rank { font-family: "IBM Plex Mono", monospace; font-size: 10px; text-transform: uppercase; color: var(--muted); letter-spacing: 0.08em; margin-bottom: 8px; }
   .result-card.best .result-rank { color: var(--accent); font-weight: 500; }
   .result-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
@@ -427,7 +503,29 @@
   .scenario-title { font-family: "Fraunces", serif; font-size: 18px; color: var(--ink); margin: 0 0 6px; }
   .scenario-sub { font-size: 13px; color: var(--muted); line-height: 1.6; margin: 0 0 14px; }
   .scenario-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-  .scenario-summary { margin-top: 12px; font-size: 12px; color: var(--muted); line-height: 1.6; }
+  .scenario-summary { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 6px; }
+  .scenario-summary-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: rgba(120,120,128,0.12);
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.3;
+  }
+  .scenario-summary-key {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    opacity: 0.72;
+  }
+  .scenario-summary-value {
+    color: var(--text);
+    font-weight: 600;
+  }
   @media (max-width: 640px) {
     .scenario-grid { grid-template-columns: 1fr; }
   }
@@ -505,6 +603,7 @@
     .grid { grid-template-columns: 1fr; }
     .filter-row { grid-template-columns: 1fr 1fr; }
     .filter-row .field:first-child { grid-column: 1 / -1; }
+    .filter-row .field.full { grid-column: 1 / -1; }
     .filter-row .actions { grid-column: 1 / -1; }
   }
 </style>
@@ -555,7 +654,6 @@
 
         <div class="actions">
           <button class="btn btn-primary" id="runRecommendationBtn">立即推薦</button>
-          <button class="btn btn-secondary" id="fillDemoScenarioBtn">載入示例</button>
           <button class="btn btn-secondary" id="clearRecommendBtn">清除</button>
         </div>
 
@@ -619,6 +717,14 @@
         </div>
 
         <div class="filter-row">
+          <div class="field full">
+            <label>地區</label>
+            <div class="segmented-toggle" id="card-region-filter">
+              <button class="btn btn-secondary active" type="button" data-region-scope="">全部</button>
+              <button class="btn btn-secondary" type="button" data-region-scope="hk">香港卡</button>
+              <button class="btn btn-secondary" type="button" data-region-scope="cn">大陸卡</button>
+            </div>
+          </div>
           <div class="field">
             <label for="card-search">搜尋</label>
             <input id="card-search" type="text" placeholder="卡名 / 銀行">
@@ -678,7 +784,7 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "本地餐飲及娛樂 1%",
   "網上旅遊/娛樂/訂閱 港幣 5.4%"
 ]);
-const APP_VERSION = "v2026.04.21.1";
+const APP_VERSION = "v2026.04.23.3";
 const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
 const CARD_DISPLAY_ORDER = [
   "BOC Chill Card",
@@ -686,8 +792,39 @@ const CARD_DISPLAY_ORDER = [
   "MMPOWER",
   "恒生多貨幣扣賬卡",
   "AEON WAKUWAKU",
-  "DBS Live Fresh"
+  "DBS Live Fresh",
+  "長城萬事達 YOU 卡",
+  "中信i享銀聯卡",
+  "中信萬事達扣賬卡",
+  "農行萬事達白金卡",
+  "工行星座Visa卡"
 ];
+const MAINLAND_CARD_NAMES = new Set([
+  "長城萬事達 YOU 卡",
+  "中信i享銀聯卡",
+  "中信萬事達扣賬卡",
+  "農行萬事達白金卡",
+  "工行星座Visa卡"
+]);
+const LEGACY_CARD_NAME_MAP = {
+  "i享卡": "中信i享銀聯卡",
+  "萬事達扣賬卡": "中信萬事達扣賬卡",
+  "萬事達全球支付白金卡": "農行萬事達白金卡",
+  "星座 Visa": "工行星座Visa卡"
+};
+const LEGACY_OFFER_TITLE_MAP = {
+  [canonicalOfferKey("工行星座Visa卡", "香港 Apple Pay 滿 HK$50 返 US$2（3/4）")]: "香港 Apple Pay 滿 HK$50 返 US$2",
+  [canonicalOfferKey("工行星座Visa卡", "境外 Apple Pay 交通 100%（0/15）")]: "境外 Apple Pay 交通 100%"
+};
+const CUSTOM_REWARD_OFFER_KEYS = new Set([
+  canonicalOfferKey("長城萬事達 YOU 卡", "Apple Pay 首3筆 100%返現"),
+  canonicalOfferKey("長城萬事達 YOU 卡", "Apple Pay 首2筆額外返 US$3 + US$2"),
+  canonicalOfferKey("中信萬事達扣賬卡", "Apple Pay 首2筆額外返 US$3 + US$2"),
+  canonicalOfferKey("農行萬事達白金卡", "Apple Pay 首3筆 100%返現"),
+  canonicalOfferKey("農行萬事達白金卡", "Apple Pay 首2筆額外返 US$3 + US$2"),
+  canonicalOfferKey("工行星座Visa卡", "香港 Apple Pay 滿 HK$50 返 US$2"),
+  canonicalOfferKey("工行星座Visa卡", "境外 Apple Pay 交通 100%")
+]);
 
 function canonicalOfferKey(cardName, title) {
   return `${cardName}::${title}`;
@@ -769,6 +906,61 @@ const CANONICAL_CARD_DEFINITIONS = [
     },
     locations: ["香港", "海外", "網上"],
     notes: "海外註冊網上商戶以港幣 DCC 付款不適用。"
+  },
+  {
+    name: "長城萬事達 YOU 卡",
+    bank: "中行",
+    baseRate: 0,
+    currency: "CNY",
+    categories: {
+      general: 1
+    },
+    locations: ["香港", "澳門", "內地", "海外", "網上"],
+    notes: ""
+  },
+  {
+    name: "中信i享銀聯卡",
+    bank: "中信",
+    baseRate: 0,
+    currency: "HKD",
+    categories: {
+      general: 1
+    },
+    locations: ["香港", "澳門", "海外"],
+    notes: ""
+  },
+  {
+    name: "中信萬事達扣賬卡",
+    bank: "中信",
+    baseRate: 0,
+    currency: "CNY",
+    categories: {
+      general: 1
+    },
+    locations: ["香港", "澳門", "內地", "海外", "網上"],
+    notes: ""
+  },
+  {
+    name: "農行萬事達白金卡",
+    bank: "農行",
+    baseRate: 0,
+    currency: "CNY",
+    categories: {
+      general: 1
+    },
+    locations: ["香港", "澳門", "海外", "網上"],
+    notes: ""
+  },
+  {
+    name: "工行星座Visa卡",
+    bank: "工行",
+    baseRate: 0,
+    currency: "CNY",
+    categories: {
+      general: 1
+    },
+    locations: ["香港", "澳門", "海外", "網上"],
+    notes: ""
   }
 ];
 
@@ -837,7 +1029,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
     startDate: "2026-01-01",
     endDate: "2026-12-31",
     locations: ["香港", "網上"],
-    notes: "指定商戶（Amazon、GU、lululemon、淘寶及 Uniqlo）簽賬高達 8% +FUN Dollars。",
+    notes: "合資格指定商戶簽賬指於指定商戶（Amazon、GU、lululemon、淘寶及 Uniqlo）在網上或香港實體銷售點（不包括百貨公司專櫃及特賣場）所作的合資格零售簽賬，高達 8% +FUN Dollars。",
     requiresKeywords: ["amazon", "gu", "lululemon", "淘寶", "taobao", "uniqlo", "優衣庫"]
   },
   {
@@ -1055,6 +1247,261 @@ const CANONICAL_OFFER_DEFINITIONS = [
     locations: ["網上"],
     notes: "✅（待返）發卡 4 個月內於任何兩個月（3 月 + 4 月）於指定合資格訂閱服務各簽賬任何金額一次可享 HK$100 現金回贈；最遲於完成要求後 6 個月回贈。",
     requiresKeywords: ["訂閱", "subscription", "netflix", "spotify", "disney+", "apple tv", "apple music", "joox", "kkbox", "viu", "moov", "youtube"]
+  },
+  {
+    cardName: "長城萬事達 YOU 卡",
+    title: "Apple Pay 首3筆 100%返現",
+    category: "general",
+    tags: ["applepay"],
+    bonusRate: 0,
+    minSpend: 0,
+    cap: 0,
+    startDate: "2026-01-01",
+    endDate: "2026-06-30",
+    locations: ["香港", "澳門", "海外"],
+    usageUsed: 0,
+    usageTotal: 3,
+    notes: "Apple Pay 首三筆消費 100% 返現，每筆最高返 US$5。"
+  },
+  {
+    cardName: "長城萬事達 YOU 卡",
+    title: "Apple Pay 首2筆額外返 US$3 + US$2",
+    category: "general",
+    tags: ["applepay"],
+    bonusRate: 0,
+    minSpend: 0,
+    cap: 0,
+    startDate: "2026-01-01",
+    endDate: "2026-12-31",
+    locations: ["香港", "澳門", "海外"],
+    usageUsed: 0,
+    usageTotal: 2,
+    notes: "Apple Pay 首筆消費可獲 US$3 返現，第二筆消費可獲 US$2 返現。疊加上面 100% 返現後，第一筆最高 US$8、第二筆最高 US$7、第三筆最高 US$5。"
+  },
+  {
+    cardName: "中信i享銀聯卡",
+    title: "香港線下滿 HK$200 減 HK$20",
+    category: "general",
+    tags: ["shopping", "dining", "entertainment", "transport"],
+    bonusRate: 0,
+    minSpend: 200,
+    cap: 20,
+    currency: "HKD",
+    startDate: "2026-01-01",
+    endDate: "2026-05-31",
+    locations: ["香港"],
+    usageUsed: 0,
+    usageTotal: 10,
+    notes: "在香港線下消費滿 HK$200 可享 HK$20 立減，每用戶每天可享 1 次，累計最高可享 HK$200。"
+  },
+  {
+    cardName: "中信i享銀聯卡",
+    title: "境外線下隨機立減最高 30%",
+    category: "general",
+    tags: ["overseas"],
+    bonusRate: 0,
+    minSpend: 200,
+    cap: 200,
+    currency: "CNY",
+    startDate: "2026-01-01",
+    endDate: "2026-06-30",
+    locations: ["香港", "澳門", "海外"],
+    notes: "在香港、澳門、新加坡、日本、韓國通過銀聯清算網絡的合資格境外線下交易，單筆交易金額滿 200 元可享實時隨機立減，最高 30%，每月每卡最高可享 200 元實時立減。"
+  },
+  {
+    cardName: "中信萬事達扣賬卡",
+    title: "Apple Pay 首2筆額外返 US$3 + US$2",
+    category: "general",
+    tags: ["applepay"],
+    bonusRate: 0,
+    minSpend: 0,
+    cap: 0,
+    startDate: "2026-01-01",
+    endDate: "2026-12-31",
+    locations: ["香港", "澳門", "海外"],
+    usageUsed: 0,
+    usageTotal: 2,
+    notes: "Apple Pay 首筆消費可獲 US$3 返現，第二筆消費可獲 US$2 返現。"
+  },
+  {
+    cardName: "農行萬事達白金卡",
+    title: "每月首筆境外線下返 US$1",
+    category: "general",
+    tags: ["overseas"],
+    bonusRate: 0,
+    minSpend: 0,
+    cap: 0,
+    startDate: "2026-01-01",
+    endDate: "2026-06-30",
+    locations: ["香港", "澳門", "海外"],
+    notes: "每月首筆境外線下消費返 US$1。"
+  },
+  {
+    cardName: "農行萬事達白金卡",
+    title: "境外簽賬 1%",
+    category: "general",
+    tags: ["overseas"],
+    bonusRate: 1,
+    minSpend: 0,
+    cap: 0,
+    startDate: "2026-01-01",
+    endDate: "2026-06-30",
+    locations: ["香港", "澳門", "海外", "網上"],
+    notes: "境外線上／線下消費筆筆返現 1%，每月返現金額不設上限。"
+  },
+  {
+    cardName: "農行萬事達白金卡",
+    title: "境外線下簽賬 3%",
+    category: "general",
+    tags: ["overseas"],
+    bonusRate: 3,
+    minSpend: 0,
+    cap: 0,
+    startDate: "2026-01-01",
+    endDate: "2026-06-30",
+    locations: ["香港", "澳門", "海外"],
+    notes: "境外線下消費筆筆返現 3%，每季度返現上限 US$30，先消費先得，滿額即止。"
+  },
+  {
+    cardName: "農行萬事達白金卡",
+    title: "境外精選商戶 10%",
+    category: "general",
+    tags: ["merchant", "shopping", "travel", "dining", "transport", "entertainment", "subscription"],
+    bonusRate: 10,
+    minSpend: 0,
+    cap: 0,
+    startDate: "2026-01-01",
+    endDate: "2026-06-30",
+    locations: ["香港", "海外", "網上"],
+    notes: "境外精選商戶消費筆筆返 10%，每季度返現上限 US$30，先消費先得，滿額即止。\n購物：COSTCO、IKEA、ARC'TERYX、LULULEMON、Saks Fifth Avenue、HARRODS、SOGO、KING POWER、SUNING、FARFETCH、SSENSE。\n出行：BOOKING.COM。\n外賣：UBER EATS、DELIVEROO、DOOR DASH。\n交通：UBER。\n娛樂：STEAM、NETFLIX、SPOTIFY、Sony PlayStation、Nintendo eShop。",
+    requiresKeywords: ["costco", "ikea", "arc'teryx", "arcteryx", "lululemon", "saks fifth avenue", "harrods", "sogo", "king power", "suning", "farfetch", "ssense", "booking.com", "booking", "uber eats", "deliveroo", "door dash", "doordash", "uber", "steam", "netflix", "spotify", "sony playstation", "playstation", "nintendo eshop", "nintendo e-shop", "nintendo eshop"]
+  },
+  {
+    cardName: "農行萬事達白金卡",
+    title: "Apple Pay 首3筆 100%返現",
+    category: "general",
+    tags: ["applepay"],
+    bonusRate: 0,
+    minSpend: 0,
+    cap: 0,
+    startDate: "2026-01-01",
+    endDate: "2026-06-30",
+    locations: ["香港", "澳門", "海外"],
+    usageUsed: 0,
+    usageTotal: 3,
+    notes: "Apple Pay 首三筆消費 100% 返現，每筆最高返 US$2。"
+  },
+  {
+    cardName: "農行萬事達白金卡",
+    title: "Apple Pay 首2筆額外返 US$3 + US$2",
+    category: "general",
+    tags: ["applepay"],
+    bonusRate: 0,
+    minSpend: 0,
+    cap: 0,
+    startDate: "2026-01-01",
+    endDate: "2026-12-31",
+    locations: ["香港", "澳門", "海外"],
+    usageUsed: 0,
+    usageTotal: 2,
+    notes: "Apple Pay 首筆消費可獲 US$3 返現，第二筆消費可獲 US$2 返現。疊加上面 100% 返現後，第一筆最高 US$5、第二筆最高 US$4、第三筆最高 US$2。"
+  },
+  {
+    cardName: "工行星座Visa卡",
+    title: "香港 Apple Pay 滿 HK$50 返 US$2",
+    category: "general",
+    tags: ["applepay"],
+    bonusRate: 0,
+    minSpend: 50,
+    cap: 0,
+    currency: "HKD",
+    displayCap: 8,
+    displayCurrency: "USD",
+    startDate: "2026-01-01",
+    endDate: "2026-05-31",
+    locations: ["香港"],
+    usageUsed: 3,
+    usageTotal: 4,
+    notes: "在香港線下商戶以 Apple Pay 單筆消費滿 HK$50 可獲 US$2 返現，活動期間最多可返現 4 筆。"
+  },
+  {
+    cardName: "工行星座Visa卡",
+    title: "境外實體交通 10%",
+    category: "transport",
+    tags: ["overseas", "transport"],
+    bonusRate: 10,
+    minSpend: 0,
+    cap: 0,
+    displayCap: 30,
+    displayCurrency: "USD",
+    startDate: "2026-01-01",
+    endDate: "2026-09-30",
+    dateNote: "按季度上限",
+    locations: ["香港", "澳門", "海外"],
+    notes: "境外拍實體卡乘坐公共交通筆筆 10% 優惠獎勵，單日最高返 US$2，每季度累計最多可獲得 US$30 優惠獎勵。"
+  },
+  {
+    cardName: "工行星座Visa卡",
+    title: "境外 Apple Pay 交通 100%",
+    category: "transport",
+    tags: ["overseas", "transport", "applepay"],
+    bonusRate: 0,
+    minSpend: 0,
+    cap: 0,
+    displayCap: 15,
+    displayCurrency: "USD",
+    startDate: "2026-01-01",
+    endDate: "2026-09-30",
+    dateNote: "按季度上限",
+    locations: ["香港", "澳門", "海外"],
+    usageMode: "amount",
+    usageUsed: 0,
+    usageTotal: 15,
+    usageCurrency: "USD",
+    notes: "境外 Apple Pay 乘坐公共交通筆筆 100% 優惠獎勵，單日最高返 US$3，每季度累計最多可獲得 US$15 優惠獎勵。"
+  },
+  {
+    cardName: "工行星座Visa卡",
+    title: "境外線下匯率優惠最高 10%",
+    category: "general",
+    tags: ["overseas"],
+    bonusRate: 0,
+    minSpend: 0,
+    cap: 0,
+    displayCap: 25,
+    displayCurrency: "USD",
+    startDate: "2026-01-01",
+    endDate: "2026-09-30",
+    locations: ["香港", "澳門", "海外"],
+    notes: "境外線下消費可享筆筆隨機匯率優惠，每筆最高 10% 匯率優惠獎勵，每月最多 US$25。"
+  },
+  {
+    cardName: "工行星座Visa卡",
+    title: "每滿 3 筆返 US$3",
+    category: "general",
+    tags: ["overseas"],
+    bonusRate: 0,
+    minSpend: 3,
+    cap: 6,
+    currency: "USD",
+    displayMinSpend: "3筆 × US$3",
+    startDate: "2026-01-01",
+    endDate: "2026-09-30",
+    locations: ["香港", "澳門", "海外", "網上"],
+    notes: "每累計完成 3 筆單筆金額不低於等值 US$3 的合資格交易，即有機會獲得 US$3 返現獎勵；活動期間累計最高可獲得 US$6 返現獎勵。"
+  },
+  {
+    cardName: "工行星座Visa卡",
+    title: "境外簽賬 1%",
+    category: "general",
+    tags: ["overseas"],
+    bonusRate: 1,
+    minSpend: 0,
+    cap: 0,
+    startDate: "2026-01-01",
+    endDate: "2026-10-31",
+    locations: ["香港", "澳門", "海外", "網上"],
+    notes: "境外線上／線下消費可享筆筆 1% 返現，返現金額不設上限。"
   }
 ];
 
@@ -1074,15 +1521,12 @@ const CATEGORY_LABELS = {
 };
 
 const CATEGORY_FILTER_ORDER = [
-  "online",
   "shopping",
   "dining",
   "entertainment",
   "travel",
   "transport",
-  "subscription",
-  "groceries",
-  "overseas"
+  "subscription"
 ];
 
 const SCENARIO_CATEGORY_OPTIONS = [
@@ -1222,6 +1666,94 @@ const CANONICAL_RECOMMENDATION_RULES = {
     regions: ["澳門", "內地", "海外"],
     currency: "foreign",
     payoutTiming: "instant"
+  },
+  [canonicalOfferKey("中信i享銀聯卡", "香港線下滿 HK$200 減 HK$20")]: {
+    group: null,
+    channel: "offline",
+    regions: ["香港"],
+    currency: "HKD"
+  },
+  [canonicalOfferKey("長城萬事達 YOU 卡", "Apple Pay 首3筆 100%返現")]: {
+    group: null,
+    channel: "either",
+    regions: ["香港", "澳門", "海外"],
+    currency: "any",
+    paymentMethod: "applepay"
+  },
+  [canonicalOfferKey("長城萬事達 YOU 卡", "Apple Pay 首2筆額外返 US$3 + US$2")]: {
+    group: null,
+    channel: "either",
+    regions: ["香港", "澳門", "海外"],
+    currency: "any",
+    paymentMethod: "applepay"
+  },
+  [canonicalOfferKey("中信萬事達扣賬卡", "Apple Pay 首2筆額外返 US$3 + US$2")]: {
+    group: null,
+    channel: "either",
+    regions: ["香港", "澳門", "海外"],
+    currency: "any",
+    paymentMethod: "applepay"
+  },
+  [canonicalOfferKey("農行萬事達白金卡", "境外簽賬 1%")]: {
+    group: "abc-global-overseas",
+    channel: "either",
+    regions: ["香港", "澳門", "海外"],
+    currency: "any"
+  },
+  [canonicalOfferKey("農行萬事達白金卡", "境外線下簽賬 3%")]: {
+    group: "abc-global-overseas",
+    channel: "offline",
+    regions: ["香港", "澳門", "海外"],
+    currency: "any"
+  },
+  [canonicalOfferKey("農行萬事達白金卡", "境外精選商戶 10%")]: {
+    group: "abc-global-overseas",
+    channel: "either",
+    regions: "any",
+    currency: "any",
+    merchantMode: "listed"
+  },
+  [canonicalOfferKey("農行萬事達白金卡", "Apple Pay 首3筆 100%返現")]: {
+    group: null,
+    channel: "either",
+    regions: ["香港", "澳門", "海外"],
+    currency: "any",
+    paymentMethod: "applepay"
+  },
+  [canonicalOfferKey("農行萬事達白金卡", "Apple Pay 首2筆額外返 US$3 + US$2")]: {
+    group: null,
+    channel: "either",
+    regions: ["香港", "澳門", "海外"],
+    currency: "any",
+    paymentMethod: "applepay"
+  },
+  [canonicalOfferKey("工行星座Visa卡", "香港 Apple Pay 滿 HK$50 返 US$2")]: {
+    group: null,
+    channel: "offline",
+    regions: ["香港"],
+    currency: "HKD",
+    paymentMethod: "applepay"
+  },
+  [canonicalOfferKey("工行星座Visa卡", "境外實體交通 10%")]: {
+    group: "icbc-overseas-primary",
+    channel: "offline",
+    regions: ["香港", "澳門", "海外"],
+    currency: "any",
+    categoryAnyOf: ["transport"]
+  },
+  [canonicalOfferKey("工行星座Visa卡", "境外 Apple Pay 交通 100%")]: {
+    group: "icbc-overseas-primary",
+    channel: "offline",
+    regions: ["香港", "澳門", "海外"],
+    currency: "any",
+    paymentMethod: "applepay",
+    categoryAnyOf: ["transport"]
+  },
+  [canonicalOfferKey("工行星座Visa卡", "境外簽賬 1%")]: {
+    group: "icbc-overseas-primary",
+    channel: "either",
+    regions: ["香港", "澳門", "海外"],
+    currency: "any"
   }
 };
 
@@ -1244,6 +1776,8 @@ let recommendOverrides = {
 let recommendationConfirmed = false;
 let recommendCurrencyTouched = false;
 let recommendAmountTouched = false;
+let recommendResultScope = "";
+let latestRecommendationRenderData = null;
 
 bootstrap();
 
@@ -1275,7 +1809,6 @@ function bindEvents() {
   });
 
   document.getElementById("runRecommendationBtn").addEventListener("click", runRecommendation);
-  document.getElementById("fillDemoScenarioBtn").addEventListener("click", fillDemoScenario);
   document.getElementById("clearRecommendBtn").addEventListener("click", clearRecommendForm);
   document.getElementById("recommend-description").addEventListener("input", handleRecommendDescriptionInput);
   document.getElementById("recommend-amount").addEventListener("input", handleRecommendAmountInput);
@@ -1284,6 +1817,13 @@ function bindEvents() {
   document.getElementById("saveOfferBtn").addEventListener("click", saveOffer);
   document.getElementById("resetOfferFormBtn").addEventListener("click", () => resetOfferForm());
   document.getElementById("card-search").addEventListener("input", renderCards);
+  document.querySelectorAll("#card-region-filter [data-region-scope]").forEach((button) => {
+    button.addEventListener("click", () => {
+      document.querySelectorAll("#card-region-filter [data-region-scope]").forEach((item) => item.classList.remove("active"));
+      button.classList.add("active");
+      renderCards();
+    });
+  });
   document.getElementById("card-bank-filter").addEventListener("change", renderCards);
   document.getElementById("card-category-filter").addEventListener("change", renderCards);
   document.getElementById("clearCardFiltersBtn").addEventListener("click", clearCardFilters);
@@ -1337,6 +1877,7 @@ function applySuggestedAmountFromDescription() {
 function resetRecommendationOverrides() {
   recommendOverrides = { region: "", channel: "", category: "", merchant: "" };
   recommendationConfirmed = false;
+  latestRecommendationRenderData = null;
   document.getElementById("recommendClarifications").innerHTML = "";
   document.getElementById("recommendationResults").innerHTML = "";
 }
@@ -1414,9 +1955,18 @@ function normalizeOffer(offer) {
     bonusRate: Number(offer.bonusRate || 0),
     minSpend: Number(offer.minSpend || 0),
     cap: Number(offer.cap || 0),
+    currency: offer.currency || "",
+    displayMinSpend: offer.displayMinSpend || "",
+    displayCap: Number(offer.displayCap || 0),
+    displayCurrency: offer.displayCurrency || "",
     startDate: offer.startDate || todayString(),
     endDate: offer.endDate || todayString(),
+    dateNote: offer.dateNote || "",
     locations: Array.isArray(offer.locations) ? offer.locations : [],
+    usageMode: offer.usageMode || "count",
+    usageUsed: Number(offer.usageUsed || 0),
+    usageTotal: Number(offer.usageTotal || 0),
+    usageCurrency: offer.usageCurrency || "",
     notes,
     tags: [...tags],
     requiresKeywords: Array.isArray(offer.requiresKeywords) ? offer.requiresKeywords : []
@@ -1430,7 +1980,11 @@ function isLegacyPayMeCard(card) {
 
 function migrateStoredData() {
   const existingCards = (Array.isArray(state.cards) ? state.cards : [])
-    .filter((card) => !isLegacyPayMeCard(card));
+    .filter((card) => !isLegacyPayMeCard(card))
+    .map((card) => ({
+      ...card,
+      name: LEGACY_CARD_NAME_MAP[card.name] || card.name
+    }));
   const customCards = existingCards
     .filter((card) => !CANONICAL_CARD_DEFINITIONS.some((item) => item.name === card.name))
     .map((card) => ({
@@ -1453,6 +2007,16 @@ function migrateStoredData() {
   const existingCardById = Object.fromEntries(existingCards.map((card) => [card.id, card]));
   const existingOffers = (Array.isArray(state.offers) ? state.offers : [])
     .filter((offer) => !`${offer?.title || ""} ${offer?.notes || ""}`.toLowerCase().includes("payme"));
+  existingOffers.forEach((offer) => {
+    const linkedCard = existingCardById[offer.cardId];
+    const cardName = linkedCard?.name || "";
+    const legacyKey = canonicalOfferKey(cardName, offer.title || "");
+    const nextTitle = LEGACY_OFFER_TITLE_MAP[legacyKey];
+    if (nextTitle) {
+      offer.title = nextTitle;
+      offer.canonicalKey = canonicalOfferKey(cardName, nextTitle);
+    }
+  });
   const customOffers = existingOffers.filter((offer) => {
     // 已廢棄的正式優惠標題，清除
     if (DEPRECATED_OFFER_TITLES.has(offer.title)) return false;
@@ -1465,6 +2029,10 @@ function migrateStoredData() {
     const key = canonicalOfferKey(definition.cardName, definition.title);
     const existing = existingOffers.find((offer) => offer.canonicalKey === key)
       || existingOffers.find((offer) => offer.title === definition.title);
+    const existingDisplayCap = Number(existing?.displayCap || 0);
+    const definitionDisplayCap = Number(definition.displayCap || 0);
+    const existingUsageTotal = Number(existing?.usageTotal || 0);
+    const definitionUsageTotal = Number(definition.usageTotal || 0);
     return normalizeOffer({
       id: existing?.id || crypto.randomUUID(),
       canonicalKey: key,
@@ -1475,9 +2043,18 @@ function migrateStoredData() {
       bonusRate: definition.bonusRate,
       minSpend: definition.minSpend,
       cap: definition.cap,
+      currency: existing?.currency || definition.currency,
+      displayMinSpend: existing?.displayMinSpend || definition.displayMinSpend,
+      displayCap: existingDisplayCap > 0 ? existingDisplayCap : definitionDisplayCap,
+      displayCurrency: existing?.displayCurrency || definition.displayCurrency,
       startDate: definition.startDate,
       endDate: definition.endDate,
+      dateNote: existing?.dateNote || definition.dateNote,
       locations: definition.locations,
+      usageMode: definition.usageMode || existing?.usageMode,
+      usageUsed: existing?.usageUsed ?? definition.usageUsed,
+      usageTotal: existingUsageTotal > 0 ? existingUsageTotal : definitionUsageTotal,
+      usageCurrency: existing?.usageCurrency || definition.usageCurrency,
       notes: definition.notes,
       requiresKeywords: definition.requiresKeywords
     });
@@ -1500,9 +2077,18 @@ function seedDefaultOffers() {
     bonusRate: definition.bonusRate,
     minSpend: definition.minSpend,
     cap: definition.cap,
+    currency: definition.currency,
+    displayMinSpend: definition.displayMinSpend,
+    displayCap: definition.displayCap,
+    displayCurrency: definition.displayCurrency,
     startDate: definition.startDate,
     endDate: definition.endDate,
+    dateNote: definition.dateNote,
     locations: definition.locations,
+    usageMode: definition.usageMode,
+    usageUsed: definition.usageUsed,
+    usageTotal: definition.usageTotal,
+    usageCurrency: definition.usageCurrency,
     notes: definition.notes,
     requiresKeywords: definition.requiresKeywords
   }));
@@ -1534,11 +2120,15 @@ function closeOfferComposer() {
 
 function renderCards() {
   const query = document.getElementById("card-search").value.trim().toLowerCase();
+  const regionScope = document.querySelector("#card-region-filter [data-region-scope].active")?.dataset.regionScope || "";
   const bankFilter = document.getElementById("card-bank-filter").value.trim();
   const categoryFilter = document.getElementById("card-category-filter").value.trim();
   const filtered = state.cards.filter((card) => {
     const haystack = [card.name, card.bank, card.notes].join(" ").toLowerCase();
     const matchesQuery = !query || haystack.includes(query);
+    const matchesRegion = !regionScope
+      || (regionScope === "hk" && !isMainlandCard(card))
+      || (regionScope === "cn" && isMainlandCard(card));
     const matchesBank = !bankFilter || card.bank === bankFilter;
     const cardCategories = new Set([
       ...((card.tags || []).filter(Boolean)),
@@ -1547,7 +2137,7 @@ function renderCards() {
         .flatMap((offer) => [offer.category, ...(offer.tags || [])].filter(Boolean))
     ]);
     const matchesCategory = !categoryFilter || cardCategories.has(categoryFilter);
-    return matchesQuery && matchesBank && matchesCategory;
+    return matchesQuery && matchesRegion && matchesBank && matchesCategory;
   }).sort((left, right) => {
     const leftIndex = CARD_DISPLAY_ORDER.indexOf(left.name);
     const rightIndex = CARD_DISPLAY_ORDER.indexOf(right.name);
@@ -1557,78 +2147,111 @@ function renderCards() {
     return left.name.localeCompare(right.name, "zh-Hant");
   });
 
-  document.getElementById("cardsList").innerHTML = filtered.length ? filtered.map((card) => {
-    const cardOffers = state.offers
-      .filter((offer) => offer.cardId === card.id)
-      .sort((left, right) => {
-        const leftTotal = Number(left.bonusRate || 0) + Number(card.baseRate || 0);
-        const rightTotal = Number(right.bonusRate || 0) + Number(card.baseRate || 0);
-        if (rightTotal !== leftTotal) return rightTotal - leftTotal;
-        if (Number(right.bonusRate || 0) !== Number(left.bonusRate || 0)) return Number(right.bonusRate || 0) - Number(left.bonusRate || 0);
-        return left.title.localeCompare(right.title, "zh-Hant");
-      });
-    const strongestOffer = cardOffers.reduce((best, offer) => {
-      if (!best || Number(offer.bonusRate || 0) > Number(best.bonusRate || 0)) return offer;
-      return best;
-    }, null);
-    const highestRewardText = strongestOffer
-      ? formatPercent(Number(strongestOffer.bonusRate || 0) + Number(card.baseRate || 0))
-      : formatPercent(card.baseRate);
-    const restrictionText = card.notes ? card.notes.trim() : "";
-    const offerMarkup = cardOffers.length ? `
-      <div class="details" style="margin-top:12px;">
-        <div><strong>規則與優惠：</strong></div>
-        <div class="offer-list">
-          ${cardOffers.map((offer) => `
-            <article class="offer-card">
-              <div class="offer-card-header">
-                <div>
-                  <h4 class="offer-card-title">${escapeHtml(offer.title)}</h4>
-                </div>
-                <div style="display:flex;align-items:flex-start;gap:8px;flex-shrink:0;">
-                  <div class="offer-card-date">${escapeHtml(formatOfferDate(offer))}</div>
-                  <button class="tiny-btn" onclick="editOffer('${offer.id}')">編輯規則</button>
-                </div>
+  if (!filtered.length) {
+    document.getElementById("cardsList").innerHTML = `<div class="empty-state">暫時未有可顯示的信用卡資料。</div>`;
+    return;
+  }
+  document.getElementById("cardsList").innerHTML = filtered.map((card) => renderCardMarkup(card)).join("");
+}
+
+function renderCardMarkup(card) {
+  const isMainland = isMainlandCard(card);
+  const cardOffers = state.offers
+    .filter((offer) => offer.cardId === card.id)
+    .sort((left, right) => {
+      if (isMainland) {
+        const leftDisplayOrder = getOfferDisplayOrder(card.name, left);
+        const rightDisplayOrder = getOfferDisplayOrder(card.name, right);
+        if (leftDisplayOrder !== rightDisplayOrder) return leftDisplayOrder - rightDisplayOrder;
+      }
+      const leftTotal = Number(left.bonusRate || 0) + Number(card.baseRate || 0);
+      const rightTotal = Number(right.bonusRate || 0) + Number(card.baseRate || 0);
+      if (rightTotal !== leftTotal) return rightTotal - leftTotal;
+      if (Number(right.bonusRate || 0) !== Number(left.bonusRate || 0)) return Number(right.bonusRate || 0) - Number(left.bonusRate || 0);
+      return left.title.localeCompare(right.title, "zh-Hant");
+    });
+  const strongestOffer = cardOffers.reduce((best, offer) => {
+    if (!best || Number(offer.bonusRate || 0) > Number(best.bonusRate || 0)) return offer;
+    return best;
+  }, null);
+  const highestRewardText = strongestOffer
+    ? formatPercent(Number(strongestOffer.bonusRate || 0) + Number(card.baseRate || 0))
+    : formatPercent(card.baseRate);
+  const restrictionText = card.notes ? card.notes.trim() : "";
+  const offerMarkup = cardOffers.length ? `
+    <div class="details" style="margin-top:12px;">
+      <div><strong>規則與優惠：</strong></div>
+      <div class="offer-list">
+        ${cardOffers.map((offer) => `
+          <article class="offer-card">
+            <div class="offer-card-header">
+              <div>
+                <h4 class="offer-card-title">${escapeHtml(offer.title)}</h4>
               </div>
-              ${/迎新/.test(`${offer.title || ""} ${offer.notes || ""}`) ? "" : `
-                <div class="offer-card-meta">
-                  ${renderOfferLocationChip(offer, card.name)}
-                  ${Number(offer.minSpend || 0) > 0 ? `<span class="chip chip-threshold">門檻 ${escapeHtml(formatCurrency(offer.minSpend))}</span>` : ""}
-                  ${Number(offer.cap || 0) > 0 ? `<span class="chip chip-cap">上限 ${escapeHtml(formatCurrency(offer.cap))}</span>` : ""}
+              <div style="display:flex;align-items:flex-start;gap:8px;flex-shrink:0;">
+                <div class="offer-card-date">${escapeHtml(formatOfferDate(offer))}</div>
+                <button class="tiny-btn" onclick="editOffer('${offer.id}')">編輯規則</button>
+              </div>
+            </div>
+            ${/迎新/.test(`${offer.title || ""} ${offer.notes || ""}`) ? "" : `
+              <div class="offer-card-meta">
+                ${renderOfferLocationChip(offer, card.name)}
+                ${offer.displayMinSpend
+                  ? `<span class="chip chip-threshold">門檻 ${escapeHtml(offer.displayMinSpend)}</span>`
+                  : Number(offer.minSpend || 0) > 0
+                    ? `<span class="chip chip-threshold">門檻 ${escapeHtml(formatAmountByCurrency(offer.minSpend, offer.currency || card.currency))}</span>`
+                    : ""}
+                ${Number(offer.displayCap || offer.cap || 0) > 0 ? `<span class="chip chip-cap">上限 ${escapeHtml(formatAmountByCurrency(offer.displayCap || offer.cap, offer.displayCurrency || offer.currency || card.currency))}</span>` : ""}
+                ${Number(offer.usageTotal || 0) > 0
+                  ? offer.usageMode === "amount"
+                    ? `<span class="chip chip-status chip-status-static">已用 ${escapeHtml(formatUsageText(offer))}</span>`
+                    : `<button class="chip chip-status" type="button" onclick="cycleOfferUsage('${offer.id}')">已用 ${escapeHtml(formatUsageText(offer))}</button>`
+                  : ""}
+              </div>
+            `}
+            ${offer.notes ? `<div class="offer-card-note">${escapeHtml(offer.notes)}</div>` : ""}
+            ${card.name === "BOC Chill Card" && offer.title === "指定商戶 8%" ? `
+              <div class="offer-setting">
+                <div class="check-grid">
+                  <label class="check-chip">
+                    <input type="checkbox" ${state.settings?.chillMonthlyQualified ? "checked" : ""} onchange="setChillMonthlyQualified(this.checked)">
+                    <span>今月合資格簽賬已滿 HK$1,000</span>
+                  </label>
                 </div>
-              `}
-              ${offer.notes ? `<div class="offer-card-note">${escapeHtml(offer.notes)}</div>` : ""}
-              ${card.name === "BOC Chill Card" && offer.title === "指定商戶 8%" ? `
-                <div class="offer-setting">
-                  <div class="check-grid">
-                    <label class="check-chip">
-                      <input type="checkbox" ${state.settings?.chillMonthlyQualified ? "checked" : ""} onchange="setChillMonthlyQualified(this.checked)">
-                      <span>今月合資格簽賬已滿 HK$1,000</span>
-                    </label>
-                  </div>
-                  <p class="field-hint">只影響呢個 8% 指定商戶判斷，推薦時計入。</p>
-                </div>
-              ` : ""}
-            </article>
-          `).join("")}
+                <p class="field-hint">只影響呢個 8% 指定商戶判斷，推薦時計入。</p>
+              </div>
+            ` : ""}
+          </article>
+        `).join("")}
+      </div>
+    </div>
+  ` : "";
+
+  return `
+    <article class="list-card">
+      <div class="card-top">
+        <div>
+          <h3 class="card-name">${escapeHtml(card.name)}</h3>
         </div>
       </div>
-    ` : "";
-    return `
-      <article class="list-card">
-        <div class="card-top">
-          <div>
-            <h3 class="card-name">${escapeHtml(card.name)}</h3>
-          </div>
-        </div>
-        <div class="details">
-          <div><strong>最高可達：</strong>${escapeHtml(highestRewardText)}</div>
-          ${restrictionText ? `<div><strong>限制：</strong>${escapeHtml(restrictionText)}</div>` : ""}
-        </div>
-        ${offerMarkup}
-      </article>
-    `;
-  }).join("") : `<div class="empty-state">暫時未有可顯示的信用卡資料。</div>`;
+      <div class="details">
+        ${isMainland ? "" : `<div><strong>最高可達：</strong>${escapeHtml(highestRewardText)}</div>`}
+        ${restrictionText ? `<div><strong>限制：</strong>${escapeHtml(restrictionText)}</div>` : ""}
+      </div>
+      ${offerMarkup}
+    </article>
+  `;
+}
+
+function isMainlandCard(card) {
+  return MAINLAND_CARD_NAMES.has(card?.name || "");
+}
+
+function getOfferDisplayOrder(cardName, offer) {
+  const canonicalIndex = CANONICAL_OFFER_DEFINITIONS.findIndex((definition) =>
+    definition.cardName === cardName && definition.title === offer.title
+  );
+  return canonicalIndex === -1 ? Number.MAX_SAFE_INTEGER : canonicalIndex;
 }
 
 function renderCardFilters() {
@@ -1663,6 +2286,8 @@ function renderCardFilters() {
 
 function clearCardFilters() {
   document.getElementById("card-search").value = "";
+  document.querySelectorAll("#card-region-filter [data-region-scope]").forEach((item) => item.classList.remove("active"));
+  document.querySelector('#card-region-filter [data-region-scope=""]').classList.add("active");
   document.getElementById("card-bank-filter").value = "";
   document.getElementById("card-category-filter").value = "";
   renderCards();
@@ -1750,18 +2375,6 @@ function clearRecommendForm() {
   document.getElementById("recommendationResults").innerHTML = "";
 }
 
-function fillDemoScenario() {
-  document.getElementById("recommend-description").value = "今晚喺香港網上買家電";
-  document.getElementById("recommend-amount").value = "680";
-  document.getElementById("recommend-currency").value = "HKD";
-  document.getElementById("recommend-date").value = todayString();
-  recommendCurrencyTouched = false;
-  recommendAmountTouched = false;
-  recommendOverrides = { region: "", channel: "", category: "", merchant: "" };
-  recommendationConfirmed = false;
-  runRecommendation();
-}
-
 function setChillMonthlyQualified(checked) {
   state.settings.chillMonthlyQualified = Boolean(checked);
   saveData();
@@ -1806,9 +2419,46 @@ function runRecommendation() {
       : b.rankingScore - a.rankingScore
     );
 
-  document.getElementById("recommendationResults").innerHTML = results.length ? results.map((result, index) => `
-    <article class="result-card ${index === 0 ? "best" : ""}">
-      <div class="result-rank">${index === 0 ? "最佳選擇" : "備選 " + (index + 1)}</div>
+  renderRecommendationResults(results, scenario, rateMode, currency);
+}
+
+function renderRecommendationResults(results, scenario, rateMode, currency) {
+  latestRecommendationRenderData = { results, scenario, rateMode, currency };
+
+  if (!results.length) {
+    document.getElementById("recommendationResults").innerHTML = `<div class="empty-state">還沒有信用卡資料，暫時無法推薦。</div>`;
+    return;
+  }
+
+  const filtered = results.filter((result) =>
+    !recommendResultScope
+    || (recommendResultScope === "hk" && !isMainlandCard(result.card))
+    || (recommendResultScope === "cn" && isMainlandCard(result.card))
+  );
+
+  const scopeControls = `
+    <div class="segmented-toggle" style="margin-bottom:14px;">
+      <button class="btn btn-secondary ${recommendResultScope === "" ? "active" : ""}" type="button" onclick="setRecommendationResultScope('')">全部</button>
+      <button class="btn btn-secondary ${recommendResultScope === "hk" ? "active" : ""}" type="button" onclick="setRecommendationResultScope('hk')">香港卡</button>
+      <button class="btn btn-secondary ${recommendResultScope === "cn" ? "active" : ""}" type="button" onclick="setRecommendationResultScope('cn')">大陸卡</button>
+    </div>
+  `;
+
+  if (!filtered.length) {
+    document.getElementById("recommendationResults").innerHTML = `
+      ${scopeControls}
+      <div class="empty-state">呢個篩選下暫時冇結果。</div>
+    `;
+    return;
+  }
+
+  document.getElementById("recommendationResults").innerHTML = `
+    ${scopeControls}
+    ${filtered.map((result) => {
+      const globalIndex = results.findIndex((item) => item.card.id === result.card.id);
+      return `
+    <article class="result-card ${globalIndex === 0 ? "best" : ""}">
+      <div class="result-rank">${globalIndex === 0 ? "最佳選擇" : "備選 " + (globalIndex + 1)}</div>
       <div class="result-header">
         <div>
           <h3 class="card-name">${escapeHtml(result.card.name)}</h3>
@@ -1834,9 +2484,33 @@ function runRecommendation() {
         `}
         <div><strong>解析結果：</strong>${escapeHtml(scenario.description)} → ${escapeHtml(formatScenarioLocations(scenario.locations))} / ${escapeHtml(CATEGORY_LABELS[scenario.category] || scenario.category)}</div>
       </div>
+      ${result.selectedOffers.length ? `
+        <div class="result-offer-details">
+          ${result.selectedOffers.map((offer) => `
+            <div class="result-offer-detail">
+              <div class="result-offer-detail-title">${escapeHtml(formatRecommendationOfferTitle(result.card, offer))}</div>
+              <div class="result-offer-detail-note">${escapeHtml(offer.notes || "沒有補充說明")}</div>
+            </div>
+          `).join("")}
+        </div>
+      ` : ""}
       <p class="result-note">${escapeHtml(result.explanation)}</p>
     </article>
-  `).join("") : `<div class="empty-state">還沒有信用卡資料，暫時無法推薦。</div>`;
+  `;
+    }).join("")}
+  `;
+}
+
+function setRecommendationResultScope(scope) {
+  recommendResultScope = scope;
+  if (latestRecommendationRenderData) {
+    renderRecommendationResults(
+      latestRecommendationRenderData.results,
+      latestRecommendationRenderData.scenario,
+      latestRecommendationRenderData.rateMode,
+      latestRecommendationRenderData.currency
+    );
+  }
 }
 
 function applyRecommendationOverrides(scenario) {
@@ -1881,11 +2555,11 @@ function renderRecommendClarifications(scenario) {
   const currentCategory = recommendOverrides.category || (scenario.category || "general");
   const currentMerchant = recommendOverrides.merchant || scenario.merchantTokens?.[0] || "";
   const summaryBits = [
-    `地點：${currentRegion}`,
-    `方式：${currentChannel === "online" ? "網上" : "實體"}`,
-    `類別：${CATEGORY_LABELS[currentCategory] || currentCategory}`,
-    `貨幣：${scenario.currency}`,
-    `商戶：${currentMerchant || "未指定"}`
+    { key: "貨幣", value: scenario.currency },
+    { key: "地點", value: currentRegion },
+    { key: "方式", value: currentChannel === "online" ? "網上" : "實體" },
+    { key: "類別", value: CATEGORY_LABELS[currentCategory] || currentCategory },
+    { key: "商戶", value: currentMerchant || "未指定" }
   ];
 
   container.innerHTML = `
@@ -1917,7 +2591,9 @@ function renderRecommendClarifications(scenario) {
           <input id="scenario-merchant" type="text" value="${escapeHtml(currentMerchant)}" placeholder="例如：Netflix、三星、Starbucks" oninput="setRecommendationMerchant(this.value)">
         </div>
       </div>
-      <div class="scenario-summary">目前按 ${escapeHtml(summaryBits.join(" / "))} 計算。</div>
+      <div class="scenario-summary">
+        ${summaryBits.map((item) => `<span class="scenario-summary-chip"><span class="scenario-summary-key">${escapeHtml(item.key)}</span><span class="scenario-summary-value">${escapeHtml(item.value)}</span></span>`).join("")}
+      </div>
       <div class="actions" style="margin-top:14px;">
         <button class="btn btn-primary" type="button" onclick="confirmRecommendationScenario()">確認場景並推薦</button>
       </div>
@@ -1957,13 +2633,13 @@ function inferScenarioFromText(text) {
     { location: "香港", keywords: ["香港", "hk", "本地"] }
   ];
   const categoryMatchers = [
-    { category: "dining", keywords: ["餐廳", "食", "晚飯", "午飯", "早餐", "cafe", "咖啡", "自助餐", "酒吧", "餐飲", "mcdonald", "麥當勞", "starbucks", "星巴克", "pacific coffee"] },
-    { category: "travel", keywords: ["酒店", "機票", "航空", "旅行", "旅遊", "住宿", "訂房", "航班"] },
+    { category: "dining", keywords: ["餐廳", "食", "晚飯", "午飯", "早餐", "cafe", "咖啡", "自助餐", "酒吧", "餐飲", "mcdonald", "麥當勞", "starbucks", "星巴克", "pacific coffee", "uber eats", "deliveroo", "doordash", "door dash"] },
+    { category: "travel", keywords: ["酒店", "機票", "航空", "旅行", "旅遊", "住宿", "訂房", "航班", "booking", "booking.com"] },
     { category: "groceries", keywords: ["超市", "買餸", "百佳", "惠康", "groceries"] },
     { category: "transport", keywords: ["地鐵", "的士", "uber", "巴士", "高鐵", "交通", "停車場", "jr", "japan railway", "mrt"] },
     { category: "entertainment", keywords: ["戲院", "睇戲", "睇電影", "看戲", "看電影", "cinema", "concert", "演唱會", "電影", "院線", "mcl", "百老匯", "英皇戲院", "影藝", "星達", "迪士尼", "海洋公園"] },
     { category: "online", keywords: ["網上", "online", "官網", "網站", "淘寶", "amazon", "電商", "netflix", "spotify", "disney+", "youtube", "apple tv", "apple music", "訂閱", "app store"] },
-    { category: "shopping", keywords: ["購物", "商場", "耳機", "衫", "鞋", "家電", "百貨", "uniqlo", "優衣庫", "ikea", "log-on", "pop mart", "popmart", "唐吉訶德", "松本清", "lululemon", "harrods"] }
+    { category: "shopping", keywords: ["購物", "商場", "耳機", "手機", "鞋", "家電", "百貨", "uniqlo", "優衣庫", "ikea", "log-on", "pop mart", "popmart", "唐吉訶德", "松本清", "lululemon", "harrods", "costco", "arcteryx", "arc'teryx", "sogo", "suning", "farfetch", "ssense"] }
   ];
 
   const matchedCategory = categoryMatchers.find((item) => item.keywords.some((keyword) => normalized.includes(keyword.toLowerCase())));
@@ -2049,6 +2725,7 @@ function evaluateCard(card, scenario, rateMode) {
   const matchingOffers = state.offers.filter((offer) => {
     if (offer.cardId !== card.id) return false;
     if (shouldIgnoreOfferForRecommendation(offer)) return false;
+    if (rateMode && isFixedValueOffer(offer)) return false;
     if (!isDateInRange(scenario.date, offer.startDate, offer.endDate)) return false;
     if (!rateMode && !isOfferMinSpendSatisfied(card, offer, amount, scenario)) return false;
     if (!offerScopeMatchesScenario(card, offer, scenario)) return false;
@@ -2096,6 +2773,7 @@ function evaluateCard(card, scenario, rateMode) {
     bestRate,
     hasInstantPayout,
     rankingScore,
+    selectedOffers,
     offerTitles: selectedOffers.map((offer) => formatRecommendationOfferTitle(card, offer)),
     offerSelectionSummary,
     explanation: explanationParts.join("；")
@@ -2224,13 +2902,50 @@ function selectBestOfferCombination(card, scenario, offers, amount) {
 
 function getOfferSelectionKey(card, offer) {
   const rule = getCanonicalRecommendationRule(card, offer);
-  if (isFixedValueOffer(offer)) return `stackable:${offer.id}`;
   if (rule?.group) return `exclusive:${card.id}:${rule.group}`;
+  if (isFixedValueOffer(offer)) return `stackable:${offer.id}`;
   if ((offer.tags || []).includes("applepay")) return `exclusive:${card.id}:applepay`;
   return `stackable:${offer.id}`;
 }
 
+function hasCustomReward(offer) {
+  return CUSTOM_REWARD_OFFER_KEYS.has(offer.canonicalKey || "");
+}
+
+function isOfferExhausted(offer) {
+  const total = Number(offer.usageTotal || 0);
+  if (total <= 0) return false;
+  return Number(offer.usageUsed || 0) >= total;
+}
+
+function getCustomRewardAmount(offer, amount) {
+  const key = offer.canonicalKey || "";
+  const used = Number(offer.usageUsed || 0);
+  const remaining = Math.max(0, Number(offer.usageTotal || 0) - used);
+  if (remaining <= 0) return 0;
+
+  if (key === canonicalOfferKey("長城萬事達 YOU 卡", "Apple Pay 首3筆 100%返現")) {
+    return Math.min(Number(amount || 0), 5);
+  }
+  if (key === canonicalOfferKey("農行萬事達白金卡", "Apple Pay 首3筆 100%返現")) {
+    return Math.min(Number(amount || 0), 2);
+  }
+  if (key === canonicalOfferKey("長城萬事達 YOU 卡", "Apple Pay 首2筆額外返 US$3 + US$2")
+    || key === canonicalOfferKey("中信萬事達扣賬卡", "Apple Pay 首2筆額外返 US$3 + US$2")
+    || key === canonicalOfferKey("農行萬事達白金卡", "Apple Pay 首2筆額外返 US$3 + US$2")) {
+    return used === 0 ? 3 : used === 1 ? 2 : 0;
+  }
+  if (key === canonicalOfferKey("工行星座Visa卡", "香港 Apple Pay 滿 HK$50 返 US$2")) {
+    return Number(amount || 0) >= 50 ? 2 : 0;
+  }
+  if (key === canonicalOfferKey("工行星座Visa卡", "境外 Apple Pay 交通 100%")) {
+    return Math.min(Number(amount || 0), 3, remaining);
+  }
+  return 0;
+}
+
 function calculateOfferRewardAmount(offer, amount) {
+  if (hasCustomReward(offer)) return getCustomRewardAmount(offer, amount);
   const bonusRate = Number(offer.bonusRate || 0);
   const cap = Number(offer.cap || 0);
   if (bonusRate === 0 && cap > 0) return cap;
@@ -2239,12 +2954,17 @@ function calculateOfferRewardAmount(offer, amount) {
 }
 
 function isFixedValueOffer(offer) {
-  return Number(offer.bonusRate || 0) === 0 && Number(offer.cap || 0) > 0;
+  return hasCustomReward(offer) || (Number(offer.bonusRate || 0) === 0 && Number(offer.cap || 0) > 0);
 }
 
 function shouldIgnoreOfferForRecommendation(offer) {
-  if (isFixedValueOffer(offer)) return true;
-  return /迎新/.test(offer.title || "") || /迎新/.test(offer.notes || "");
+  const title = offer.title || "";
+  const notes = offer.notes || "";
+  if (isOfferExhausted(offer)) return true;
+  if (!hasCustomReward(offer) && Number(offer.bonusRate || 0) <= 0 && Number(offer.cap || 0) <= 0) return true;
+  if (/迎新/.test(title) || /迎新/.test(notes)) return true;
+  if (/抽盲盒|盲盒|隨機|随机|有機會|有机会|匯率優惠|汇率优惠/.test(title) || /抽盲盒|盲盒|隨機|随机|有機會|有机会|匯率優惠|汇率优惠/.test(notes)) return true;
+  return false;
 }
 
 function buildOfferSelectionSummary(selectedOffers, skippedOffers) {
@@ -2299,6 +3019,7 @@ function offerRuleMatchesScenario(card, offer, scenario) {
   const scenarioTags = new Set(scenario.scenarioTags || []);
 
   if (rule) {
+    if (rule.paymentMethod && scenario.paymentMethod !== rule.paymentMethod) return false;
     if (rule.requireTags && !rule.requireTags.every((tag) => scenarioTags.has(tag))) return false;
     if (rule.excludeWhenMatchedGroups?.length) {
       const matchedExcluded = state.offers.some((candidate) => {
@@ -2376,6 +3097,10 @@ function inferMerchantSignals(merchantTokens) {
     ["emporium", "海外"],
     ["paragon", "海外"],
     ["lululemon", "海外"],
+    ["booking.com", "海外"],
+    ["king power", "海外"],
+    ["costco", "海外"],
+    ["saks fifth avenue", "海外"],
     ["松本清", "海外"],
     ["唐吉訶德", "海外"],
     ["三越", "海外"],
@@ -2383,7 +3108,9 @@ function inferMerchantSignals(merchantTokens) {
     ["大丸", "海外"],
     ["松坂屋", "海外"],
     ["阪急", "海外"],
-    ["阪神", "海外"]
+    ["阪神", "海外"],
+    ["sogo", "香港"],
+    ["suning", "香港"]
   ]);
   const categoryMap = new Map([
     ["中國鐵路", "transport"],
@@ -2396,12 +3123,20 @@ function inferMerchantSignals(merchantTokens) {
     ["translink", "transport"],
     ["trainlink", "transport"],
     ["jr", "transport"],
+    ["booking.com", "travel"],
+    ["uber", "transport"],
+    ["uber eats", "dining"],
+    ["deliveroo", "dining"],
+    ["doordash", "dining"],
+    ["steam", "entertainment"],
+    ["playstation", "entertainment"],
+    ["nintendo eshop", "entertainment"],
     ["mcdonald", "dining"],
     ["pacific coffee", "dining"],
     ["starbucks", "dining"]
   ]);
   const japanTokens = new Set(["jr", "松本清", "唐吉訶德", "三越", "伊勢丹", "大丸", "松坂屋", "阪急", "阪神"]);
-  const onlineOnlyTokens = new Set(["app store", "apple tv", "netflix", "spotify", "disney+"]);
+  const onlineOnlyTokens = new Set(["app store", "apple tv", "netflix", "spotify", "disney+", "booking.com", "farfetch", "ssense", "steam", "playstation", "nintendo eshop"]);
   const regions = [...new Set(merchantTokens.map((token) => regionMap.get(token)).filter(Boolean))];
   const category = merchantTokens.map((token) => categoryMap.get(token)).find(Boolean) || "";
   const japan = merchantTokens.some((token) => japanTokens.has(token));
@@ -2432,6 +3167,22 @@ function collectMerchantTokens(normalizedText) {
     ["log-on", ["log-on", "log on"]],
     ["amazon", ["amazon", "亞馬遜"]],
     ["lululemon", ["lululemon"]],
+    ["costco", ["costco"]],
+    ["arc'teryx", ["arc'teryx", "arcteryx"]],
+    ["saks fifth avenue", ["saks fifth avenue"]],
+    ["sogo", ["sogo"]],
+    ["king power", ["king power"]],
+    ["suning", ["suning"]],
+    ["farfetch", ["farfetch"]],
+    ["ssense", ["ssense"]],
+    ["booking.com", ["booking.com", "booking"]],
+    ["uber eats", ["uber eats"]],
+    ["deliveroo", ["deliveroo"]],
+    ["doordash", ["doordash", "door dash"]],
+    ["uber", ["uber"]],
+    ["steam", ["steam"]],
+    ["playstation", ["playstation", "sony playstation"]],
+    ["nintendo eshop", ["nintendo eshop", "nintendo e-shop"]],
     ["pop mart", ["pop mart", "popmart"]],
     ["唐吉訶德", ["唐吉訶德"]],
     ["松本清", ["松本清"]],
@@ -2471,7 +3222,7 @@ function inferCurrencyBucket(currency, locations, description) {
 
 function formatOfferLocationLabel(offer, cardName = "") {
   if (cardName === "BOC Chill Card" && offer.title === "指定商戶 8%") {
-    return { main: "香港商戶 / 指定網上服務" };
+    return { main: "指定商戶", sub: "實體或網上" };
   }
   if (cardName === "BOC Chill Card" && offer.title === "海外簽賬 4%") {
     return { main: "澳門 / 內地 / 海外", sub: "實體或網上" };
@@ -2480,10 +3231,10 @@ function formatOfferLocationLabel(offer, cardName = "") {
     return { main: "不限地點", sub: "網上" };
   }
   if (cardName === "MMPOWER" && offer.title === "指定商戶 8%") {
-    return { chips: ["香港實體", "網上"] };
+    return { main: "指定商戶", sub: "實體或網上" };
   }
   if (cardName === "MMPOWER" && offer.title === "網上娛樂 8%") {
-    return { main: "指定娛樂商戶", sub: "網上" };
+    return { main: "指定商戶", sub: "網上" };
   }
   if (cardName === "MMPOWER" && offer.title === "網上服飾 8%") {
     return { main: "不限地點", sub: "網上" };
@@ -2501,10 +3252,10 @@ function formatOfferLocationLabel(offer, cardName = "") {
     return { main: "澳門 / 內地 / 海外", sub: "實體" };
   }
   if (cardName === "恒生多貨幣扣賬卡" && offer.title === "指定本地商戶 20%") {
-    return { main: "香港" };
+    return { main: "香港", sub: "實體或網上" };
   }
   if (cardName === "恒生多貨幣扣賬卡" && offer.title === "指定海外交通 20%") {
-    return { main: "內地 / 海外" };
+    return { main: "內地 / 海外", sub: "實體或網上" };
   }
   if (cardName === "AEON WAKUWAKU" && offer.title === "網上簽賬 6%") {
     return { main: "不限地點", sub: "網上" };
@@ -2523,6 +3274,57 @@ function formatOfferLocationLabel(offer, cardName = "") {
   }
   if (cardName === "DBS Live Fresh" && offer.title === "合資格網上外幣 1%") {
     return { main: "海外", sub: "網上" };
+  }
+  if (cardName === "長城萬事達 YOU 卡" && offer.title === "Apple Pay 首3筆 100%返現") {
+    return { main: "香港 / 澳門 / 海外", sub: "實體或網上" };
+  }
+  if (cardName === "長城萬事達 YOU 卡" && offer.title === "Apple Pay 首2筆額外返 US$3 + US$2") {
+    return { main: "香港 / 澳門 / 海外", sub: "實體或網上" };
+  }
+  if (cardName === "中信i享銀聯卡" && offer.title === "香港線下滿 HK$200 減 HK$20") {
+    return { main: "香港", sub: "實體" };
+  }
+  if (cardName === "中信i享銀聯卡" && offer.title === "境外線下隨機立減最高 30%") {
+    return { main: "香港 / 海外", sub: "實體" };
+  }
+  if (cardName === "中信萬事達扣賬卡" && offer.title === "Apple Pay 首2筆額外返 US$3 + US$2") {
+    return { main: "香港 / 澳門 / 海外", sub: "實體或網上" };
+  }
+  if (cardName === "農行萬事達白金卡" && offer.title === "每月首筆境外線下返 US$1") {
+    return { main: "香港 / 澳門 / 海外", sub: "實體" };
+  }
+  if (cardName === "農行萬事達白金卡" && offer.title === "境外簽賬 1%") {
+    return { main: "香港 / 澳門 / 海外", sub: "實體或網上" };
+  }
+  if (cardName === "農行萬事達白金卡" && offer.title === "境外線下簽賬 3%") {
+    return { main: "香港 / 澳門 / 海外", sub: "實體" };
+  }
+  if (cardName === "農行萬事達白金卡" && offer.title === "境外精選商戶 10%") {
+    return { main: "指定商戶", sub: "實體或網上" };
+  }
+  if (cardName === "農行萬事達白金卡" && offer.title === "Apple Pay 首3筆 100%返現") {
+    return { main: "香港 / 澳門 / 海外", sub: "實體或網上" };
+  }
+  if (cardName === "農行萬事達白金卡" && offer.title === "Apple Pay 首2筆額外返 US$3 + US$2") {
+    return { main: "香港 / 澳門 / 海外", sub: "實體或網上" };
+  }
+  if (cardName === "工行星座Visa卡" && offer.title === "香港 Apple Pay 滿 HK$50 返 US$2") {
+    return { main: "香港", sub: "實體" };
+  }
+  if (cardName === "工行星座Visa卡" && offer.title === "境外實體交通 10%") {
+    return { main: "香港 / 澳門 / 海外", sub: "實體" };
+  }
+  if (cardName === "工行星座Visa卡" && offer.title === "境外 Apple Pay 交通 100%") {
+    return { main: "香港 / 澳門 / 海外", sub: "實體" };
+  }
+  if (cardName === "工行星座Visa卡" && offer.title === "境外線下匯率優惠最高 10%") {
+    return { main: "香港 / 澳門 / 海外", sub: "實體" };
+  }
+  if (cardName === "工行星座Visa卡" && offer.title === "每滿 3 筆返 US$3") {
+    return { main: "香港 / 澳門 / 海外", sub: "實體或網上" };
+  }
+  if (cardName === "工行星座Visa卡" && offer.title === "境外簽賬 1%") {
+    return { main: "香港 / 澳門 / 海外", sub: "實體或網上" };
   }
   return { main: formatOfferLocations(offer.locations) };
 }
@@ -2583,14 +3385,45 @@ function formatCurrency(value) {
   return "$" + Number(value || 0).toFixed(2);
 }
 
+function formatAmountByCurrency(value, currency) {
+  const amount = formatNumber(value);
+  const symbols = { HKD: "$", USD: "US$", CNY: "¥", JPY: "¥", MOP: "MOP$", THB: "฿", TWD: "NT$" };
+  return (symbols[currency] || "$") + amount;
+}
+
 function formatCurrencyWithCode(value, currency) {
   const amount = Number(value || 0).toFixed(2);
   const symbols = { HKD: "HK$", USD: "US$", CNY: "¥", JPY: "¥", MOP: "MOP$", THB: "฿", TWD: "NT$" };
   return (symbols[currency] || currency + "$") + amount;
 }
 
+function currencySymbol(currency) {
+  const symbols = { HKD: "HK$", USD: "US$", CNY: "¥", JPY: "¥", MOP: "MOP$", THB: "฿", TWD: "NT$" };
+  return symbols[currency] || "";
+}
+
 function formatOfferDate(offer) {
-  return `${offer.startDate} 至 ${offer.endDate}`;
+  const base = `${offer.startDate} 至 ${offer.endDate}`;
+  return offer.dateNote ? `${base}（${offer.dateNote}）` : base;
+}
+
+function formatUsageText(offer) {
+  if (offer.usageMode === "amount") {
+    const currency = offer.usageCurrency || offer.currency || "";
+    const prefix = currencySymbol(currency);
+    return `${prefix}${formatNumber(offer.usageUsed || 0)}/${formatNumber(offer.usageTotal || 0)}`;
+  }
+  return `${Number(offer.usageUsed || 0)}/${Number(offer.usageTotal || 0)}`;
+}
+
+function cycleOfferUsage(offerId) {
+  const offer = state.offers.find((item) => item.id === offerId);
+  if (!offer || Number(offer.usageTotal || 0) <= 0) return;
+  const total = Number(offer.usageTotal || 0);
+  const current = Number(offer.usageUsed || 0);
+  offer.usageUsed = current >= total ? 0 : current + 1;
+  saveData();
+  renderCards();
 }
 
 function isDateInRange(date, startDate, endDate) {
@@ -2643,6 +3476,8 @@ function escapeHtml(value) {
 }
 
 window.editOffer = editOffer;
+window.cycleOfferUsage = cycleOfferUsage;
+window.setRecommendationResultScope = setRecommendationResultScope;
 </script>
 </body>
 </html>
