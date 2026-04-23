@@ -438,7 +438,9 @@
   .offer-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
   .offer-card { background: var(--card-inner); border: 1px solid var(--border); border-radius: 11px; padding: 13px; }
   .offer-card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 6px; }
+  .offer-card-heading { flex: 1; min-width: 0; }
   .offer-card-title { font-size: 13px; font-weight: 600; color: var(--ink); margin: 0; }
+  .offer-card-actions { display: flex; align-items: flex-start; gap: 8px; flex-shrink: 0; }
   .offer-card-date { font-size: 11px; color: var(--muted); white-space: nowrap; flex-shrink: 0; }
   .offer-card-meta { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 6px; }
   .offer-card-note { font-size: 12px; line-height: 1.5; color: var(--muted); white-space: pre-line; }
@@ -452,6 +454,18 @@
   }
   .offer-setting .field-hint {
     margin-bottom: 0;
+  }
+  @media (max-width: 520px) {
+    .offer-card-header { gap: 10px; }
+    .offer-card-actions {
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+    }
+    .offer-card-date {
+      white-space: normal;
+      text-align: right;
+    }
   }
 
   /* RESULT CARDS */
@@ -2185,10 +2199,10 @@ function renderCardMarkup(card) {
         ${cardOffers.map((offer) => `
           <article class="offer-card">
             <div class="offer-card-header">
-              <div>
+              <div class="offer-card-heading">
                 <h4 class="offer-card-title">${escapeHtml(offer.title)}</h4>
               </div>
-              <div style="display:flex;align-items:flex-start;gap:8px;flex-shrink:0;">
+              <div class="offer-card-actions">
                 <div class="offer-card-date">${escapeHtml(formatOfferDate(offer))}</div>
                 <button class="tiny-btn" onclick="editOffer('${offer.id}')">編輯規則</button>
               </div>
