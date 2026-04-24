@@ -808,10 +808,11 @@ const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
 const CARD_DISPLAY_ORDER = [
   "BOC Chill Card",
   "HSBC 金卡",
+  "PayMe 銀聯卡",
   "MMPOWER",
   "恒生多貨幣扣賬卡",
-  "AEON WAKUWAKU",
   "DBS Live Fresh",
+  "AEON WAKUWAKU",
   "長城萬事達 YOU 卡",
   "中信i享銀聯卡",
   "中信萬事達扣賬卡",
@@ -833,7 +834,9 @@ const LEGACY_CARD_NAME_MAP = {
 };
 const LEGACY_OFFER_TITLE_MAP = {
   [canonicalOfferKey("工行星座Visa卡", "香港 Apple Pay 滿 HK$50 返 US$2（3/4）")]: "香港 Apple Pay 滿 HK$50 返 US$2",
-  [canonicalOfferKey("工行星座Visa卡", "境外 Apple Pay 交通 100%（0/15）")]: "境外 Apple Pay 交通 100%"
+  [canonicalOfferKey("工行星座Visa卡", "境外 Apple Pay 交通 100%（0/15）")]: "境外 Apple Pay 交通 100%",
+  [canonicalOfferKey("PayMe 銀聯卡", "NFC 港幣/人民幣/澳門幣 3%")]: "港幣/澳門幣/人民幣 3%",
+  [canonicalOfferKey("PayMe 銀聯卡", "NFC 其他貨幣 10%")]: "其他貨幣 10%"
 };
 const CUSTOM_REWARD_OFFER_KEYS = new Set([
   canonicalOfferKey("長城萬事達 YOU 卡", "Apple Pay 首3筆 100%返現"),
@@ -925,6 +928,17 @@ const CANONICAL_CARD_DEFINITIONS = [
     },
     locations: ["香港", "海外", "網上"],
     notes: "海外註冊網上商戶以港幣 DCC 付款不適用。"
+  },
+  {
+    name: "PayMe 銀聯卡",
+    bank: "匯豐",
+    baseRate: 0,
+    currency: "HKD",
+    categories: {
+      general: 1
+    },
+    locations: ["香港", "澳門", "內地", "海外"],
+    notes: ""
   },
   {
     name: "長城萬事達 YOU 卡",
@@ -1116,7 +1130,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
     startDate: "2026-01-01",
     endDate: "2026-06-30",
     locations: ["海外"],
-    notes: "於指定海外商戶作合資格交易可享 15% 現金回贈，只可於每個指定商戶享現金回贈一次：【日本】松本清、唐吉訶德、阪急／阪神百貨、大丸松坂屋、樂天免稅店東京銀座店、三越伊勢丹、三井 Outlet Park 爵士之夢長島、三井 Outlet Park 木更津；【英國】Harrods；【加拿大】Lululemon；【澳洲】Coles、Woolworths；【泰國】曼谷 Emporium、Paragon Department Stores。",
+    notes: "於指定海外商戶作合資格交易可享 15% 現金回贈，只可於每個指定商戶享現金回贈一次。\n【日本】松本清、唐吉訶德、阪急／阪神百貨、大丸松坂屋、樂天免稅店東京銀座店、三越伊勢丹、三井 Outlet Park 爵士之夢長島、三井 Outlet Park 木更津。\n【英國】Harrods。\n【加拿大】Lululemon。\n【澳洲】Coles、Woolworths。\n【泰國】曼谷 Emporium、Paragon Department Stores。",
     requiresKeywords: ["松本清", "唐吉訶德", "阪急", "阪神", "大丸", "松坂屋", "樂天免稅", "三越", "伊勢丹", "三井", "harrods", "lululemon", "coles", "woolworths", "emporium", "paragon"]
   },
   {
@@ -1130,7 +1144,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
     startDate: "2026-01-01",
     endDate: "2026-06-30",
     locations: ["內地", "海外", "網上"],
-    notes: "於指定海外交通作合資格交易可享 20% 現金回贈（上限 HK$120）：【澳洲】Transport for NSW TrainLink、Translink；【加拿大】Go Transit；【內地】中國鐵路 12306、北京地鐵、Go 巴出行、上海地鐵、上海磁浮、環島中港通；【日本】Japan Railway；【泰國】Mass Rapid Transit Authority of Thailand；【英國】Lothian Buses、Transport for Greater Manchester、Transport for London。部分指定商戶網站/網上交易亦適用。",
+    notes: "於指定海外交通作合資格交易可享 20% 現金回贈（上限 HK$120）。\n【澳洲】Transport for NSW TrainLink、Translink。\n【加拿大】Go Transit。\n【內地】中國鐵路 12306、北京地鐵、Go 巴出行、上海地鐵、上海磁浮、環島中港通。\n【日本】Japan Railway。\n【泰國】Mass Rapid Transit Authority of Thailand。\n【英國】Lothian Buses、Transport for Greater Manchester、Transport for London。\n部分指定商戶網站/網上交易亦適用。",
     requiresKeywords: ["translink", "trainlink", "go transit", "中國鐵路", "北京地鐵", "go巴出行", "上海地鐵", "上海磁浮", "環島中港通", "japan railway", "jr", "mass rapid transit", "mrt", "lothian buses", "transport for greater manchester", "transport for london", "tfl"]
   },
   {
@@ -1266,6 +1280,36 @@ const CANONICAL_OFFER_DEFINITIONS = [
     locations: ["網上"],
     notes: "✅（待返）發卡 4 個月內於任何兩個月（3 月 + 4 月）於指定合資格訂閱服務各簽賬任何金額一次可享 HK$100 現金回贈；最遲於完成要求後 6 個月回贈。",
     requiresKeywords: ["訂閱", "subscription", "netflix", "spotify", "disney+", "apple tv", "apple music", "joox", "kkbox", "viu", "moov", "youtube"]
+  },
+  {
+    cardName: "PayMe 銀聯卡",
+    title: "港幣/澳門幣/人民幣 3%",
+    category: "general",
+    tags: ["nfc"],
+    bonusRate: 3,
+    minSpend: 0,
+    cap: 200,
+    startDate: "2026-04-23",
+    endDate: "2026-06-23",
+    locations: ["香港", "澳門", "內地", "海外"],
+    displayCap: 200,
+    displayCurrency: "HKD",
+    notes: "於香港、中國內地及全球各地，以 PayMe 銀聯卡經 NFC 免觸支付，港幣、人民幣或澳門幣付款可享累積交易金額 3% 回贈。每個推廣階段兩項優惠合共最高 HK$200，兩個階段合共最高 HK$400；第一階段 2026-04-23 至 2026-05-22，第二階段 2026-05-23 至 2026-06-23。"
+  },
+  {
+    cardName: "PayMe 銀聯卡",
+    title: "其他貨幣 10%",
+    category: "general",
+    tags: ["nfc", "overseas"],
+    bonusRate: 10,
+    minSpend: 0,
+    cap: 200,
+    startDate: "2026-04-23",
+    endDate: "2026-06-23",
+    locations: ["海外"],
+    displayCap: 200,
+    displayCurrency: "HKD",
+    notes: "以 PayMe 銀聯卡經 NFC 免觸支付，以其他貨幣付款可享累積交易金額 10% 回贈。每個推廣階段兩項優惠合共最高 HK$200，兩個階段合共最高 HK$400；第一階段 2026-04-23 至 2026-05-22，第二階段 2026-05-23 至 2026-06-23。"
   },
   {
     cardName: "長城萬事達 YOU 卡",
@@ -1692,6 +1736,19 @@ const CANONICAL_RECOMMENDATION_RULES = {
     regions: ["香港"],
     currency: "HKD"
   },
+  [canonicalOfferKey("PayMe 銀聯卡", "港幣/澳門幣/人民幣 3%")]: {
+    group: "payme-nfc",
+    channel: "offline",
+    regions: ["香港", "澳門", "內地", "海外"],
+    currencyAnyOf: ["HKD", "CNY", "MOP"]
+  },
+  [canonicalOfferKey("PayMe 銀聯卡", "其他貨幣 10%")]: {
+    group: "payme-nfc",
+    channel: "offline",
+    regions: ["海外"],
+    currency: "foreign",
+    excludeCurrencies: ["HKD", "CNY", "MOP"]
+  },
   [canonicalOfferKey("長城萬事達 YOU 卡", "Apple Pay 首3筆 100%返現")]: {
     group: null,
     channel: "either",
@@ -1992,14 +2049,8 @@ function normalizeOffer(offer) {
   };
 }
 
-function isLegacyPayMeCard(card) {
-  const text = `${card?.name || ""} ${card?.bank || ""} ${card?.notes || ""}`.toLowerCase();
-  return text.includes("payme");
-}
-
 function migrateStoredData() {
   const existingCards = (Array.isArray(state.cards) ? state.cards : [])
-    .filter((card) => !isLegacyPayMeCard(card))
     .map((card) => ({
       ...card,
       name: LEGACY_CARD_NAME_MAP[card.name] || card.name
@@ -2024,8 +2075,7 @@ function migrateStoredData() {
   const cardIdByName = Object.fromEntries(state.cards.map((card) => [card.name, card.id]));
   const canonicalCardNames = new Set(CANONICAL_CARD_DEFINITIONS.map((card) => card.name));
   const existingCardById = Object.fromEntries(existingCards.map((card) => [card.id, card]));
-  const existingOffers = (Array.isArray(state.offers) ? state.offers : [])
-    .filter((offer) => !`${offer?.title || ""} ${offer?.notes || ""}`.toLowerCase().includes("payme"));
+  const existingOffers = Array.isArray(state.offers) ? state.offers : [];
   existingOffers.forEach((offer) => {
     const linkedCard = existingCardById[offer.cardId];
     const cardName = linkedCard?.name || "";
@@ -2878,6 +2928,8 @@ function ruleRegionMatches(rule, scenario, card, offer) {
 }
 
 function ruleCurrencyMatches(rule, scenario) {
+  if (Array.isArray(rule.currencyAnyOf) && !rule.currencyAnyOf.includes(scenario.currency)) return false;
+  if (Array.isArray(rule.excludeCurrencies) && rule.excludeCurrencies.includes(scenario.currency)) return false;
   if (!rule.currency || rule.currency === "any") return true;
   if (rule.currency === "foreign") return scenario.currencyBucket === "foreign";
   if (rule.currency === "HKD") return scenario.currency === "HKD";
@@ -3298,6 +3350,12 @@ function formatOfferLocationLabel(offer, cardName = "") {
   }
   if (cardName === "DBS Live Fresh" && offer.title === "合資格網上外幣 1%") {
     return { main: "海外", sub: "網上" };
+  }
+  if (cardName === "PayMe 銀聯卡" && offer.title === "港幣/澳門幣/人民幣 3%") {
+    return { main: "香港 / 澳門 / 內地 / 海外", sub: "實體或網上" };
+  }
+  if (cardName === "PayMe 銀聯卡" && offer.title === "其他貨幣 10%") {
+    return { main: "海外", sub: "實體或網上" };
   }
   if (cardName === "長城萬事達 YOU 卡" && offer.title === "Apple Pay 首3筆 100%返現") {
     return { main: "香港 / 澳門 / 海外", sub: "實體或網上" };

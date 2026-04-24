@@ -29,8 +29,8 @@ global.structuredClone = (value) => JSON.parse(JSON.stringify(value));
 
 eval(code);
 
-function runScenario(description, amount, currency, chillMonthlyQualified = false, rateMode = false) {
-  const scenario = { description, amount, currency, date: "2026-04-21" };
+function runScenario(description, amount, currency, chillMonthlyQualified = false, rateMode = false, date = "2026-04-21") {
+  const scenario = { description, amount, currency, date };
   Object.assign(scenario, inferScenarioFromText(description));
   scenario.currencyBucket = inferCurrencyBucket(currency, scenario.locations, description);
   scenario.flags = { chillMonthlyQualified };
@@ -172,6 +172,22 @@ const cases = [
     currency: "HKD",
     expectedCard: "長城萬事達 YOU 卡",
     expectedOffer: "Apple Pay 首3筆 100%返現"
+  },
+  {
+    description: "PayMe 香港買嘢",
+    amount: 1000,
+    currency: "HKD",
+    date: "2026-04-24",
+    expectedAnyCard: "PayMe 銀聯卡",
+    expectedAnyOffer: "港幣/澳門幣/人民幣 3%"
+  },
+  {
+    description: "PayMe 泰國買嘢",
+    amount: 1000,
+    currency: "THB",
+    date: "2026-04-24",
+    expectedAnyCard: "PayMe 銀聯卡",
+    expectedAnyOffer: "其他貨幣 10%"
   }
 ];
 
@@ -183,10 +199,25 @@ cases.forEach((testCase) => {
     testCase.amount,
     testCase.currency,
     Boolean(testCase.chillMonthlyQualified),
-    Boolean(testCase.rateMode)
+    Boolean(testCase.rateMode),
+    testCase.date || "2026-04-21"
   );
   const best = ranked[0];
   const bestOffer = best.offerTitles[0] || "";
+  if (testCase.expectedAnyCard) {
+    const matchedResult = ranked.find((result) =>
+      result.card.name === testCase.expectedAnyCard
+      && result.offerTitles.some((offerTitle) => offerTitle.includes(testCase.expectedAnyOffer))
+    );
+    if (!matchedResult) {
+      failures.push({
+        ...testCase,
+        actualTopCard: best.card.name,
+        actualTopOffer: bestOffer
+      });
+    }
+    return;
+  }
   const offerMatched = testCase.expectedOffer === "" ? bestOffer === "" : bestOffer.includes(testCase.expectedOffer);
   const cardMatched = best.card.name === testCase.expectedCard;
 
