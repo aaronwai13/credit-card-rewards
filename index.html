@@ -504,6 +504,26 @@
     color: var(--muted);
     white-space: pre-line;
   }
+  .result-missed-details {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .result-missed-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+  }
+  .result-missed-item {
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--muted);
+  }
+  .result-missed-item strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
   .result-rank { font-family: "IBM Plex Mono", monospace; font-size: 10px; text-transform: uppercase; color: var(--muted); letter-spacing: 0.08em; margin-bottom: 8px; }
   .result-card.best .result-rank { color: var(--accent); font-weight: 500; }
   .result-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
@@ -803,7 +823,7 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "本地餐飲及娛樂 1%",
   "網上旅遊/娛樂/訂閱 港幣 5.4%"
 ]);
-const APP_VERSION = "v2026.04.23.4";
+const APP_VERSION = "v2026.04.28.1";
 const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
 const CARD_DISPLAY_ORDER = [
   "BOC Chill Card",
@@ -2568,6 +2588,14 @@ function renderRecommendationResults(results, scenario, rateMode, currency) {
           `).join("")}
         </div>
       ` : ""}
+      ${result.missedOfferReasons.length ? `
+        <div class="result-missed-details">
+          <div class="result-missed-title">未採用活動</div>
+          ${result.missedOfferReasons.map((item) => `
+            <div class="result-missed-item"><strong>${escapeHtml(item.title)}</strong>：${escapeHtml(item.reason)}</div>
+          `).join("")}
+        </div>
+      ` : ""}
       <p class="result-note">${escapeHtml(result.explanation)}</p>
     </article>
   `;
@@ -2819,6 +2847,7 @@ function evaluateCard(card, scenario, rateMode) {
   const bestOfferRate = selectedOffers.reduce((max, offer) => Math.max(max, Number(offer.bonusRate || 0)), 0);
   const bestRate = baseRateApplied + bestOfferRate;
   const hasInstantPayout = selectedOffers.some((offer) => getCanonicalRecommendationRule(card, offer)?.payoutTiming === "instant");
+  const missedOfferReasons = buildMissedOfferReasons(card, scenario, amount, rateMode, selectedOffers);
   const rankingScore = rateMode
     ? bestRate + getInstantPayoutRateBonus(hasInstantPayout)
     : totalRewardAmount + getInstantPayoutValueBonus(hasInstantPayout, amount);
@@ -2848,9 +2877,84 @@ function evaluateCard(card, scenario, rateMode) {
     rankingScore,
     selectedOffers,
     offerTitles: selectedOffers.map((offer) => formatRecommendationOfferTitle(card, offer)),
+    missedOfferReasons,
     offerSelectionSummary,
     explanation: explanationParts.join("；")
   };
+}
+
+function buildMissedOfferReasons(card, scenario, amount, rateMode, selectedOffers) {
+  const selectedIds = new Set(selectedOffers.map((offer) => offer.id));
+  return state.offers
+    .filter((offer) => offer.cardId === card.id && !selectedIds.has(offer.id))
+    .map((offer) => ({
+      offer,
+      reason: getOfferExclusionReason(card, offer, scenario, amount, rateMode)
+    }))
+    .filter((item) => item.reason)
+    .sort((left, right) => getOfferDiagnosticPriority(right.offer) - getOfferDiagnosticPriority(left.offer))
+    .slice(0, 2)
+    .map((item) => ({
+      title: item.offer.title,
+      reason: item.reason
+    }));
+}
+
+function getOfferDiagnosticPriority(offer) {
+  if (hasCustomReward(offer) || isFixedValueOffer(offer)) return 1000 + Number(offer.cap || 0);
+  return Number(offer.bonusRate || 0);
+}
+
+function getOfferExclusionReason(card, offer, scenario, amount, rateMode) {
+  if (isOfferExhausted(offer)) return "使用次數或額度已用完";
+  if (shouldIgnoreOfferForRecommendation(offer)) return "";
+  if (rateMode && isFixedValueOffer(offer)) return "需要輸入金額先可以同百分比回贈比較";
+  if (!isDateInRange(scenario.date, offer.startDate, offer.endDate)) return "不在活動期內";
+  if (!isOfferMinSpendSatisfied(card, offer, amount, scenario, { ignoreAmount: rateMode })) {
+    return getMinSpendExclusionReason(card, offer);
+  }
+  const scopeReason = getOfferScopeExclusionReason(card, offer, scenario);
+  if (scopeReason) return scopeReason;
+  const ruleReason = getOfferRuleExclusionReason(card, offer, scenario);
+  if (ruleReason) return ruleReason;
+  if (!merchantOfferMatchesScenario(offer, scenario)) return "商戶或關鍵字不符合指定名單";
+  return "";
+}
+
+function getMinSpendExclusionReason(card, offer) {
+  const rule = getCanonicalRecommendationRule(card, offer);
+  if (rule?.minSpendType === "monthlyQualified") return "Chill 今月合資格簽賬未標記已滿 HK$1,000";
+  return `未達門檻 ${formatAmountByCurrency(Number(offer.minSpend || 0), offer.currency || card.currency || "HKD")}`;
+}
+
+function getOfferScopeExclusionReason(card, offer, scenario) {
+  const rule = getCanonicalRecommendationRule(card, offer);
+  if (rule) {
+    if (!ruleCategoryMatches(rule, scenario)) return "類別不符合活動要求";
+    if (!ruleChannelMatches(rule, scenario)) return "交易方式不符合活動要求";
+    if (!ruleRegionMatches(rule, scenario, card, offer)) return "地點不符合活動要求";
+    if (!ruleCurrencyMatches(rule, scenario)) return "貨幣不符合活動要求";
+    return "";
+  }
+  if (!categoryMatchesOffer(offer, scenario)) return "類別不符合活動要求";
+  if ((offer.tags || []).includes("online") && scenario.channel !== "online") return "交易方式不符合活動要求";
+  const offerRegions = (offer.locations || []).filter((location) => location !== "網上");
+  if (offerRegions.length && !scenario.regions.some((region) => offerRegions.includes(region))) return "地點不符合活動要求";
+  return "";
+}
+
+function getOfferRuleExclusionReason(card, offer, scenario) {
+  const rule = getCanonicalRecommendationRule(card, offer);
+  const scenarioTags = new Set(scenario.scenarioTags || []);
+  if (rule) {
+    if (rule.paymentMethod && scenario.paymentMethod !== rule.paymentMethod) return "付款方式不符合活動要求";
+    if (rule.requireTags && !rule.requireTags.every((tag) => scenarioTags.has(tag))) return "場景標籤不符合活動要求";
+    if (rule.excludeWhenMatchedGroups?.length && offerRuleMatchesScenario(card, offer, scenario) === false) {
+      return "同組較高優先活動已命中";
+    }
+    return offerRuleMatchesScenario(card, offer, scenario) ? "" : "附加條件不符合活動要求";
+  }
+  return offerRuleMatchesScenario(card, offer, scenario) ? "" : "附加條件不符合活動要求";
 }
 
 function getInstantPayoutRateBonus(hasInstantPayout) {
