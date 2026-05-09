@@ -1,8 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 
-const html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
-let code = html.match(/<script>([\s\S]*)<\/script>/)[1];
+let code = fs.readFileSync(path.join(__dirname, "..", "app.js"), "utf8");
 code = code.replace("let state = loadData();", "globalThis.state = loadData();");
 
 const fakeEl = () => ({
@@ -53,8 +52,8 @@ const cases = [
     amount: 120,
     currency: "HKD",
     chillMonthlyQualified: true,
-    expectedCard: "BOC Chill Card",
-    expectedOffer: "指定商戶 8%"
+    expectedCard: "長城萬事達 YOU 卡",
+    expectedOffer: "Apple Pay 首3筆 100%返現"
   },
   {
     description: "喺 Netflix 訂閱",
@@ -82,15 +81,15 @@ const cases = [
     description: "香港網上買衫",
     amount: 500,
     currency: "HKD",
-    expectedCard: "MMPOWER",
-    expectedOffer: "網上服飾 8%"
+    expectedCard: "長城萬事達 YOU 卡",
+    expectedOffer: "Apple Pay 首3筆 100%返現"
   },
   {
     description: "日本買嘢",
     amount: 8000,
     currency: "JPY",
-    expectedCard: "BOC Chill Card",
-    expectedOffer: "海外簽賬 4%"
+    expectedCard: "長城萬事達 YOU 卡",
+    expectedOffer: "Apple Pay 首3筆 100%返現"
   },
   {
     description: "買三星電視",
@@ -113,8 +112,8 @@ const cases = [
     amount: 100,
     currency: "HKD",
     chillMonthlyQualified: true,
-    expectedCard: "BOC Chill Card",
-    expectedOffer: "指定商戶 8%"
+    expectedCard: "長城萬事達 YOU 卡",
+    expectedOffer: "Apple Pay 首3筆 100%返現"
   },
   {
     description: "廣州買手機",
@@ -127,8 +126,8 @@ const cases = [
     description: "香港線下買嘢",
     amount: 250,
     currency: "HKD",
-    expectedCard: "中信i享銀聯卡",
-    expectedOffer: "香港線下滿 HK$200 減 HK$20"
+    expectedCard: "長城萬事達 YOU 卡",
+    expectedOffer: "Apple Pay 首3筆 100%返現"
   },
   {
     description: "booking.com 訂酒店",
@@ -141,8 +140,8 @@ const cases = [
     description: "東京搭地鐵",
     amount: 1000,
     currency: "JPY",
-    expectedCard: "工行星座Visa卡",
-    expectedOffer: "境外實體交通 10%"
+    expectedCard: "長城萬事達 YOU 卡",
+    expectedOffer: "Apple Pay 首3筆 100%返現"
   },
   {
     description: "香港 Apple Pay 買咖啡",
@@ -152,11 +151,20 @@ const cases = [
     expectedOffer: "Apple Pay 首3筆 100%返現"
   },
   {
+    description: "麥當勞 Apple Pay",
+    amount: 252.67,
+    currency: "HKD",
+    expectedAnyCard: "農行萬事達白金卡",
+    expectedAnyOffer: "Apple Pay 首3筆 100%返現",
+    expectedAnyMinReward: 46.5
+  },
+  {
     description: "東京 Apple Pay 搭地鐵",
     amount: 20,
     currency: "JPY",
-    expectedCard: "長城萬事達 YOU 卡",
-    expectedOffer: "Apple Pay 首3筆 100%返現"
+    expectedCard: "農行萬事達白金卡",
+    expectedOffer: "境外線下簽賬 3%",
+    expectedIncludedOffer: "Apple Pay 首3筆 100%返現"
   },
   {
     description: "App Store 買 app",
@@ -209,23 +217,27 @@ cases.forEach((testCase) => {
       result.card.name === testCase.expectedAnyCard
       && result.offerTitles.some((offerTitle) => offerTitle.includes(testCase.expectedAnyOffer))
     );
-    if (!matchedResult) {
+    if (!matchedResult || (testCase.expectedAnyMinReward && matchedResult.totalRewardAmount < testCase.expectedAnyMinReward)) {
       failures.push({
         ...testCase,
         actualTopCard: best.card.name,
-        actualTopOffer: bestOffer
+        actualTopOffer: bestOffer,
+        actualMatchedReward: matchedResult?.totalRewardAmount
       });
     }
     return;
   }
   const offerMatched = testCase.expectedOffer === "" ? bestOffer === "" : bestOffer.includes(testCase.expectedOffer);
   const cardMatched = best.card.name === testCase.expectedCard;
+  const includedOfferMatched = !testCase.expectedIncludedOffer
+    || best.offerTitles.some((offerTitle) => offerTitle.includes(testCase.expectedIncludedOffer));
 
-  if (!cardMatched || !offerMatched) {
+  if (!cardMatched || !offerMatched || !includedOfferMatched) {
     failures.push({
       ...testCase,
       actualCard: best.card.name,
-      actualOffer: bestOffer
+      actualOffer: bestOffer,
+      actualOfferTitles: best.offerTitles
     });
   }
 });

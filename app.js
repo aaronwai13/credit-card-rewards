@@ -6,8 +6,17 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "本地餐飲及娛樂 1%",
   "網上旅遊/娛樂/訂閱 港幣 5.4%"
 ]);
-const APP_VERSION = "v2026.05.03.1";
+const APP_VERSION = "v2026.05.09.3";
 const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
+const CURRENCY_TO_HKD = {
+  HKD: 1,
+  USD: 7.8,
+  CNY: 1.08,
+  JPY: 0.052,
+  MOP: 0.97,
+  THB: 0.21,
+  TWD: 0.24
+};
 const CARD_DISPLAY_ORDER = [
   "BOC Chill Card",
   "HSBC 金卡",
@@ -53,6 +62,18 @@ const CUSTOM_REWARD_OFFER_KEYS = new Set([
 
 function canonicalOfferKey(cardName, title) {
   return `${cardName}::${title}`;
+}
+
+function getLinkedCardNameByOffer(offer, cardById) {
+  return cardById[offer.cardId]?.name || "";
+}
+
+function findExistingCanonicalOffer(definition, existingOffers, cardById) {
+  const key = canonicalOfferKey(definition.cardName, definition.title);
+  return existingOffers.find((offer) => offer.canonicalKey === key)
+    || existingOffers.find((offer) =>
+      offer.title === definition.title && getLinkedCardNameByOffer(offer, cardById) === definition.cardName
+    );
 }
 
 function isCanonicalOfferRule(card, offer, cardName, offerTitle) {
@@ -1097,6 +1118,7 @@ function bindEvents() {
     button.addEventListener("click", () => {
       document.querySelectorAll("#card-region-filter [data-region-scope]").forEach((item) => item.classList.remove("active"));
       button.classList.add("active");
+      renderCardFilters();
       renderCards();
     });
   });
@@ -1294,16 +1316,19 @@ function migrateStoredData() {
     return !linkedCard || !canonicalCardNames.has(linkedCard.name);
   });
 
+  const seenOfferIds = new Set();
   const canonicalOffers = CANONICAL_OFFER_DEFINITIONS.map((definition) => {
     const key = canonicalOfferKey(definition.cardName, definition.title);
-    const existing = existingOffers.find((offer) => offer.canonicalKey === key)
-      || existingOffers.find((offer) => offer.title === definition.title);
+    const existing = findExistingCanonicalOffer(definition, existingOffers, existingCardById);
     const existingDisplayCap = Number(existing?.displayCap || 0);
     const definitionDisplayCap = Number(definition.displayCap || 0);
     const existingUsageTotal = Number(existing?.usageTotal || 0);
     const definitionUsageTotal = Number(definition.usageTotal || 0);
+    const existingId = existing?.id || "";
+    const offerId = existingId && !seenOfferIds.has(existingId) ? existingId : crypto.randomUUID();
+    seenOfferIds.add(offerId);
     return normalizeOffer({
-      id: existing?.id || crypto.randomUUID(),
+      id: offerId,
       canonicalKey: key,
       cardId: cardIdByName[definition.cardName] || "",
       title: definition.title,
@@ -1389,15 +1414,13 @@ function closeOfferComposer() {
 
 function renderCards() {
   const query = document.getElementById("card-search").value.trim().toLowerCase();
-  const regionScope = document.querySelector("#card-region-filter [data-region-scope].active")?.dataset.regionScope || "";
+  const regionScope = getActiveCardRegionScope();
   const bankFilter = document.getElementById("card-bank-filter").value.trim();
   const categoryFilter = document.getElementById("card-category-filter").value.trim();
   const filtered = state.cards.filter((card) => {
     const haystack = [card.name, card.bank, card.notes].join(" ").toLowerCase();
     const matchesQuery = !query || haystack.includes(query);
-    const matchesRegion = !regionScope
-      || (regionScope === "hk" && !isMainlandCard(card))
-      || (regionScope === "cn" && isMainlandCard(card));
+    const matchesRegion = cardMatchesRegionScope(card, regionScope);
     const matchesBank = !bankFilter || card.bank === bankFilter;
     const cardCategories = new Set([
       ...((card.tags || []).filter(Boolean)),
@@ -1472,9 +1495,7 @@ function renderCardMarkup(card) {
                     : ""}
                 ${Number(offer.displayCap || offer.cap || 0) > 0 ? `<span class="chip chip-cap">上限 ${escapeHtml(formatAmountByCurrency(offer.displayCap || offer.cap, offer.displayCurrency || offer.currency || card.currency))}</span>` : ""}
                 ${Number(offer.usageTotal || 0) > 0
-                  ? offer.usageMode === "amount"
-                    ? `<span class="chip chip-status chip-status-static">已用 ${escapeHtml(formatUsageText(offer))}</span>`
-                    : `<button class="chip chip-status" type="button" onclick="cycleOfferUsage('${offer.id}')">已用 ${escapeHtml(formatUsageText(offer))}</button>`
+                  ? `<button class="chip chip-status ${isOfferExhausted(offer) ? "is-complete" : ""}" type="button" onclick="cycleOfferUsage('${offer.id}')" aria-label="更新已用狀態：${escapeHtml(offer.title)}">已用 ${escapeHtml(formatUsageText(offer))}</button>`
                   : ""}
               </div>
             `}
@@ -1523,11 +1544,22 @@ function getOfferDisplayOrder(cardName, offer) {
   return canonicalIndex === -1 ? Number.MAX_SAFE_INTEGER : canonicalIndex;
 }
 
+function getActiveCardRegionScope() {
+  return document.querySelector("#card-region-filter [data-region-scope].active")?.dataset.regionScope || "";
+}
+
+function cardMatchesRegionScope(card, regionScope) {
+  return !regionScope
+    || (regionScope === "hk" && !isMainlandCard(card))
+    || (regionScope === "cn" && isMainlandCard(card));
+}
+
 function renderCardFilters() {
   const bankSelect = document.getElementById("card-bank-filter");
   const categorySelect = document.getElementById("card-category-filter");
   const currentBank = bankSelect.value;
   const currentCategory = categorySelect.value;
+  const regionScope = getActiveCardRegionScope();
   const orderedCards = [...state.cards].sort((left, right) => {
     const leftIndex = CARD_DISPLAY_ORDER.indexOf(left.name);
     const rightIndex = CARD_DISPLAY_ORDER.indexOf(right.name);
@@ -1535,7 +1567,7 @@ function renderCardFilters() {
     if (leftIndex !== -1) return -1;
     if (rightIndex !== -1) return 1;
     return left.name.localeCompare(right.name, "zh-Hant");
-  });
+  }).filter((card) => cardMatchesRegionScope(card, regionScope));
   const banks = [...new Set(orderedCards.map((card) => card.bank).filter(Boolean))];
   const categories = CATEGORY_FILTER_ORDER.filter((category) => state.cards.some((card) => {
     const cardCategories = new Set([
@@ -2240,7 +2272,7 @@ function selectBestOfferCombination(card, scenario, offers, amount) {
 
   buckets.forEach((bucketOffers) => {
     const ranked = [...bucketOffers].sort((left, right) => {
-      const valueDiff = calculateOfferRewardAmount(right, amount) - calculateOfferRewardAmount(left, amount);
+      const valueDiff = calculateOfferRewardAmount(right, amount, scenario.currency) - calculateOfferRewardAmount(left, amount, scenario.currency);
       if (valueDiff !== 0) return valueDiff;
       return Number(right.bonusRate || 0) - Number(left.bonusRate || 0);
     });
@@ -2248,7 +2280,7 @@ function selectBestOfferCombination(card, scenario, offers, amount) {
     skippedOffers.push(...ranked.slice(1));
   });
 
-  const offerRewardAmount = selectedOffers.reduce((sum, offer) => sum + calculateOfferRewardAmount(offer, amount), 0);
+  const offerRewardAmount = selectedOffers.reduce((sum, offer) => sum + calculateOfferRewardAmount(offer, amount, scenario.currency), 0);
   return {
     selectedOffers,
     skippedOffers,
@@ -2275,34 +2307,41 @@ function isOfferExhausted(offer) {
   return Number(offer.usageUsed || 0) >= total;
 }
 
-function getCustomRewardAmount(offer, amount) {
+function getCustomRewardAmount(offer, amount, displayCurrency) {
   const key = offer.canonicalKey || "";
   const used = Number(offer.usageUsed || 0);
   const remaining = Math.max(0, Number(offer.usageTotal || 0) - used);
   if (remaining <= 0) return 0;
+  const amountInUsd = convertCurrencyAmount(Number(amount || 0), displayCurrency, "USD");
+  let rewardUsd = 0;
 
   if (key === canonicalOfferKey("長城萬事達 YOU 卡", "Apple Pay 首3筆 100%返現")) {
-    return Math.min(Number(amount || 0), 5);
+    rewardUsd = Math.min(amountInUsd, 5);
+    return convertCurrencyAmount(rewardUsd, "USD", displayCurrency);
   }
   if (key === canonicalOfferKey("農行萬事達白金卡", "Apple Pay 首3筆 100%返現")) {
-    return Math.min(Number(amount || 0), 2);
+    rewardUsd = Math.min(amountInUsd, 2);
+    return convertCurrencyAmount(rewardUsd, "USD", displayCurrency);
   }
   if (key === canonicalOfferKey("長城萬事達 YOU 卡", "Apple Pay 首2筆額外返 US$3 + US$2")
     || key === canonicalOfferKey("中信萬事達扣賬卡", "Apple Pay 首2筆額外返 US$3 + US$2")
     || key === canonicalOfferKey("農行萬事達白金卡", "Apple Pay 首2筆額外返 US$3 + US$2")) {
-    return used === 0 ? 3 : used === 1 ? 2 : 0;
+    rewardUsd = used === 0 ? 3 : used === 1 ? 2 : 0;
+    return convertCurrencyAmount(rewardUsd, "USD", displayCurrency);
   }
   if (key === canonicalOfferKey("工行星座Visa卡", "香港 Apple Pay 滿 HK$50 返 US$2")) {
-    return Number(amount || 0) >= 50 ? 2 : 0;
+    rewardUsd = Number(amount || 0) >= 50 ? 2 : 0;
+    return convertCurrencyAmount(rewardUsd, "USD", displayCurrency);
   }
   if (key === canonicalOfferKey("工行星座Visa卡", "境外 Apple Pay 交通 100%")) {
-    return Math.min(Number(amount || 0), 3, remaining);
+    rewardUsd = Math.min(amountInUsd, 3, remaining);
+    return convertCurrencyAmount(rewardUsd, "USD", displayCurrency);
   }
   return 0;
 }
 
-function calculateOfferRewardAmount(offer, amount) {
-  if (hasCustomReward(offer)) return getCustomRewardAmount(offer, amount);
+function calculateOfferRewardAmount(offer, amount, displayCurrency) {
+  if (hasCustomReward(offer)) return getCustomRewardAmount(offer, amount, displayCurrency);
   const bonusRate = Number(offer.bonusRate || 0);
   const cap = Number(offer.cap || 0);
   if (bonusRate === 0 && cap > 0) return cap;
@@ -2760,6 +2799,14 @@ function formatCurrencyWithCode(value, currency) {
   return (symbols[currency] || currency + "$") + amount;
 }
 
+function convertCurrencyAmount(amount, fromCurrency, toCurrency) {
+  if (!fromCurrency || !toCurrency || fromCurrency === toCurrency) return Number(amount || 0);
+  const fromRate = CURRENCY_TO_HKD[fromCurrency];
+  const toRate = CURRENCY_TO_HKD[toCurrency];
+  if (!fromRate || !toRate) return Number(amount || 0);
+  return Number(amount || 0) * fromRate / toRate;
+}
+
 function currencySymbol(currency) {
   const symbols = { HKD: "HK$", USD: "US$", CNY: "¥", JPY: "¥", MOP: "MOP$", THB: "฿", TWD: "NT$" };
   return symbols[currency] || "";
@@ -2784,9 +2831,17 @@ function cycleOfferUsage(offerId) {
   if (!offer || Number(offer.usageTotal || 0) <= 0) return;
   const total = Number(offer.usageTotal || 0);
   const current = Number(offer.usageUsed || 0);
-  offer.usageUsed = current >= total ? 0 : current + 1;
+  const step = offer.usageMode === "amount" ? getOfferUsageAmountStep(offer) : 1;
+  offer.usageUsed = current >= total ? 0 : Math.min(total, current + step);
   saveData();
   renderCards();
+}
+
+function getOfferUsageAmountStep(offer) {
+  if (offer.canonicalKey === canonicalOfferKey("工行星座Visa卡", "境外 Apple Pay 交通 100%")) {
+    return 3;
+  }
+  return 1;
 }
 
 function isDateInRange(date, startDate, endDate) {

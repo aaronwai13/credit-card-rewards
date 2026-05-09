@@ -1,11 +1,12 @@
-const CACHE_NAME = "credit-card-rewards-v2026-04-21-1";
+const CACHE_NAME = "credit-card-rewards-v2026-05-09-3";
 const ASSETS = [
   "./",
   "./index.html",
-  "./manifest.json?v=2026-04-21-1",
-  "./icon.svg?v=2026-04-21-1",
-  "./icon-192.png?v=2026-04-21-1",
-  "./apple-touch-icon.png?v=2026-04-21-1"
+  "./app.js?v=2026.05.09.3",
+  "./manifest.json?v=2026-05-09-3",
+  "./icon.svg?v=2026-05-09-3",
+  "./icon-192.png?v=2026-05-09-3",
+  "./apple-touch-icon.png?v=2026-05-09-3"
 ];
 
 self.addEventListener("install", (event) => {
