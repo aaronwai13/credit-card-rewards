@@ -6,7 +6,7 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "本地餐飲及娛樂 1%",
   "網上旅遊/娛樂/訂閱 港幣 5.4%"
 ]);
-const APP_VERSION = "v2026.05.18.14";
+const APP_VERSION = "v2026.05.18.15";
 const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
 const CURRENCY_TO_HKD = {
   HKD: 1,
@@ -1093,12 +1093,12 @@ function applyExchangeRates(rates) {
   }
 }
 
-function setFxRateStatus(type, ts) {
+function setFxRateStatus(ts) {
   const el = document.getElementById("fx-rate-status");
   if (!el) return;
-  if (type === "static") {
+  if (!ts) {
     el.className = "field-hint fx-rate-status static";
-    el.textContent = "靜態匯率（離線）";
+    el.textContent = "靜態匯率";
     return;
   }
   el.className = "field-hint fx-rate-status live";
@@ -1120,30 +1120,35 @@ function setFxRateStatus(type, ts) {
 
 async function fetchLiveRates() {
   const CACHE_KEY = "ccr_fx_rates_v1";
-  const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
+  const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+  let cachedTs = null;
+  let cachedRates = null;
   try {
     const cached = localStorage.getItem(CACHE_KEY);
     if (cached) {
       const { ts, rates } = JSON.parse(cached);
-      if (Date.now() - ts < CACHE_TTL_MS) {
-        applyExchangeRates(rates);
-        updateHkdHint();
-        setFxRateStatus("cached", ts);
-        return;
-      }
+      cachedTs = ts;
+      cachedRates = rates;
     }
   } catch {}
-  try {
-    const res = await fetch("https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/hkd.json");
-    if (!res.ok) { setFxRateStatus("static"); return; }
-    const data = await res.json();
-    if (!data.hkd) { setFxRateStatus("static"); return; }
+  if (cachedRates) {
+    applyExchangeRates(cachedRates);
+    updateHkdHint();
+    setFxRateStatus(cachedTs);
+  }
+  if (!cachedTs || Date.now() - cachedTs > CACHE_TTL_MS) {
+    try {
+      const res = await fetch("https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/hkd.json");
+      if (!res.ok) { if (!cachedTs) setFxRateStatus(null); return; }
+      const data = await res.json();
+      if (!data.hkd) { if (!cachedTs) setFxRateStatus(null); return; }
     const ts = Date.now();
     localStorage.setItem(CACHE_KEY, JSON.stringify({ ts, rates: data.hkd }));
     applyExchangeRates(data.hkd);
     updateHkdHint();
-    setFxRateStatus("live", ts);
-  } catch { setFxRateStatus("static"); }
+    setFxRateStatus(ts);
+  } catch { if (!cachedTs) setFxRateStatus(null); }
+  }
 }
 
 bootstrap();
