@@ -6,7 +6,7 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "本地餐飲及娛樂 1%",
   "網上旅遊/娛樂/訂閱 港幣 5.4%"
 ]);
-const APP_VERSION = "v2026.05.19.2";
+const APP_VERSION = "v2026.05.19.3";
 const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
 const CURRENCY_TO_HKD = {
   HKD: 1,
@@ -1096,9 +1096,10 @@ function applyExchangeRates(rates) {
 function setFxRateStatus(ts) {
   const el = document.getElementById("fx-rate-status");
   if (!el) return;
+  const source = `<a href="https://github.com/fawazahmed0/exchange-api" target="_blank" rel="noopener" class="fx-source-link">Exchange Rate API</a>`;
   if (!ts) {
     el.className = "field-hint fx-rate-status static";
-    el.textContent = "靜態匯率";
+    el.innerHTML = `靜態匯率 · ${source}`;
     return;
   }
   el.className = "field-hint fx-rate-status live";
@@ -1108,14 +1109,16 @@ function setFxRateStatus(ts) {
   const yesterday = new Date(today);
   yesterday.setDate(today.getDate() - 1);
   const isYesterday = rateDate.toDateString() === yesterday.toDateString();
+  let label;
   if (isToday) {
-    el.textContent = "實時匯率";
+    label = "實時匯率";
   } else if (isYesterday) {
-    el.textContent = "實時匯率（昨日）";
+    label = "實時匯率（昨日）";
   } else {
     const dateStr = rateDate.toLocaleDateString("zh-HK", { month: "numeric", day: "numeric" });
-    el.textContent = `實時匯率（${dateStr}）`;
+    label = `實時匯率（${dateStr}）`;
   }
+  el.innerHTML = `${label} · ${source}`;
 }
 
 async function fetchLiveRates() {
