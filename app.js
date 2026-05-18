@@ -6,7 +6,7 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "本地餐飲及娛樂 1%",
   "網上旅遊/娛樂/訂閱 港幣 5.4%"
 ]);
-const APP_VERSION = "v2026.05.18.3";
+const APP_VERSION = "v2026.05.18.4";
 const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
 const CURRENCY_TO_HKD = {
   HKD: 1,
@@ -1750,7 +1750,7 @@ function renderRecommendationResults(results, scenario, rateMode, currency) {
           </div>
         </div>
         <div style="display:flex;align-items:flex-start;gap:8px;">
-          <div class="result-value">${rateMode ? formatPercent(result.bestRate) : formatCurrencyWithCode(result.totalRewardAmount, currency)}</div>
+          <div class="result-value">${rateMode ? formatPercent(result.bestRate) : formatCurrencyWithCode(result.totalRewardAmount, "HKD")}</div>
           <span class="result-chevron">›</span>
         </div>
       </div>
@@ -1761,8 +1761,8 @@ function renderRecommendationResults(results, scenario, rateMode, currency) {
             <div><strong>命中活動：</strong>${escapeHtml(result.offerTitles.length ? result.offerTitles.join(" / ") : "無")}</div>
             <div><strong>優惠處理：</strong>${escapeHtml(result.offerSelectionSummary)}</div>
           ` : `
-            <div><strong>基礎回贈：</strong>${formatCurrencyWithCode(result.baseRewardAmount, currency)} (${formatPercent(result.baseRateApplied)})</div>
-            <div><strong>活動加碼：</strong>${formatCurrencyWithCode(result.offerRewardAmount, currency)}</div>
+            <div><strong>基礎回贈：</strong>${formatCurrencyWithCode(result.baseRewardAmount, "HKD")} (${formatPercent(result.baseRateApplied)})</div>
+            <div><strong>活動加碼：</strong>${formatCurrencyWithCode(result.offerRewardAmount, "HKD")}</div>
             <div><strong>命中活動：</strong>${escapeHtml(result.offerTitles.length ? result.offerTitles.join(" / ") : "無")}</div>
             <div><strong>優惠處理：</strong>${escapeHtml(result.offerSelectionSummary)}</div>
           `}
@@ -1816,14 +1816,15 @@ function setRecommendationResultScope(scope) {
 function evaluateCard(card, scenario, rateMode) {
   const baseRateApplied = Number(card.baseRate || 0);
   const amount = scenario.amount || 0;
-  const baseRewardAmount = amount * baseRateApplied / 100;
+  const hkdAmount = convertCurrencyAmount(amount, scenario.currency, "HKD");
+  const baseRewardAmount = hkdAmount * baseRateApplied / 100;
 
   const matchingOffers = state.offers.filter((offer) => {
     if (offer.cardId !== card.id) return false;
     if (shouldIgnoreOfferForRecommendation(offer)) return false;
     if (rateMode && isFixedValueOffer(offer)) return false;
     if (!isDateInRange(scenario.date, offer.startDate, offer.endDate)) return false;
-    if (!isOfferMinSpendSatisfied(card, offer, amount, scenario, { ignoreAmount: rateMode })) return false;
+    if (!isOfferMinSpendSatisfied(card, offer, hkdAmount, scenario, { ignoreAmount: rateMode })) return false;
     if (!offerScopeMatchesScenario(card, offer, scenario)) return false;
     if (!offerRuleMatchesScenario(card, offer, scenario)) return false;
     if (!merchantOfferMatchesScenario(offer, scenario)) return false;
@@ -1835,7 +1836,7 @@ function evaluateCard(card, scenario, rateMode) {
     skippedOffers,
     offerRewardAmount,
     offerSelectionSummary
-  } = selectBestOfferCombination(card, scenario, matchingOffers, amount);
+  } = selectBestOfferCombination(card, scenario, matchingOffers, hkdAmount);
 
   const totalRewardAmount = baseRewardAmount + offerRewardAmount;
 
@@ -2058,7 +2059,7 @@ function selectBestOfferCombination(card, scenario, offers, amount) {
 
   buckets.forEach((bucketOffers) => {
     const ranked = [...bucketOffers].sort((left, right) => {
-      const valueDiff = calculateOfferRewardAmount(right, amount, scenario.currency) - calculateOfferRewardAmount(left, amount, scenario.currency);
+      const valueDiff = calculateOfferRewardAmount(right, amount, "HKD") - calculateOfferRewardAmount(left, amount, "HKD");
       if (valueDiff !== 0) return valueDiff;
       return Number(right.bonusRate || 0) - Number(left.bonusRate || 0);
     });
@@ -2066,7 +2067,7 @@ function selectBestOfferCombination(card, scenario, offers, amount) {
     skippedOffers.push(...ranked.slice(1));
   });
 
-  const offerRewardAmount = selectedOffers.reduce((sum, offer) => sum + calculateOfferRewardAmount(offer, amount, scenario.currency), 0);
+  const offerRewardAmount = selectedOffers.reduce((sum, offer) => sum + calculateOfferRewardAmount(offer, amount, "HKD"), 0);
   return {
     selectedOffers,
     skippedOffers,
