@@ -6,7 +6,7 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "本地餐飲及娛樂 1%",
   "網上旅遊/娛樂/訂閱 港幣 5.4%"
 ]);
-const APP_VERSION = "v2026.05.18.12";
+const APP_VERSION = "v2026.05.18.13";
 const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
 const CURRENCY_TO_HKD = {
   HKD: 1,
@@ -802,7 +802,6 @@ const CATEGORY_LABELS = {
   transport: "交通",
   travel: "旅遊",
   subscription: "訂閱",
-  groceries: "超市",
   overseas: "海外",
   applepay: "Apple Pay",
   merchant: "指定商戶"
