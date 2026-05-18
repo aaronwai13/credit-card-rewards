@@ -6,7 +6,7 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "本地餐飲及娛樂 1%",
   "網上旅遊/娛樂/訂閱 港幣 5.4%"
 ]);
-const APP_VERSION = "v2026.05.18.13";
+const APP_VERSION = "v2026.05.18.14";
 const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
 const CURRENCY_TO_HKD = {
   HKD: 1,
@@ -1096,16 +1096,25 @@ function applyExchangeRates(rates) {
 function setFxRateStatus(type, ts) {
   const el = document.getElementById("fx-rate-status");
   if (!el) return;
-  el.className = `field-hint fx-rate-status ${type}`;
-  if (type === "live") {
-    const time = new Date(ts).toLocaleTimeString("zh-HK", { hour: "2-digit", minute: "2-digit" });
-    el.textContent = `實時匯率（更新於 ${time}）`;
-  } else if (type === "cached") {
-    const time = new Date(ts).toLocaleTimeString("zh-HK", { hour: "2-digit", minute: "2-digit" });
-    el.textContent = `實時匯率（快取，更新於 ${time}）`;
-    el.className = "field-hint fx-rate-status live";
-  } else {
+  if (type === "static") {
+    el.className = "field-hint fx-rate-status static";
     el.textContent = "靜態匯率（離線）";
+    return;
+  }
+  el.className = "field-hint fx-rate-status live";
+  const rateDate = new Date(ts);
+  const today = new Date();
+  const isToday = rateDate.toDateString() === today.toDateString();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  const isYesterday = rateDate.toDateString() === yesterday.toDateString();
+  if (isToday) {
+    el.textContent = "實時匯率";
+  } else if (isYesterday) {
+    el.textContent = "實時匯率（昨日）";
+  } else {
+    const dateStr = rateDate.toLocaleDateString("zh-HK", { month: "numeric", day: "numeric" });
+    el.textContent = `實時匯率（${dateStr}）`;
   }
 }
 
