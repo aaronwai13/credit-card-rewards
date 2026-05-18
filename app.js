@@ -1737,7 +1737,7 @@ function renderRecommendationResults(results, scenario, rateMode, currency) {
     ${filtered.map((result) => {
       const globalIndex = results.findIndex((item) => item.card.id === result.card.id);
       return `
-    <article class="result-card ${globalIndex === 0 ? "best" : ""}">
+    <article class="result-card ${globalIndex === 0 ? "best expanded" : ""}" onclick="toggleResultCard(this)">
       <div class="result-rank">${globalIndex === 0 ? "最佳選擇" : "備選 " + (globalIndex + 1)}</div>
       <div class="result-header">
         <div>
@@ -1749,44 +1749,53 @@ function renderRecommendationResults(results, scenario, rateMode, currency) {
             ${result.hasInstantPayout ? `<span>即時回贈</span>` : ""}
           </div>
         </div>
-        <div class="result-value">${rateMode ? formatPercent(result.bestRate) : formatCurrencyWithCode(result.totalRewardAmount, currency)}</div>
-      </div>
-      <div class="breakdown">
-        ${rateMode ? `
-          <div><strong>最高回贈率：</strong>${formatPercent(result.bestRate)}</div>
-          <div><strong>命中活動：</strong>${escapeHtml(result.offerTitles.length ? result.offerTitles.join(" / ") : "無")}</div>
-          <div><strong>優惠處理：</strong>${escapeHtml(result.offerSelectionSummary)}</div>
-        ` : `
-          <div><strong>基礎回贈：</strong>${formatCurrencyWithCode(result.baseRewardAmount, currency)} (${formatPercent(result.baseRateApplied)})</div>
-          <div><strong>活動加碼：</strong>${formatCurrencyWithCode(result.offerRewardAmount, currency)}</div>
-          <div><strong>命中活動：</strong>${escapeHtml(result.offerTitles.length ? result.offerTitles.join(" / ") : "無")}</div>
-          <div><strong>優惠處理：</strong>${escapeHtml(result.offerSelectionSummary)}</div>
-        `}
-        <div><strong>解析結果：</strong>${escapeHtml(scenario.description)} → ${escapeHtml(formatScenarioLocations(scenario.locations))} / ${escapeHtml(CATEGORY_LABELS[scenario.category] || scenario.category)}</div>
-      </div>
-      ${result.selectedOffers.length ? `
-        <div class="result-offer-details">
-          ${result.selectedOffers.map((offer) => `
-            <div class="result-offer-detail">
-              <div class="result-offer-detail-title">${escapeHtml(formatRecommendationOfferTitle(result.card, offer))}</div>
-              <div class="result-offer-detail-note">${escapeHtml(offer.notes || "沒有補充說明")}</div>
-            </div>
-          `).join("")}
+        <div style="display:flex;align-items:flex-start;gap:8px;">
+          <div class="result-value">${rateMode ? formatPercent(result.bestRate) : formatCurrencyWithCode(result.totalRewardAmount, currency)}</div>
+          <span class="result-chevron">›</span>
         </div>
-      ` : ""}
-      ${result.missedOfferReasons.length ? `
-        <div class="result-missed-details">
-          <div class="result-missed-title">未採用活動</div>
-          ${result.missedOfferReasons.map((item) => `
-            <div class="result-missed-item"><strong>${escapeHtml(item.title)}</strong>：${escapeHtml(item.reason)}</div>
-          `).join("")}
+      </div>
+      <div class="result-body">
+        <div class="breakdown">
+          ${rateMode ? `
+            <div><strong>最高回贈率：</strong>${formatPercent(result.bestRate)}</div>
+            <div><strong>命中活動：</strong>${escapeHtml(result.offerTitles.length ? result.offerTitles.join(" / ") : "無")}</div>
+            <div><strong>優惠處理：</strong>${escapeHtml(result.offerSelectionSummary)}</div>
+          ` : `
+            <div><strong>基礎回贈：</strong>${formatCurrencyWithCode(result.baseRewardAmount, currency)} (${formatPercent(result.baseRateApplied)})</div>
+            <div><strong>活動加碼：</strong>${formatCurrencyWithCode(result.offerRewardAmount, currency)}</div>
+            <div><strong>命中活動：</strong>${escapeHtml(result.offerTitles.length ? result.offerTitles.join(" / ") : "無")}</div>
+            <div><strong>優惠處理：</strong>${escapeHtml(result.offerSelectionSummary)}</div>
+          `}
+          <div><strong>解析結果：</strong>${escapeHtml(scenario.description)} → ${escapeHtml(formatScenarioLocations(scenario.locations))} / ${escapeHtml(CATEGORY_LABELS[scenario.category] || scenario.category)}</div>
         </div>
-      ` : ""}
-      <p class="result-note">${escapeHtml(result.explanation)}</p>
+        ${result.selectedOffers.length ? `
+          <div class="result-offer-details">
+            ${result.selectedOffers.map((offer) => `
+              <div class="result-offer-detail">
+                <div class="result-offer-detail-title">${escapeHtml(formatRecommendationOfferTitle(result.card, offer))}</div>
+                <div class="result-offer-detail-note">${escapeHtml(offer.notes || "沒有補充說明")}</div>
+              </div>
+            `).join("")}
+          </div>
+        ` : ""}
+        ${result.missedOfferReasons.length ? `
+          <div class="result-missed-details">
+            <div class="result-missed-title">未採用活動</div>
+            ${result.missedOfferReasons.map((item) => `
+              <div class="result-missed-item"><strong>${escapeHtml(item.title)}</strong>：${escapeHtml(item.reason)}</div>
+            `).join("")}
+          </div>
+        ` : ""}
+        <p class="result-note">${escapeHtml(result.explanation)}</p>
+      </div>
     </article>
   `;
     }).join("")}
   `;
+}
+
+function toggleResultCard(article) {
+  article.classList.toggle("expanded");
 }
 
 function setRecommendationResultScope(scope) {

@@ -543,7 +543,11 @@
   }
   .result-rank { font-family: "IBM Plex Mono", monospace; font-size: 10px; text-transform: uppercase; color: var(--muted); letter-spacing: 0.08em; margin-bottom: 8px; }
   .result-card.best .result-rank { color: var(--accent); font-weight: 500; }
-  .result-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
+  .result-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 0; cursor: pointer; user-select: none; }
+  .result-chevron { font-size: 20px; color: var(--muted); line-height: 1; margin-top: 4px; transition: transform 0.2s; flex-shrink: 0; }
+  .result-card.expanded .result-chevron { transform: rotate(90deg); }
+  .result-body { display: none; margin-top: 12px; }
+  .result-card.expanded .result-body { display: block; }
   .result-value { font-family: "Fraunces", serif; font-size: 28px; color: var(--ink); line-height: 1; white-space: nowrap; }
   .result-note { color: var(--muted); font-size: 13px; line-height: 1.5; margin-top: 10px; }
   .breakdown { display: flex; flex-direction: column; gap: 4px; font-size: 13px; line-height: 1.55; }
