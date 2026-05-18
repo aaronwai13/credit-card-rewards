@@ -6,7 +6,7 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "本地餐飲及娛樂 1%",
   "網上旅遊/娛樂/訂閱 港幣 5.4%"
 ]);
-const APP_VERSION = "v2026.05.18.10";
+const APP_VERSION = "v2026.05.18.11";
 const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
 const CURRENCY_TO_HKD = {
   HKD: 1,
@@ -1073,6 +1073,52 @@ const uiState = {
   latestRecommendationRenderData: null
 };
 
+function updateHkdHint() {
+  const currency = document.getElementById("recommend-currency").value;
+  const amount = parseFloat(document.getElementById("recommend-amount").value);
+  const hint = document.getElementById("recommend-hkd-hint");
+  if (currency !== "HKD" && amount > 0) {
+    const hkd = convertCurrencyAmount(amount, currency, "HKD");
+    hint.textContent = `≈ HK$${hkd.toFixed(2)}`;
+    hint.style.display = "";
+  } else {
+    hint.style.display = "none";
+  }
+}
+
+function applyExchangeRates(rates) {
+  const map = { USD: "usd", CNY: "cny", JPY: "jpy", KRW: "krw", MOP: "mop", THB: "thb", TWD: "twd" };
+  for (const [code, key] of Object.entries(map)) {
+    const perHkd = rates[key];
+    if (perHkd && perHkd > 0) CURRENCY_TO_HKD[code] = 1 / perHkd;
+  }
+}
+
+async function fetchLiveRates() {
+  const CACHE_KEY = "ccr_fx_rates_v1";
+  const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
+  try {
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (cached) {
+      const { ts, rates } = JSON.parse(cached);
+      if (Date.now() - ts < CACHE_TTL_MS) {
+        applyExchangeRates(rates);
+        updateHkdHint();
+        return;
+      }
+    }
+  } catch {}
+  try {
+    const res = await fetch("https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/hkd.json");
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.hkd) return;
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), rates: data.hkd }));
+    applyExchangeRates(data.hkd);
+    updateHkdHint();
+  } catch {}
+}
+
 bootstrap();
 
 function bootstrap() {
@@ -1095,6 +1141,7 @@ function bootstrap() {
   bindEvents();
   renderAll();
   maybeRegisterServiceWorker();
+  fetchLiveRates();
 }
 
 function bindEvents() {
@@ -1105,18 +1152,6 @@ function bindEvents() {
   document.getElementById("runRecommendationBtn").addEventListener("click", runRecommendation);
   document.getElementById("clearRecommendBtn").addEventListener("click", clearRecommendForm);
 
-  const updateHkdHint = () => {
-    const currency = document.getElementById("recommend-currency").value;
-    const amount = parseFloat(document.getElementById("recommend-amount").value);
-    const hint = document.getElementById("recommend-hkd-hint");
-    if (currency !== "HKD" && amount > 0) {
-      const hkd = convertCurrencyAmount(amount, currency, "HKD");
-      hint.textContent = `≈ HK$${hkd.toFixed(2)}`;
-      hint.style.display = "";
-    } else {
-      hint.style.display = "none";
-    }
-  };
   document.getElementById("recommend-currency").addEventListener("change", updateHkdHint);
   document.getElementById("recommend-amount").addEventListener("input", updateHkdHint);
   document.getElementById("saveOfferBtn").addEventListener("click", saveOffer);
