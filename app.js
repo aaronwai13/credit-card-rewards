@@ -13,6 +13,7 @@ const CURRENCY_TO_HKD = {
   USD: 7.8,
   CNY: 1.08,
   JPY: 0.052,
+  KRW: 0.0057,
   MOP: 0.97,
   THB: 0.21,
   TWD: 0.24
@@ -1068,10 +1069,6 @@ const DEFAULT_STATE = {
 let state = loadData();
 const uiState = {
   editingOfferId: null,
-  recommendOverrides: { region: "", channel: "", category: "", merchant: "" },
-  recommendationConfirmed: false,
-  recommendCurrencyTouched: false,
-  recommendAmountTouched: false,
   recommendResultScope: "",
   latestRecommendationRenderData: null
 };
@@ -1107,10 +1104,6 @@ function bindEvents() {
 
   document.getElementById("runRecommendationBtn").addEventListener("click", runRecommendation);
   document.getElementById("clearRecommendBtn").addEventListener("click", clearRecommendForm);
-  document.getElementById("recommend-description").addEventListener("input", handleRecommendDescriptionInput);
-  document.getElementById("recommend-amount").addEventListener("input", handleRecommendAmountInput);
-  document.getElementById("recommend-currency").addEventListener("change", handleRecommendCurrencyChange);
-  document.getElementById("recommend-date").addEventListener("change", handleRecommendDateChange);
   document.getElementById("saveOfferBtn").addEventListener("click", saveOffer);
   document.getElementById("resetOfferFormBtn").addEventListener("click", () => resetOfferForm());
   document.getElementById("card-search").addEventListener("input", renderCards);
@@ -1137,48 +1130,6 @@ function switchPage(page) {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-function handleRecommendDescriptionInput() {
-  resetRecommendationOverrides();
-  applySuggestedCurrencyFromDescription();
-  applySuggestedAmountFromDescription();
-}
-
-function handleRecommendAmountInput() {
-  uiState.recommendAmountTouched = true;
-  resetRecommendationOverrides();
-}
-
-function handleRecommendCurrencyChange() {
-  uiState.recommendCurrencyTouched = true;
-  resetRecommendationOverrides();
-}
-
-function handleRecommendDateChange() {
-  resetRecommendationOverrides();
-}
-
-function applySuggestedCurrencyFromDescription() {
-  if (uiState.recommendCurrencyTouched) return;
-  const description = document.getElementById("recommend-description").value.trim();
-  const suggestedCurrency = inferSuggestedCurrencyFromDescription(description);
-  if (!suggestedCurrency) return;
-  document.getElementById("recommend-currency").value = suggestedCurrency;
-}
-
-function applySuggestedAmountFromDescription() {
-  if (uiState.recommendAmountTouched) return;
-  const description = document.getElementById("recommend-description").value.trim();
-  const suggestedAmount = inferSuggestedAmountFromDescription(description);
-  document.getElementById("recommend-amount").value = suggestedAmount === null ? "" : suggestedAmount;
-}
-
-function resetRecommendationOverrides() {
-  uiState.recommendOverrides = { region: "", channel: "", category: "", merchant: "" };
-  uiState.recommendationConfirmed = false;
-  uiState.latestRecommendationRenderData = null;
-  document.getElementById("recommendClarifications").innerHTML = "";
-  document.getElementById("recommendationResults").innerHTML = "";
-}
 
 function loadData() {
   try {
@@ -1664,14 +1615,18 @@ function editOffer(offerId) {
 }
 
 function clearRecommendForm() {
-  document.getElementById("recommend-description").value = "";
+  const defaultRegion = document.querySelector('input[name="recommend-region"][value="香港"]');
+  if (defaultRegion) defaultRegion.checked = true;
+  const defaultChannel = document.querySelector('input[name="recommend-channel"][value="offline"]');
+  if (defaultChannel) defaultChannel.checked = true;
+  const defaultCategory = document.querySelector('input[name="recommend-category"][value="general"]');
+  if (defaultCategory) defaultCategory.checked = true;
+  const merchantEl = document.getElementById("recommend-merchant");
+  if (merchantEl) merchantEl.value = "";
   document.getElementById("recommend-amount").value = "";
   document.getElementById("recommend-currency").value = "HKD";
   document.getElementById("recommend-date").value = todayString();
-  uiState.recommendCurrencyTouched = false;
-  uiState.recommendAmountTouched = false;
-  uiState.recommendOverrides = { region: "", channel: "", category: "", merchant: "" };
-  uiState.recommendationConfirmed = false;
+  uiState.latestRecommendationRenderData = null;
   document.getElementById("recommendClarifications").innerHTML = "";
   document.getElementById("recommendationResults").innerHTML = "";
 }
@@ -1679,41 +1634,63 @@ function clearRecommendForm() {
 function setChillMonthlyQualified(checked) {
   state.settings.chillMonthlyQualified = Boolean(checked);
   saveData();
-  const hasScenario = document.getElementById("recommend-description").value.trim() && document.getElementById("recommend-date").value;
-  if (hasScenario) runRecommendation();
+  if (uiState.latestRecommendationRenderData) runRecommendation();
 }
 
 function runRecommendation() {
-  const description = document.getElementById("recommend-description").value.trim();
+  const region = document.querySelector('input[name="recommend-region"]:checked')?.value || "香港";
+  const channel = document.querySelector('input[name="recommend-channel"]:checked')?.value || "offline";
+  const category = document.querySelector('input[name="recommend-category"]:checked')?.value || "general";
+  const merchantRaw = (document.getElementById("recommend-merchant")?.value || "").trim();
   const amountRaw = document.getElementById("recommend-amount").value;
   const amount = amountRaw === "" ? null : Number(amountRaw);
   const currency = document.getElementById("recommend-currency").value || "HKD";
   const date = document.getElementById("recommend-date").value;
 
-  if (!description || !date) {
-    showToast("請先填好消費描述和日期。");
+  if (!date) {
+    showToast("請先填好消費日期。");
     return;
   }
 
-  const scenario = { description, amount, currency, date };
-  Object.assign(scenario, inferScenarioFromText(description));
-  applyRecommendationOverrides(scenario);
-  scenario.currencyBucket = inferCurrencyBucket(currency, scenario.locations, description);
-  scenario.flags = {
-    chillMonthlyQualified: Boolean(state.settings?.chillMonthlyQualified)
+  const locations = channel === "online" ? [region, "網上"] : [region];
+  const scenarioTags = new Set();
+  if (channel === "online") scenarioTags.add("online");
+  if (region === "海外") scenarioTags.add("overseas");
+  if (category !== "general") scenarioTags.add(category);
+
+  const normalizedMerchant = merchantRaw.toLowerCase();
+  let merchantTokens = [];
+  if (merchantRaw) {
+    merchantTokens = collectMerchantTokens(normalizedMerchant);
+    if (!merchantTokens.length) merchantTokens = [normalizedMerchant];
+  }
+
+  const scenario = {
+    description: merchantRaw,
+    amount,
+    currency,
+    date,
+    location: region,
+    locations,
+    regions: [region],
+    channel,
+    channelExplicit: true,
+    regionExplicit: true,
+    category,
+    normalizedDescription: normalizedMerchant,
+    paymentMethod: "applepay",
+    scenarioTags: [...scenarioTags],
+    merchantTokens
   };
 
-  renderRecommendClarifications(scenario);
+  if (merchantRaw) scenario.confirmedMerchant = normalizedMerchant;
 
-  if (!uiState.recommendationConfirmed) {
-    document.getElementById("recommendationResults").innerHTML = `
-      <div class="empty-state">請先確認上面場景設定，再顯示最終推薦。</div>
-    `;
-    return;
-  }
+  scenario.currencyBucket = inferCurrencyBucket(currency, locations, merchantRaw);
+  scenario.flags = { chillMonthlyQualified: Boolean(state.settings?.chillMonthlyQualified) };
+
+  document.getElementById("recommendClarifications").innerHTML = "";
 
   const rateMode = amount === null || amount <= 0;
-
   const results = state.cards.map((card) => evaluateCard(card, scenario, rateMode))
     .sort((a, b) => b.rankingScore - a.rankingScore);
 
@@ -1824,208 +1801,8 @@ function setRecommendationResultScope(scope) {
   }
 }
 
-function applyRecommendationOverrides(scenario) {
-  if (uiState.recommendOverrides.region) {
-    const baseLocations = (scenario.locations || []).filter((location) => location !== "香港" && location !== "澳門" && location !== "內地" && location !== "海外");
-    scenario.regions = [uiState.recommendOverrides.region];
-    scenario.location = uiState.recommendOverrides.region;
-    scenario.locations = [...baseLocations, uiState.recommendOverrides.region];
-  }
-  if (uiState.recommendOverrides.channel) {
-    scenario.channel = uiState.recommendOverrides.channel;
-    const nonOnline = (scenario.locations || []).filter((location) => location !== "網上");
-    scenario.locations = uiState.recommendOverrides.channel === "online" ? [...nonOnline, "網上"] : nonOnline;
-    if (!scenario.locations.length) scenario.locations = [...(scenario.regions || ["香港"])];
-  }
-  if (uiState.recommendOverrides.category) {
-    scenario.category = uiState.recommendOverrides.category;
-    const tags = new Set(scenario.scenarioTags || []);
-    ["online", "dining", "entertainment", "shopping", "transport", "travel", "subscription", "groceries"].forEach((tag) => tags.delete(tag));
-    if (uiState.recommendOverrides.category !== "general") tags.add(uiState.recommendOverrides.category);
-    scenario.scenarioTags = [...tags];
-  }
-  if (uiState.recommendOverrides.merchant.trim()) {
-    const merchantText = uiState.recommendOverrides.merchant.trim().toLowerCase();
-    scenario.confirmedMerchant = merchantText;
-    scenario.merchantTokens = collectMerchantTokens(merchantText);
-    if (!scenario.merchantTokens.length) {
-      scenario.merchantTokens = [merchantText];
-    }
-  }
-}
 
-function renderRecommendClarifications(scenario) {
-  const container = document.getElementById("recommendClarifications");
-  if (!scenario.description?.trim()) {
-    container.innerHTML = "";
-    return;
-  }
 
-  const currentRegion = uiState.recommendOverrides.region || (scenario.regions?.[0] || "香港");
-  const currentChannel = uiState.recommendOverrides.channel || (scenario.channel || "offline");
-  const currentCategory = uiState.recommendOverrides.category || (scenario.category || "general");
-  const currentMerchant = uiState.recommendOverrides.merchant || scenario.merchantTokens?.[0] || "";
-  const summaryBits = [
-    { key: "貨幣", value: scenario.currency },
-    { key: "地點", value: currentRegion },
-    { key: "方式", value: currentChannel === "online" ? "網上" : "實體" },
-    { key: "類別", value: CATEGORY_LABELS[currentCategory] || currentCategory },
-    { key: "商戶", value: currentMerchant || "未指定" }
-  ];
-
-  container.innerHTML = `
-    <section class="scenario-card">
-      <h3 class="scenario-title">確認場景</h3>
-      <p class="scenario-sub">推薦會以你喺下面確認嘅欄位為準。修改任何欄位後，需要再按一次確認先會重新計算。</p>
-      <div class="scenario-grid" style="grid-template-columns: repeat(2, minmax(0, 1fr));">
-        <div class="field" style="margin-bottom:0;">
-          <label for="scenario-region">地點</label>
-          <select id="scenario-region" onchange="setRecommendationOverride('region', this.value)">
-            ${["香港", "澳門", "內地", "海外"].map((region) => `<option value="${region}" ${currentRegion === region ? "selected" : ""}>${region}</option>`).join("")}
-          </select>
-        </div>
-        <div class="field" style="margin-bottom:0;">
-          <label for="scenario-channel">方式</label>
-          <select id="scenario-channel" onchange="setRecommendationOverride('channel', this.value)">
-            <option value="offline" ${currentChannel === "offline" ? "selected" : ""}>實體</option>
-            <option value="online" ${currentChannel === "online" ? "selected" : ""}>網上</option>
-          </select>
-        </div>
-        <div class="field" style="margin-bottom:0;">
-          <label for="scenario-category">類別</label>
-          <select id="scenario-category" onchange="setRecommendationOverride('category', this.value)">
-            ${SCENARIO_CATEGORY_OPTIONS.map((category) => `<option value="${category}" ${currentCategory === category ? "selected" : ""}>${escapeHtml(CATEGORY_LABELS[category] || category)}</option>`).join("")}
-          </select>
-        </div>
-        <div class="field full" style="margin-bottom:0; grid-column: 1 / -1;">
-          <label for="scenario-merchant">商戶 / 品牌</label>
-          <input id="scenario-merchant" type="text" value="${escapeHtml(currentMerchant)}" placeholder="例如：Netflix、三星、Starbucks" oninput="setRecommendationMerchant(this.value)">
-        </div>
-      </div>
-      <div class="scenario-summary">
-        ${summaryBits.map((item) => `<span class="scenario-summary-chip"><span class="scenario-summary-key">${escapeHtml(item.key)}</span><span class="scenario-summary-value">${escapeHtml(item.value)}</span></span>`).join("")}
-      </div>
-      <div class="actions" style="margin-top:14px;">
-        <button class="btn btn-primary" type="button" onclick="confirmRecommendationScenario()">確認場景並推薦</button>
-      </div>
-    </section>
-  `;
-}
-
-function setRecommendationOverride(key, value) {
-  uiState.recommendOverrides[key] = value;
-  uiState.recommendationConfirmed = false;
-  runRecommendation();
-}
-
-function setRecommendationMerchant(value) {
-  uiState.recommendOverrides.merchant = value;
-  uiState.recommendationConfirmed = false;
-}
-
-function confirmRecommendationScenario() {
-  const merchantInput = document.getElementById("scenario-merchant");
-  if (merchantInput) {
-    uiState.recommendOverrides.merchant = merchantInput.value;
-  }
-  uiState.recommendationConfirmed = true;
-  runRecommendation();
-}
-
-function inferScenarioFromText(text) {
-  const normalized = text.toLowerCase();
-  const appStoreMentioned = /\bapp\s*store\b/i.test(text);
-  const locationMatchers = [
-    { location: "澳門", keywords: ["澳門", "macau"] },
-    { location: "內地", keywords: ["內地", "大陸", "深圳", "廣州", "上海", "北京", "中國", "china"] },
-    { location: "海外", keywords: ["海外", "日本", "台灣", "韓國", "新加坡", "歐洲", "美國", "英國", "泰國", "澳洲", "加拿大", "旅行", "旅遊", "foreign"] },
-    { location: "網上", keywords: ["網上", "online", "官網", "網站", "淘寶", "amazon", "hk tvmall", "tvmall", "京東", "netflix", "spotify", "disney+", "youtube", "apple tv", "apple music", "訂閱", "app store"] },
-    { location: "香港", keywords: ["香港", "hk", "本地"] }
-  ];
-  const categoryMatchers = [
-    { category: "dining", keywords: ["餐廳", "食", "晚飯", "午飯", "早餐", "cafe", "咖啡", "自助餐", "酒吧", "餐飲", "mcdonald", "麥當勞", "starbucks", "星巴克", "pacific coffee", "uber eats", "deliveroo", "doordash", "door dash"] },
-    { category: "travel", keywords: ["酒店", "機票", "航空", "旅行", "旅遊", "住宿", "訂房", "航班", "booking", "booking.com"] },
-    { category: "groceries", keywords: ["超市", "買餸", "百佳", "惠康", "groceries"] },
-    { category: "transport", keywords: ["地鐵", "的士", "uber", "巴士", "高鐵", "交通", "停車場", "jr", "japan railway", "mrt"] },
-    { category: "entertainment", keywords: ["戲院", "睇戲", "睇電影", "看戲", "看電影", "cinema", "concert", "演唱會", "電影", "院線", "mcl", "百老匯", "英皇戲院", "影藝", "星達", "迪士尼", "海洋公園"] },
-    { category: "online", keywords: ["網上", "online", "官網", "網站", "淘寶", "amazon", "電商", "netflix", "spotify", "disney+", "youtube", "apple tv", "apple music", "訂閱", "app store"] },
-    { category: "shopping", keywords: ["購物", "商場", "耳機", "手機", "鞋", "家電", "百貨", "uniqlo", "優衣庫", "ikea", "log-on", "pop mart", "popmart", "唐吉訶德", "松本清", "lululemon", "harrods", "costco", "arcteryx", "arc'teryx", "sogo", "suning", "farfetch", "ssense"] }
-  ];
-
-  const matchedCategory = categoryMatchers.find((item) => item.keywords.some((keyword) => normalized.includes(keyword.toLowerCase())));
-  const matchedLocations = locationMatchers
-    .filter((item) => item.keywords.some((keyword) => normalized.includes(keyword.toLowerCase())))
-    .map((item) => item.location);
-  const uniqueLocations = [...new Set(matchedLocations)];
-  const scenarioTags = new Set();
-  const merchantTokens = collectMerchantTokens(normalized);
-  const merchantSignals = inferMerchantSignals(merchantTokens);
-  const inferredRegions = [...new Set([...uniqueLocations.filter((location) => location !== "網上"), ...merchantSignals.regions])];
-  const offlineCue = /商場|門市|實體|店舖|店铺|店內|店内|餐廳|餐厅|戲院|戏院|咖啡店|百貨|百货|專櫃|专柜|地鐵|地铁|高鐵|高铁|巴士|酒店/.test(normalized);
-  const channel = uniqueLocations.includes("網上") || merchantSignals.forceOnline ? "online" : "offline";
-  const channelExplicit = uniqueLocations.includes("網上") || merchantSignals.forceOnline || offlineCue || merchantSignals.forceOffline;
-  const regionExplicit = inferredRegions.length > 0;
-
-  if (channel === "online") scenarioTags.add("online");
-  if (inferredRegions.includes("海外")) scenarioTags.add("overseas");
-  if (matchedCategory) scenarioTags.add(matchedCategory.category);
-  if (merchantSignals.category) scenarioTags.add(merchantSignals.category);
-  if (!matchedCategory && merchantSignals.category) scenarioTags.add(merchantSignals.category);
-  if (normalized.includes("日本")) scenarioTags.add("japan");
-  if (merchantSignals.japan) scenarioTags.add("japan");
-  if (appStoreMentioned || normalized.includes("netflix") || normalized.includes("spotify") || normalized.includes("disney+") || normalized.includes("apple tv") || normalized.includes("apple music") || normalized.includes("訂閱")) {
-    scenarioTags.add("subscription");
-  }
-  if (normalized.includes("戲院") || normalized.includes("睇戲") || normalized.includes("電影") || normalized.includes("mcl") || normalized.includes("百老匯") || normalized.includes("英皇戲院")) {
-    scenarioTags.add("entertainment");
-  }
-
-  return {
-    location: inferredRegions[0] || "香港",
-    locations: uniqueLocations.length ? uniqueLocations : ["香港"],
-    regions: inferredRegions.length
-      ? inferredRegions
-      : ["香港"],
-    channel,
-    channelExplicit,
-    regionExplicit,
-    category: matchedCategory ? matchedCategory.category : (merchantSignals.category || "general"),
-    normalizedDescription: normalized,
-    paymentMethod: "applepay",
-    scenarioTags: [...scenarioTags],
-    merchantTokens
-  };
-}
-
-function inferSuggestedCurrencyFromDescription(text) {
-  const normalized = String(text || "").toLowerCase();
-  if (!normalized.trim()) return "HKD";
-  if (/(澳門|macau|macao)/.test(normalized)) return "MOP";
-  if (/(日本|tokyo|osaka|kyoto|japan|日圓|日元|yen)/.test(normalized)) return "JPY";
-  if (/(泰國|bangkok|thailand|thai|泰銖)/.test(normalized)) return "THB";
-  if (/(台灣|taiwan|taipei|台幣|台币)/.test(normalized)) return "TWD";
-  if (/(美國|美国|usa|united states|美金|美元|usd)/.test(normalized)) return "USD";
-  if (/(內地|大陸|中國|china|廣州|深圳|上海|北京|人民幣|人民币)/.test(normalized)) return "CNY";
-  if (/(香港|hk|hkd|港幣|港币|本地)/.test(normalized)) return "HKD";
-  return "";
-}
-
-function inferSuggestedAmountFromDescription(text) {
-  const raw = String(text || "");
-  if (!raw.trim()) return null;
-  const normalized = raw.replace(/,/g, "");
-  const patterns = [
-    /(?:hk\$|\$|hkd|cny|rmb|mop\$|jpy|usd|thb|twd|¥|￥)\s*(\d+(?:\.\d{1,2})?)/i,
-    /(\d+(?:\.\d{1,2})?)\s*(?:蚊|元|塊|块|銀|银|港紙|港币|港幣|人民幣|人民币|美金|美元|日圓|日元|泰銖|台幣|台币)/i
-  ];
-  for (const pattern of patterns) {
-    const match = normalized.match(pattern);
-    if (!match) continue;
-    const amount = Number(match[1]);
-    if (Number.isFinite(amount) && amount > 0) return String(amount);
-  }
-  return null;
-}
 
 function evaluateCard(card, scenario, rateMode) {
   const baseRateApplied = Number(card.baseRate || 0);
@@ -2789,13 +2566,13 @@ function formatCurrency(value) {
 
 function formatAmountByCurrency(value, currency) {
   const amount = formatNumber(value);
-  const symbols = { HKD: "$", USD: "US$", CNY: "¥", JPY: "¥", MOP: "MOP$", THB: "฿", TWD: "NT$" };
+  const symbols = { HKD: "$", USD: "US$", CNY: "¥", JPY: "¥", KRW: "₩", MOP: "MOP$", THB: "฿", TWD: "NT$" };
   return (symbols[currency] || "$") + amount;
 }
 
 function formatCurrencyWithCode(value, currency) {
   const amount = Number(value || 0).toFixed(2);
-  const symbols = { HKD: "HK$", USD: "US$", CNY: "¥", JPY: "¥", MOP: "MOP$", THB: "฿", TWD: "NT$" };
+  const symbols = { HKD: "HK$", USD: "US$", CNY: "¥", JPY: "¥", KRW: "₩", MOP: "MOP$", THB: "฿", TWD: "NT$" };
   return (symbols[currency] || currency + "$") + amount;
 }
 
@@ -2808,7 +2585,7 @@ function convertCurrencyAmount(amount, fromCurrency, toCurrency) {
 }
 
 function currencySymbol(currency) {
-  const symbols = { HKD: "HK$", USD: "US$", CNY: "¥", JPY: "¥", MOP: "MOP$", THB: "฿", TWD: "NT$" };
+  const symbols = { HKD: "HK$", USD: "US$", CNY: "¥", JPY: "¥", KRW: "₩", MOP: "MOP$", THB: "฿", TWD: "NT$" };
   return symbols[currency] || "";
 }
 

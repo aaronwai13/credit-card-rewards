@@ -28,12 +28,47 @@ global.structuredClone = (value) => JSON.parse(JSON.stringify(value));
 
 eval(code);
 
-function runScenario(description, amount, currency, chillMonthlyQualified = false, rateMode = false, date = "2026-04-21") {
-  const scenario = { description, amount, currency, date };
-  Object.assign(scenario, inferScenarioFromText(description));
-  scenario.currencyBucket = inferCurrencyBucket(currency, scenario.locations, description);
-  scenario.flags = { chillMonthlyQualified };
+function buildScenario({ region, channel, category, merchant, amount, currency, chillMonthlyQualified = false, date = "2026-04-21" }) {
+  const locations = channel === "online" ? [region, "網上"] : [region];
+  const scenarioTags = new Set();
+  if (channel === "online") scenarioTags.add("online");
+  if (region === "海外") scenarioTags.add("overseas");
+  if (category !== "general") scenarioTags.add(category);
 
+  const normalizedMerchant = (merchant || "").toLowerCase();
+  let merchantTokens = [];
+  if (merchant) {
+    merchantTokens = collectMerchantTokens(normalizedMerchant);
+    if (!merchantTokens.length) merchantTokens = [normalizedMerchant];
+  }
+
+  const scenario = {
+    description: merchant || "",
+    amount,
+    currency,
+    date,
+    location: region,
+    locations,
+    regions: [region],
+    channel,
+    channelExplicit: true,
+    regionExplicit: true,
+    category,
+    normalizedDescription: normalizedMerchant,
+    paymentMethod: "applepay",
+    scenarioTags: [...scenarioTags],
+    merchantTokens
+  };
+
+  if (merchant) scenario.confirmedMerchant = normalizedMerchant;
+  scenario.currencyBucket = inferCurrencyBucket(currency, locations, merchant || "");
+  scenario.flags = { chillMonthlyQualified };
+  return scenario;
+}
+
+function runScenario(params) {
+  const scenario = buildScenario(params);
+  const rateMode = params.rateMode || scenario.amount === null || scenario.amount <= 0;
   return state.cards
     .map((card) => evaluateCard(card, scenario, rateMode))
     .sort((left, right) => right.totalRewardAmount - left.totalRewardAmount);
@@ -41,159 +76,130 @@ function runScenario(description, amount, currency, chillMonthlyQualified = fals
 
 const cases = [
   {
-    description: "廣州餐廳食飯",
-    amount: 300,
-    currency: "CNY",
+    region: "內地", channel: "offline", category: "dining",
+    amount: 300, currency: "CNY",
     expectedCard: "BOC Chill Card",
     expectedOffer: "海外簽賬 4%"
   },
   {
-    description: "喺 App Store 買 app",
-    amount: 120,
-    currency: "HKD",
-    chillMonthlyQualified: true,
+    region: "香港", channel: "online", category: "subscription", merchant: "app store",
+    amount: 120, currency: "HKD", chillMonthlyQualified: true,
     expectedCard: "長城萬事達 YOU 卡",
     expectedOffer: "Apple Pay 首3筆 100%返現"
   },
   {
-    description: "喺 Netflix 訂閱",
-    amount: 300,
-    currency: "HKD",
-    chillMonthlyQualified: true,
+    region: "香港", channel: "online", category: "subscription", merchant: "netflix",
+    amount: 300, currency: "HKD", chillMonthlyQualified: true,
     expectedCard: "農行萬事達白金卡",
     expectedOffer: "境外精選商戶 10%"
   },
   {
-    description: "12306 買高鐵飛",
-    amount: 400,
-    currency: "CNY",
+    region: "內地", channel: "online", category: "transport", merchant: "12306",
+    amount: 400, currency: "CNY",
     expectedCard: "恒生多貨幣扣賬卡",
     expectedOffer: "指定海外交通 20%"
   },
   {
-    description: "環島中港通買飛",
-    amount: 400,
-    currency: "CNY",
+    region: "內地", channel: "offline", category: "transport", merchant: "環島中港通",
+    amount: 400, currency: "CNY",
     expectedCard: "恒生多貨幣扣賬卡",
     expectedOffer: "指定海外交通 20%"
   },
   {
-    description: "香港網上買衫",
-    amount: 500,
-    currency: "HKD",
+    region: "香港", channel: "online", category: "shopping",
+    amount: 500, currency: "HKD",
     expectedCard: "長城萬事達 YOU 卡",
     expectedOffer: "Apple Pay 首3筆 100%返現"
   },
   {
-    description: "日本買嘢",
-    amount: 8000,
-    currency: "JPY",
+    region: "海外", channel: "offline", category: "general",
+    amount: 8000, currency: "JPY",
     expectedCard: "長城萬事達 YOU 卡",
     expectedOffer: "Apple Pay 首3筆 100%返現"
   },
   {
-    description: "買三星電視",
-    amount: 3000,
-    currency: "HKD",
-    chillMonthlyQualified: true,
+    region: "香港", channel: "offline", category: "shopping", merchant: "三星",
+    amount: 3000, currency: "HKD", chillMonthlyQualified: true,
     expectedCard: "BOC Chill Card",
     expectedOffer: "指定商戶 8%"
   },
   {
-    description: "買索尼耳機",
-    amount: 1500,
-    currency: "HKD",
-    chillMonthlyQualified: true,
+    region: "香港", channel: "offline", category: "shopping", merchant: "索尼",
+    amount: 1500, currency: "HKD", chillMonthlyQualified: true,
     expectedCard: "BOC Chill Card",
     expectedOffer: "指定商戶 8%"
   },
   {
-    description: "去 Starbucks 買咖啡",
-    amount: 100,
-    currency: "HKD",
-    chillMonthlyQualified: true,
+    region: "香港", channel: "offline", category: "dining", merchant: "starbucks",
+    amount: 100, currency: "HKD", chillMonthlyQualified: true,
     expectedCard: "長城萬事達 YOU 卡",
     expectedOffer: "Apple Pay 首3筆 100%返現"
   },
   {
-    description: "廣州買手機",
-    amount: 3000,
-    currency: "HKD",
+    region: "內地", channel: "offline", category: "shopping",
+    amount: 3000, currency: "HKD",
     expectedCard: "BOC Chill Card",
     expectedOffer: ""
   },
   {
-    description: "香港線下買嘢",
-    amount: 250,
-    currency: "HKD",
+    region: "香港", channel: "offline", category: "general",
+    amount: 250, currency: "HKD",
     expectedCard: "長城萬事達 YOU 卡",
     expectedOffer: "Apple Pay 首3筆 100%返現"
   },
   {
-    description: "booking.com 訂酒店",
-    amount: 2000,
-    currency: "HKD",
+    region: "海外", channel: "online", category: "travel", merchant: "booking.com",
+    amount: 2000, currency: "HKD",
     expectedCard: "農行萬事達白金卡",
     expectedOffer: "境外精選商戶 10%"
   },
   {
-    description: "東京搭地鐵",
-    amount: 1000,
-    currency: "JPY",
+    region: "海外", channel: "offline", category: "transport",
+    amount: 1000, currency: "JPY",
     expectedCard: "長城萬事達 YOU 卡",
     expectedOffer: "Apple Pay 首3筆 100%返現"
   },
   {
-    description: "香港 Apple Pay 買咖啡",
-    amount: 50,
-    currency: "HKD",
+    region: "香港", channel: "offline", category: "dining",
+    amount: 50, currency: "HKD",
     expectedCard: "長城萬事達 YOU 卡",
     expectedOffer: "Apple Pay 首3筆 100%返現"
   },
   {
-    description: "麥當勞 Apple Pay",
-    amount: 252.67,
-    currency: "HKD",
+    region: "香港", channel: "offline", category: "dining", merchant: "麥當勞",
+    amount: 252.67, currency: "HKD",
     expectedAnyCard: "農行萬事達白金卡",
     expectedAnyOffer: "Apple Pay 首3筆 100%返現",
     expectedAnyMinReward: 46.5
   },
   {
-    description: "東京 Apple Pay 搭地鐵",
-    amount: 20,
-    currency: "JPY",
+    region: "海外", channel: "offline", category: "transport",
+    amount: 20, currency: "JPY",
     expectedCard: "農行萬事達白金卡",
     expectedOffer: "境外線下簽賬 3%",
     expectedIncludedOffer: "Apple Pay 首3筆 100%返現"
   },
   {
-    description: "App Store 買 app",
-    amount: null,
-    currency: "HKD",
-    rateMode: true,
+    region: "香港", channel: "online", category: "subscription", merchant: "app store",
+    amount: null, currency: "HKD", rateMode: true,
     expectedCard: "BOC Chill Card",
     expectedOffer: "網上簽賬 4%"
   },
   {
-    description: "香港買咖啡",
-    amount: 50,
-    currency: "HKD",
+    region: "香港", channel: "offline", category: "dining",
+    amount: 50, currency: "HKD",
     expectedCard: "長城萬事達 YOU 卡",
     expectedOffer: "Apple Pay 首3筆 100%返現"
   },
   {
-    description: "PayMe 香港買嘢",
-    amount: 1000,
-    currency: "HKD",
-    date: "2026-04-24",
+    region: "香港", channel: "offline", category: "general",
+    amount: 1000, currency: "HKD", date: "2026-04-24",
     expectedAnyCard: "PayMe 銀聯卡",
     expectedAnyOffer: "港幣/澳門幣/人民幣 3%"
   },
   {
-    description: "PayMe 泰國買嘢",
-    amount: 1000,
-    currency: "THB",
-    date: "2026-04-24",
+    region: "海外", channel: "offline", category: "general",
+    amount: 1000, currency: "THB", date: "2026-04-24",
     expectedAnyCard: "PayMe 銀聯卡",
     expectedAnyOffer: "其他貨幣 10%"
   }
@@ -202,14 +208,7 @@ const cases = [
 const failures = [];
 
 cases.forEach((testCase) => {
-  const ranked = runScenario(
-    testCase.description,
-    testCase.amount,
-    testCase.currency,
-    Boolean(testCase.chillMonthlyQualified),
-    Boolean(testCase.rateMode),
-    testCase.date || "2026-04-21"
-  );
+  const ranked = runScenario(testCase);
   const best = ranked[0];
   const bestOffer = best.offerTitles[0] || "";
   if (testCase.expectedAnyCard) {

@@ -670,7 +670,7 @@
     <div class="header-inner">
       <div class="header-eyebrow">Spend Smarter</div>
       <div class="header-title">碌卡助手</div>
-      <div class="header-sub">輸入消費場景，即時計出最值得碌的卡</div>
+      <div class="header-sub">選擇消費場景，即時計出最值得碌的卡</div>
       <div class="header-version">
         <span class="version-chip"><span id="appVersion"></span></span>
       </div>
@@ -682,8 +682,40 @@
       <div class="content">
 
         <div class="form-group">
-          <label for="recommend-description">消費描述</label>
-          <textarea id="recommend-description" ></textarea>
+          <label>地點</label>
+          <div class="check-grid">
+            <label class="check-chip"><input type="radio" name="recommend-region" value="香港" checked onchange="runRecommendation()"><span>香港</span></label>
+            <label class="check-chip"><input type="radio" name="recommend-region" value="海外" onchange="runRecommendation()"><span>海外</span></label>
+            <label class="check-chip"><input type="radio" name="recommend-region" value="內地" onchange="runRecommendation()"><span>內地</span></label>
+            <label class="check-chip"><input type="radio" name="recommend-region" value="澳門" onchange="runRecommendation()"><span>澳門</span></label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>方式</label>
+          <div class="check-grid">
+            <label class="check-chip"><input type="radio" name="recommend-channel" value="offline" checked onchange="runRecommendation()"><span>實體</span></label>
+            <label class="check-chip"><input type="radio" name="recommend-channel" value="online" onchange="runRecommendation()"><span>網上</span></label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>類別</label>
+          <div class="check-grid">
+            <label class="check-chip"><input type="radio" name="recommend-category" value="general" checked onchange="runRecommendation()"><span>一般</span></label>
+            <label class="check-chip"><input type="radio" name="recommend-category" value="dining" onchange="runRecommendation()"><span>餐飲</span></label>
+            <label class="check-chip"><input type="radio" name="recommend-category" value="shopping" onchange="runRecommendation()"><span>購物</span></label>
+            <label class="check-chip"><input type="radio" name="recommend-category" value="groceries" onchange="runRecommendation()"><span>超市</span></label>
+            <label class="check-chip"><input type="radio" name="recommend-category" value="transport" onchange="runRecommendation()"><span>交通</span></label>
+            <label class="check-chip"><input type="radio" name="recommend-category" value="travel" onchange="runRecommendation()"><span>旅遊</span></label>
+            <label class="check-chip"><input type="radio" name="recommend-category" value="entertainment" onchange="runRecommendation()"><span>娛樂</span></label>
+            <label class="check-chip"><input type="radio" name="recommend-category" value="subscription" onchange="runRecommendation()"><span>訂閱</span></label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="recommend-merchant">商戶（選填）</label>
+          <input id="recommend-merchant" type="text" placeholder="例如：Netflix、McDonald's、Starbucks">
         </div>
 
         <div class="field-row">
@@ -694,6 +726,7 @@
                 <option value="HKD">HKD</option>
                 <option value="CNY">CNY</option>
                 <option value="JPY">JPY</option>
+                <option value="KRW">KRW</option>
                 <option value="MOP">MOP</option>
                 <option value="THB">THB</option>
                 <option value="TWD">TWD</option>
