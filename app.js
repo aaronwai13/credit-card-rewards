@@ -6,7 +6,7 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "本地餐飲及娛樂 1%",
   "網上旅遊/娛樂/訂閱 港幣 5.4%"
 ]);
-const APP_VERSION = "v2026.05.18.8";
+const APP_VERSION = "v2026.05.18.9";
 const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
 const CURRENCY_TO_HKD = {
   HKD: 1,
@@ -1104,6 +1104,21 @@ function bindEvents() {
 
   document.getElementById("runRecommendationBtn").addEventListener("click", runRecommendation);
   document.getElementById("clearRecommendBtn").addEventListener("click", clearRecommendForm);
+
+  const updateHkdHint = () => {
+    const currency = document.getElementById("recommend-currency").value;
+    const amount = parseFloat(document.getElementById("recommend-amount").value);
+    const hint = document.getElementById("recommend-hkd-hint");
+    if (currency !== "HKD" && amount > 0) {
+      const hkd = convertCurrencyAmount(amount, currency, "HKD");
+      hint.textContent = `≈ HK$${hkd.toFixed(2)}`;
+      hint.style.display = "";
+    } else {
+      hint.style.display = "none";
+    }
+  };
+  document.getElementById("recommend-currency").addEventListener("change", updateHkdHint);
+  document.getElementById("recommend-amount").addEventListener("input", updateHkdHint);
   document.getElementById("saveOfferBtn").addEventListener("click", saveOffer);
   document.getElementById("resetOfferFormBtn").addEventListener("click", () => resetOfferForm());
   document.getElementById("card-search").addEventListener("input", renderCards);
