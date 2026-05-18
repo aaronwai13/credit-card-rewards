@@ -6,14 +6,14 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "本地餐飲及娛樂 1%",
   "網上旅遊/娛樂/訂閱 港幣 5.4%"
 ]);
-const APP_VERSION = "v2026.05.18.9";
+const APP_VERSION = "v2026.05.18.10";
 const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
 const CURRENCY_TO_HKD = {
   HKD: 1,
   USD: 7.8,
   CNY: 1.08,
   JPY: 0.052,
-  KRW: 0.0057,
+  KRW: 0.0052,
   MOP: 0.97,
   THB: 0.21,
   TWD: 0.24
