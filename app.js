@@ -1091,8 +1091,8 @@ function bootstrap() {
   migrateStoredData();
   seedDefaultOffers();
   renderOfferLocationCheckboxes();
-  bindEvents();
   document.getElementById("recommend-date").value = todayString();
+  bindEvents();
   renderAll();
   maybeRegisterServiceWorker();
 }
