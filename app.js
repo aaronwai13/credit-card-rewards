@@ -6,7 +6,7 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "本地餐飲及娛樂 1%",
   "網上旅遊/娛樂/訂閱 港幣 5.4%"
 ]);
-const APP_VERSION = "v2026.05.19.1";
+const APP_VERSION = "v2026.05.19.2";
 const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
 const CURRENCY_TO_HKD = {
   HKD: 1,
@@ -1120,7 +1120,6 @@ function setFxRateStatus(ts) {
 
 async function fetchLiveRates() {
   const CACHE_KEY = "ccr_fx_rates_v1";
-  const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
   let cachedTs = null;
   let cachedRates = null;
   try {
@@ -1136,7 +1135,9 @@ async function fetchLiveRates() {
     updateHkdHint();
     setFxRateStatus(cachedTs);
   }
-  if (!cachedTs || Date.now() - cachedTs > CACHE_TTL_MS) {
+  const cachedDay = cachedTs && new Date(cachedTs).toLocaleDateString("en-CA", { timeZone: "Asia/Hong_Kong" });
+  const today = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Hong_Kong" });
+  if (!cachedTs || cachedDay !== today) {
     try {
       const res = await fetch("https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/hkd.json");
       if (!res.ok) { if (!cachedTs) setFxRateStatus(null); return; }
