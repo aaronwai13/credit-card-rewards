@@ -6,7 +6,7 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "本地餐飲及娛樂 1%",
   "網上旅遊/娛樂/訂閱 港幣 5.4%"
 ]);
-const APP_VERSION = "v2026.05.18.7";
+const APP_VERSION = "v2026.05.18.8";
 const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
 const CURRENCY_TO_HKD = {
   HKD: 1,
@@ -1394,7 +1394,15 @@ function renderCards() {
     document.getElementById("cardsList").innerHTML = `<div class="empty-state">暫時未有可顯示的信用卡資料。</div>`;
     return;
   }
+  const expandedIds = new Set(
+    [...document.querySelectorAll("#cardsList .list-card.expanded[data-card-id]")].map((el) => el.dataset.cardId)
+  );
   document.getElementById("cardsList").innerHTML = filtered.map((card) => renderCardMarkup(card)).join("");
+  if (expandedIds.size) {
+    document.querySelectorAll("#cardsList .list-card[data-card-id]").forEach((el) => {
+      if (expandedIds.has(el.dataset.cardId)) el.classList.add("expanded");
+    });
+  }
 }
 
 function renderCardMarkup(card) {
@@ -1469,7 +1477,7 @@ function renderCardMarkup(card) {
   ` : "";
 
   return `
-    <article class="list-card">
+    <article class="list-card" data-card-id="${escapeHtml(card.id)}">
       <div class="card-top" onclick="toggleListCard(this.closest('.list-card'))">
         <div>
           <h3 class="card-name">${escapeHtml(card.name)}</h3>
