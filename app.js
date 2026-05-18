@@ -6,7 +6,7 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "本地餐飲及娛樂 1%",
   "網上旅遊/娛樂/訂閱 港幣 5.4%"
 ]);
-const APP_VERSION = "v2026.05.18.4";
+const APP_VERSION = "v2026.05.18.5";
 const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
 const CURRENCY_TO_HKD = {
   HKD: 1,
@@ -1470,16 +1470,19 @@ function renderCardMarkup(card) {
 
   return `
     <article class="list-card">
-      <div class="card-top">
+      <div class="card-top" onclick="toggleListCard(this.closest('.list-card'))">
         <div>
           <h3 class="card-name">${escapeHtml(card.name)}</h3>
         </div>
+        <span class="list-card-chevron">›</span>
       </div>
-      <div class="details">
-        ${isMainland ? "" : `<div><strong>最高可達：</strong>${escapeHtml(highestRewardText)}</div>`}
-        ${restrictionText ? `<div><strong>限制：</strong>${escapeHtml(restrictionText)}</div>` : ""}
+      <div class="list-card-body">
+        <div class="details" style="margin-top:8px;">
+          ${isMainland ? "" : `<div><strong>最高可達：</strong>${escapeHtml(highestRewardText)}</div>`}
+          ${restrictionText ? `<div><strong>限制：</strong>${escapeHtml(restrictionText)}</div>` : ""}
+        </div>
+        ${offerMarkup}
       </div>
-      ${offerMarkup}
     </article>
   `;
 }
@@ -1795,6 +1798,10 @@ function renderRecommendationResults(results, scenario, rateMode, currency) {
 }
 
 function toggleResultCard(article) {
+  article.classList.toggle("expanded");
+}
+
+function toggleListCard(article) {
   article.classList.toggle("expanded");
 }
 

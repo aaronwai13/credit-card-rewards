@@ -441,7 +441,11 @@
     width: 4px;
     background: linear-gradient(180deg, var(--accent) 0%, var(--ink) 100%);
   }
-  .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+  .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 0; cursor: pointer; user-select: none; }
+  .list-card-chevron { font-size: 20px; color: var(--muted); line-height: 1; margin-top: 2px; transition: transform 0.2s; flex-shrink: 0; }
+  .list-card.expanded .list-card-chevron { transform: rotate(90deg); }
+  .list-card-body { display: none; margin-top: 10px; }
+  .list-card.expanded .list-card-body { display: block; }
   .card-name { font-family: "Fraunces", serif; font-size: 18px; color: var(--ink); margin: 0; line-height: 1.2; }
   .details { font-size: 13px; line-height: 1.6; color: var(--text); display: flex; flex-direction: column; gap: 3px; }
   .details strong { color: var(--ink); font-weight: 600; }
@@ -868,6 +872,6 @@
 
   <div class="toast" id="toast"></div>
 
-<script src="./app.js?v=2026.05.18.4"></script>
+<script src="./app.js?v=2026.05.18.5"></script>
 </body>
 </html>
