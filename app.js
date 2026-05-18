@@ -6,7 +6,7 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "本地餐飲及娛樂 1%",
   "網上旅遊/娛樂/訂閱 港幣 5.4%"
 ]);
-const APP_VERSION = "v2026.05.19.3";
+const APP_VERSION = "v2026.05.19.4";
 const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
 const CURRENCY_TO_HKD = {
   HKD: 1,
@@ -1096,7 +1096,7 @@ function applyExchangeRates(rates) {
 function setFxRateStatus(ts) {
   const el = document.getElementById("fx-rate-status");
   if (!el) return;
-  const source = `<a href="https://github.com/fawazahmed0/exchange-api" target="_blank" rel="noopener" class="fx-source-link">Exchange Rate API</a>`;
+  const source = `<a href="https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/hkd.json" target="_blank" rel="noopener" class="fx-source-link">匯率來源</a>`;
   if (!ts) {
     el.className = "field-hint fx-rate-status static";
     el.innerHTML = `靜態匯率 · ${source}`;
