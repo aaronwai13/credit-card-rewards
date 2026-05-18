@@ -173,6 +173,8 @@
   .field { display: flex; flex-direction: column; }
   .field.full { grid-column: 1 / -1; }
   .field-hint { font-size: 11px; color: var(--muted); line-height: 1.5; margin-top: 6px; }
+  .fx-rate-status.live { color: #4caf80; }
+  .fx-rate-status.static { color: var(--muted); }
 
   .field-row {
     display: grid;
@@ -743,6 +745,7 @@
               <input id="recommend-amount" type="number" min="0" step="0.01" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" >
             </div>
             <div id="recommend-hkd-hint" class="field-hint" style="display:none;"></div>
+            <div id="fx-rate-status" class="field-hint fx-rate-status"></div>
           </div>
           <div class="form-group" style="margin-bottom:0;">
             <label for="recommend-date">消費日期</label>
@@ -873,6 +876,6 @@
 
   <div class="toast" id="toast"></div>
 
-<script src="./app.js?v=2026.05.18.11"></script>
+<script src="./app.js?v=2026.05.18.12"></script>
 </body>
 </html>

@@ -6,7 +6,7 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "本地餐飲及娛樂 1%",
   "網上旅遊/娛樂/訂閱 港幣 5.4%"
 ]);
-const APP_VERSION = "v2026.05.18.11";
+const APP_VERSION = "v2026.05.18.12";
 const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
 const CURRENCY_TO_HKD = {
   HKD: 1,
@@ -1094,6 +1094,22 @@ function applyExchangeRates(rates) {
   }
 }
 
+function setFxRateStatus(type, ts) {
+  const el = document.getElementById("fx-rate-status");
+  if (!el) return;
+  el.className = `field-hint fx-rate-status ${type}`;
+  if (type === "live") {
+    const time = new Date(ts).toLocaleTimeString("zh-HK", { hour: "2-digit", minute: "2-digit" });
+    el.textContent = `實時匯率（更新於 ${time}）`;
+  } else if (type === "cached") {
+    const time = new Date(ts).toLocaleTimeString("zh-HK", { hour: "2-digit", minute: "2-digit" });
+    el.textContent = `實時匯率（快取，更新於 ${time}）`;
+    el.className = "field-hint fx-rate-status live";
+  } else {
+    el.textContent = "靜態匯率（離線）";
+  }
+}
+
 async function fetchLiveRates() {
   const CACHE_KEY = "ccr_fx_rates_v1";
   const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
@@ -1104,19 +1120,22 @@ async function fetchLiveRates() {
       if (Date.now() - ts < CACHE_TTL_MS) {
         applyExchangeRates(rates);
         updateHkdHint();
+        setFxRateStatus("cached", ts);
         return;
       }
     }
   } catch {}
   try {
     const res = await fetch("https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/hkd.json");
-    if (!res.ok) return;
+    if (!res.ok) { setFxRateStatus("static"); return; }
     const data = await res.json();
-    if (!data.hkd) return;
-    localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), rates: data.hkd }));
+    if (!data.hkd) { setFxRateStatus("static"); return; }
+    const ts = Date.now();
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ ts, rates: data.hkd }));
     applyExchangeRates(data.hkd);
     updateHkdHint();
-  } catch {}
+    setFxRateStatus("live", ts);
+  } catch { setFxRateStatus("static"); }
 }
 
 bootstrap();
