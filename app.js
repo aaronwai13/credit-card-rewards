@@ -6,7 +6,7 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "本地餐飲及娛樂 1%",
   "網上旅遊/娛樂/訂閱 港幣 5.4%"
 ]);
-const APP_VERSION = "v2026.05.18.2";
+const APP_VERSION = "v2026.05.18.3";
 const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
 const CURRENCY_TO_HKD = {
   HKD: 1,
@@ -1737,7 +1737,7 @@ function renderRecommendationResults(results, scenario, rateMode, currency) {
     ${filtered.map((result) => {
       const globalIndex = results.findIndex((item) => item.card.id === result.card.id);
       return `
-    <article class="result-card ${globalIndex === 0 ? "best expanded" : ""}" onclick="toggleResultCard(this)">
+    <article class="result-card ${globalIndex === 0 ? "best" : ""}" onclick="toggleResultCard(this)">
       <div class="result-rank">${globalIndex === 0 ? "最佳選擇" : "備選 " + (globalIndex + 1)}</div>
       <div class="result-header">
         <div>
