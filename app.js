@@ -6,7 +6,7 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "本地餐飲及娛樂 1%",
   "網上旅遊/娛樂/訂閱 港幣 5.4%"
 ]);
-const APP_VERSION = "v2026.05.19.19";
+const APP_VERSION = "v2026.05.19.20";
 const MERCHANT_SUGGESTIONS = [
   ["Netflix", ["netflix"]],
   ["Spotify", ["spotify"]],
@@ -1307,20 +1307,20 @@ function bindEvents() {
 
 function positionSuggestions(input, dropdown) {
   const rect = input.getBoundingClientRect();
-  const spaceBelow = window.innerHeight - rect.bottom;
+  // visualViewport.height shrinks when keyboard opens on iOS; window.innerHeight does not
+  const vvHeight = (window.visualViewport ? window.visualViewport.height : window.innerHeight);
+  const spaceBelow = vvHeight - rect.bottom;
   const spaceAbove = rect.top;
   const maxH = 220;
-  if (spaceBelow >= Math.min(maxH, 80) || spaceBelow >= spaceAbove) {
-    dropdown.style.top = rect.bottom + 4 + "px";
-    dropdown.style.bottom = "";
+  if (spaceBelow >= 80 || spaceBelow >= spaceAbove) {
+    dropdown.style.top = "100%";
+    dropdown.style.bottom = "auto";
     dropdown.style.maxHeight = Math.min(maxH, spaceBelow - 8) + "px";
   } else {
-    dropdown.style.bottom = window.innerHeight - rect.top + 4 + "px";
-    dropdown.style.top = "";
+    dropdown.style.bottom = "100%";
+    dropdown.style.top = "auto";
     dropdown.style.maxHeight = Math.min(maxH, spaceAbove - 8) + "px";
   }
-  dropdown.style.left = rect.left + "px";
-  dropdown.style.width = rect.width + "px";
 }
 
 function initMerchantAutocomplete(inputId, suggestionsId) {
@@ -1350,10 +1350,12 @@ function initMerchantAutocomplete(inputId, suggestionsId) {
 }
 
 function selectMerchantSuggestion(event, inputId) {
+  event.preventDefault();
   const input = document.getElementById(inputId || "recommend-merchant");
   const display = event.currentTarget.textContent;
   input.value = display.replace(/（[^）]*）/, "").trim();
   event.currentTarget.closest(".merchant-suggestions").hidden = true;
+  input.blur();
   if (inputId === "card-merchant-search") renderCards();
   else updateHkdHint();
 }
