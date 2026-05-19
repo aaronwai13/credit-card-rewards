@@ -6,7 +6,7 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "本地餐飲及娛樂 1%",
   "網上旅遊/娛樂/訂閱 港幣 5.4%"
 ]);
-const APP_VERSION = "v2026.05.19.13";
+const APP_VERSION = "v2026.05.19.14";
 const MERCHANT_SUGGESTIONS = [
   ["Netflix", ["netflix"]],
   ["Spotify", ["spotify"]],
@@ -1782,8 +1782,8 @@ function cardOfferMatchesMerchantQuery(offer, query) {
   const normalizedQuery = query.toLowerCase();
   const tokens = collectMerchantTokens(normalizedQuery);
   const keywords = Array.isArray(offer.requiresKeywords) ? offer.requiresKeywords.map((k) => k.toLowerCase()) : [];
-  if (!keywords.length) return false;
-  return keywords.some((k) => tokens.includes(k) || keywordMatchesDescription(k, normalizedQuery));
+  if (keywords.length) return keywords.some((k) => tokens.includes(k) || keywordMatchesDescription(k, normalizedQuery));
+  return (offer.title || "").toLowerCase().includes(normalizedQuery);
 }
 
 function saveOffer() {
