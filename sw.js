@@ -1,8 +1,8 @@
-const CACHE_NAME = "credit-card-rewards-v2026-05-19-15";
+const CACHE_NAME = "credit-card-rewards-v2026-05-19-16";
 const ASSETS = [
   "./",
   "./index.html",
-  "./app.js?v=2026.05.19.15",
+  "./app.js?v=2026.05.19.16",
   "./manifest.json?v=2026-05-19-7",
   "./icon.svg?v=2026-05-19-7",
   "./icon-192.png?v=2026-05-19-7",

@@ -6,7 +6,7 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "本地餐飲及娛樂 1%",
   "網上旅遊/娛樂/訂閱 港幣 5.4%"
 ]);
-const APP_VERSION = "v2026.05.19.15";
+const APP_VERSION = "v2026.05.19.16";
 const MERCHANT_SUGGESTIONS = [
   ["Netflix", ["netflix"]],
   ["Spotify", ["spotify"]],
@@ -1315,7 +1315,7 @@ function initMerchantAutocomplete(inputId, suggestionsId) {
     if (!q) { dropdown.hidden = true; return; }
     const matches = MERCHANT_SUGGESTIONS.filter(([display, variants]) =>
       display.toLowerCase().includes(q) || variants.some((v) => v.includes(q))
-    ).slice(0, 8);
+    ).slice(0, 5);
     if (!matches.length) { dropdown.hidden = true; return; }
     dropdown.innerHTML = matches.map(([display]) =>
       `<div class="merchant-suggestion-item" onpointerdown="selectMerchantSuggestion(event,'${inputId}')">${escapeHtml(display)}</div>`
