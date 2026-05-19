@@ -6,7 +6,7 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "本地餐飲及娛樂 1%",
   "網上旅遊/娛樂/訂閱 港幣 5.4%"
 ]);
-const APP_VERSION = "v2026.05.19.14";
+const APP_VERSION = "v2026.05.19.15";
 const MERCHANT_SUGGESTIONS = [
   ["Netflix", ["netflix"]],
   ["Spotify", ["spotify"]],
@@ -1649,12 +1649,15 @@ function renderCardMarkup(card, merchantQuery = "") {
     ? formatPercent(Number(strongestOffer.bonusRate || 0) + Number(card.baseRate || 0))
     : formatPercent(card.baseRate);
   const restrictionText = card.notes ? card.notes.trim() : "";
-  const offerMarkup = cardOffers.length ? `
+  const displayOffers = merchantQuery
+    ? cardOffers.filter((offer) => cardOfferMatchesMerchantQuery(offer, merchantQuery))
+    : cardOffers;
+  const offerMarkup = displayOffers.length ? `
     <div class="details" style="margin-top:12px;">
       <div><strong>規則與優惠：</strong></div>
       <div class="offer-list">
-        ${cardOffers.map((offer) => `
-          <article class="offer-card${merchantQuery && cardOfferMatchesMerchantQuery(offer, merchantQuery) ? " merchant-match" : ""}">
+        ${displayOffers.map((offer) => `
+          <article class="offer-card${merchantQuery ? " merchant-match" : ""}">
             <div class="offer-card-header">
               <div class="offer-card-heading">
                 <h4 class="offer-card-title">${escapeHtml(offer.title)}</h4>
@@ -1678,7 +1681,7 @@ function renderCardMarkup(card, merchantQuery = "") {
                   : ""}
               </div>
             `}
-            ${offer.notes ? `<div class="offer-card-note">${escapeHtml(offer.notes)}</div>` : ""}
+            ${offer.notes ? `<div class="offer-card-note">${merchantQuery ? highlightMerchantInText(offer.notes, merchantQuery) : escapeHtml(offer.notes)}</div>` : ""}
             ${card.name === "BOC Chill Card" && offer.title === "指定商戶 8%" ? `
               <div class="offer-setting">
                 <div class="check-grid">
@@ -1784,6 +1787,23 @@ function cardOfferMatchesMerchantQuery(offer, query) {
   const keywords = Array.isArray(offer.requiresKeywords) ? offer.requiresKeywords.map((k) => k.toLowerCase()) : [];
   if (keywords.length) return keywords.some((k) => tokens.includes(k) || keywordMatchesDescription(k, normalizedQuery));
   return (offer.title || "").toLowerCase().includes(normalizedQuery);
+}
+
+function highlightMerchantInText(text, query) {
+  if (!query || !text) return escapeHtml(text || "");
+  const escaped = escapeHtml(text);
+  const q = query.trim().toLowerCase();
+  const terms = new Set([q]);
+  collectMerchantTokens(q).forEach((t) => terms.add(t));
+  MERCHANT_SUGGESTIONS.forEach(([, variants]) => {
+    if (variants.some((v) => v.includes(q))) variants.forEach((v) => terms.add(v));
+  });
+  let result = escaped;
+  for (const term of [...terms].filter((t) => t.length >= 2)) {
+    const escapedTerm = escapeHtml(term).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    result = result.replace(new RegExp(`(${escapedTerm})`, "gi"), '<mark class="merchant-hl">$1</mark>');
+  }
+  return result;
 }
 
 function saveOffer() {
