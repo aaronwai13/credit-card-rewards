@@ -6,7 +6,7 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "本地餐飲及娛樂 1%",
   "網上旅遊/娛樂/訂閱 港幣 5.4%"
 ]);
-const APP_VERSION = "v2026.05.19.9";
+const APP_VERSION = "v2026.05.19.10";
 const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
 const CURRENCY_TO_HKD = {
   HKD: 1,
@@ -385,7 +385,6 @@ const CANONICAL_OFFER_DEFINITIONS = [
     notes: "於指定本地商戶作合資格交易可享 20% 現金回贈（上限 HK$120）。優惠只適用於指定商戶之香港零售分店及指定網站：POP MART（popmart.com/hk）、MCL 戲院（mclcinema.com）、百老匯院線（cinema.com.hk/tc）、英皇戲院（emperorcinemas.com/zh）；唐吉訶德及松本清只限香港零售分店。",
     requiresKeywords: ["pop mart", "popmart", "唐吉訶德", "松本清", "mcl", "百老匯", "英皇", "睇戲", "電影"]
   },
-  {
   {
     cardName: "AEON WAKUWAKU",
     title: "網上簽賬 6%",
