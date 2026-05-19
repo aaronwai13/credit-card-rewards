@@ -6,7 +6,7 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "本地餐飲及娛樂 1%",
   "網上旅遊/娛樂/訂閱 港幣 5.4%"
 ]);
-const APP_VERSION = "v2026.05.19.8";
+const APP_VERSION = "v2026.05.19.9";
 const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
 const CURRENCY_TO_HKD = {
   HKD: 1,
@@ -386,19 +386,6 @@ const CANONICAL_OFFER_DEFINITIONS = [
     requiresKeywords: ["pop mart", "popmart", "唐吉訶德", "松本清", "mcl", "百老匯", "英皇", "睇戲", "電影"]
   },
   {
-    cardName: "AEON WAKUWAKU",
-    title: "App Store 迎新 HK$50",
-    category: "general",
-    tags: ["subscription", "online"],
-    bonusRate: 0,
-    minSpend: 0,
-    cap: 50,
-    startDate: "2026-01-01",
-    endDate: "2026-12-31",
-    locations: ["網上"],
-    notes: "✅（待返）發卡後 60 日內於 App Store 作任何簽賬消費可享 HK$50 回贈。",
-    requiresKeywords: ["app store"]
-  },
   {
     cardName: "AEON WAKUWAKU",
     title: "網上簽賬 6%",
