@@ -6,7 +6,7 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "本地餐飲及娛樂 1%",
   "網上旅遊/娛樂/訂閱 港幣 5.4%"
 ]);
-const APP_VERSION = "v2026.05.19.18";
+const APP_VERSION = "v2026.05.19.19";
 const MERCHANT_SUGGESTIONS = [
   ["Netflix", ["netflix"]],
   ["Spotify", ["spotify"]],
@@ -1305,10 +1305,32 @@ function bindEvents() {
   initMerchantAutocomplete("card-merchant-search", "card-merchant-suggestions");
 }
 
+function positionSuggestions(input, dropdown) {
+  const rect = input.getBoundingClientRect();
+  const spaceBelow = window.innerHeight - rect.bottom;
+  const spaceAbove = rect.top;
+  const maxH = 220;
+  if (spaceBelow >= Math.min(maxH, 80) || spaceBelow >= spaceAbove) {
+    dropdown.style.top = rect.bottom + 4 + "px";
+    dropdown.style.bottom = "";
+    dropdown.style.maxHeight = Math.min(maxH, spaceBelow - 8) + "px";
+  } else {
+    dropdown.style.bottom = window.innerHeight - rect.top + 4 + "px";
+    dropdown.style.top = "";
+    dropdown.style.maxHeight = Math.min(maxH, spaceAbove - 8) + "px";
+  }
+  dropdown.style.left = rect.left + "px";
+  dropdown.style.width = rect.width + "px";
+}
+
 function initMerchantAutocomplete(inputId, suggestionsId) {
   const input = document.getElementById(inputId);
   const dropdown = document.getElementById(suggestionsId);
   if (!input || !dropdown) return;
+
+  const reposition = () => { if (!dropdown.hidden) positionSuggestions(input, dropdown); };
+  window.addEventListener("resize", reposition, { passive: true });
+  window.addEventListener("scroll", reposition, { passive: true });
 
   input.addEventListener("input", () => {
     const q = input.value.trim().toLowerCase();
@@ -1321,6 +1343,7 @@ function initMerchantAutocomplete(inputId, suggestionsId) {
       `<div class="merchant-suggestion-item" onpointerdown="selectMerchantSuggestion(event,'${inputId}')">${escapeHtml(display)}</div>`
     ).join("");
     dropdown.hidden = false;
+    positionSuggestions(input, dropdown);
   });
 
   input.addEventListener("blur", () => { setTimeout(() => { dropdown.hidden = true; }, 150); });
@@ -1613,7 +1636,7 @@ function renderCards() {
   const savedScrollY = window.scrollY;
   if (!filtered.length) {
     document.getElementById("cardsList").innerHTML = `<div class="empty-state">暫時未有可顯示的信用卡資料。</div>`;
-    window.scrollTo({ top: savedScrollY, behavior: "instant" });
+    requestAnimationFrame(() => window.scrollTo(0, savedScrollY));
     return;
   }
   const expandedIds = new Set(

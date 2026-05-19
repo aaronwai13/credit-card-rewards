@@ -174,15 +174,12 @@
   .field.full { grid-column: 1 / -1; }
   .field-hint { font-size: 11px; color: var(--muted); line-height: 1.5; margin-top: 6px; }
   .merchant-suggestions {
-    position: absolute;
-    top: calc(100% - 10px);
-    left: 0; right: 0;
+    position: fixed;
     background: var(--card);
     border: 1.5px solid var(--border-strong);
     border-radius: 14px;
-    max-height: 220px;
     overflow-y: auto;
-    z-index: 200;
+    z-index: 9999;
     box-shadow: var(--shadow);
   }
   .merchant-suggestion-item {
@@ -903,6 +900,6 @@
 
   <div class="toast" id="toast"></div>
 
-<script src="./app.js?v=2026.05.19.18"></script>
+<script src="./app.js?v=2026.05.19.19"></script>
 </body>
 </html>
