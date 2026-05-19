@@ -6,7 +6,7 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "本地餐飲及娛樂 1%",
   "網上旅遊/娛樂/訂閱 港幣 5.4%"
 ]);
-const APP_VERSION = "v2026.05.19.12";
+const APP_VERSION = "v2026.05.19.13";
 const MERCHANT_SUGGESTIONS = [
   ["Netflix", ["netflix"]],
   ["Spotify", ["spotify"]],
@@ -1299,13 +1299,15 @@ function bindEvents() {
   });
   document.getElementById("card-bank-filter").addEventListener("change", renderCards);
   document.getElementById("card-category-filter").addEventListener("change", renderCards);
+  document.getElementById("card-merchant-search").addEventListener("input", renderCards);
   document.getElementById("clearCardFiltersBtn").addEventListener("click", clearCardFilters);
-  initMerchantAutocomplete();
+  initMerchantAutocomplete("recommend-merchant", "merchant-suggestions");
+  initMerchantAutocomplete("card-merchant-search", "card-merchant-suggestions");
 }
 
-function initMerchantAutocomplete() {
-  const input = document.getElementById("recommend-merchant");
-  const dropdown = document.getElementById("merchant-suggestions");
+function initMerchantAutocomplete(inputId, suggestionsId) {
+  const input = document.getElementById(inputId);
+  const dropdown = document.getElementById(suggestionsId);
   if (!input || !dropdown) return;
 
   input.addEventListener("input", () => {
@@ -1316,7 +1318,7 @@ function initMerchantAutocomplete() {
     ).slice(0, 8);
     if (!matches.length) { dropdown.hidden = true; return; }
     dropdown.innerHTML = matches.map(([display]) =>
-      `<div class="merchant-suggestion-item" onpointerdown="selectMerchantSuggestion(event)">${escapeHtml(display)}</div>`
+      `<div class="merchant-suggestion-item" onpointerdown="selectMerchantSuggestion(event,'${inputId}')">${escapeHtml(display)}</div>`
     ).join("");
     dropdown.hidden = false;
   });
@@ -1324,13 +1326,13 @@ function initMerchantAutocomplete() {
   input.addEventListener("blur", () => { setTimeout(() => { dropdown.hidden = true; }, 150); });
 }
 
-function selectMerchantSuggestion(event) {
-  const input = document.getElementById("recommend-merchant");
-  const dropdown = document.getElementById("merchant-suggestions");
+function selectMerchantSuggestion(event, inputId) {
+  const input = document.getElementById(inputId || "recommend-merchant");
   const display = event.currentTarget.textContent;
   input.value = display.replace(/（[^）]*）/, "").trim();
-  dropdown.hidden = true;
-  updateHkdHint();
+  event.currentTarget.closest(".merchant-suggestions").hidden = true;
+  if (inputId === "card-merchant-search") renderCards();
+  else updateHkdHint();
 }
 
 function switchPage(page) {
@@ -1578,6 +1580,7 @@ function closeOfferComposer() {
 
 function renderCards() {
   const query = document.getElementById("card-search").value.trim().toLowerCase();
+  const merchantQuery = (document.getElementById("card-merchant-search")?.value || "").trim();
   const regionScope = getActiveCardRegionScope();
   const bankFilter = document.getElementById("card-bank-filter").value.trim();
   const categoryFilter = document.getElementById("card-category-filter").value.trim();
@@ -1593,6 +1596,10 @@ function renderCards() {
         .flatMap((offer) => [offer.category, ...(offer.tags || [])].filter(Boolean))
     ]);
     const matchesCategory = !categoryFilter || cardCategories.has(categoryFilter);
+    if (merchantQuery) {
+      const cardOffers = state.offers.filter((o) => o.cardId === card.id);
+      if (!cardOffers.some((o) => cardOfferMatchesMerchantQuery(o, merchantQuery))) return false;
+    }
     return matchesQuery && matchesRegion && matchesBank && matchesCategory;
   }).sort((left, right) => {
     const leftIndex = CARD_DISPLAY_ORDER.indexOf(left.name);
@@ -1610,7 +1617,7 @@ function renderCards() {
   const expandedIds = new Set(
     [...document.querySelectorAll("#cardsList .list-card.expanded[data-card-id]")].map((el) => el.dataset.cardId)
   );
-  document.getElementById("cardsList").innerHTML = filtered.map((card) => renderCardMarkup(card)).join("");
+  document.getElementById("cardsList").innerHTML = filtered.map((card) => renderCardMarkup(card, merchantQuery)).join("");
   if (expandedIds.size) {
     document.querySelectorAll("#cardsList .list-card[data-card-id]").forEach((el) => {
       if (expandedIds.has(el.dataset.cardId)) el.classList.add("expanded");
@@ -1618,7 +1625,7 @@ function renderCards() {
   }
 }
 
-function renderCardMarkup(card) {
+function renderCardMarkup(card, merchantQuery = "") {
   const isMainland = isMainlandCard(card);
   const cardOffers = state.offers
     .filter((offer) => offer.cardId === card.id)
@@ -1647,7 +1654,7 @@ function renderCardMarkup(card) {
       <div><strong>規則與優惠：</strong></div>
       <div class="offer-list">
         ${cardOffers.map((offer) => `
-          <article class="offer-card">
+          <article class="offer-card${merchantQuery && cardOfferMatchesMerchantQuery(offer, merchantQuery) ? " merchant-match" : ""}">
             <div class="offer-card-header">
               <div class="offer-card-heading">
                 <h4 class="offer-card-title">${escapeHtml(offer.title)}</h4>
@@ -1690,7 +1697,7 @@ function renderCardMarkup(card) {
   ` : "";
 
   return `
-    <article class="list-card" data-card-id="${escapeHtml(card.id)}">
+    <article class="list-card${merchantQuery ? " expanded" : ""}" data-card-id="${escapeHtml(card.id)}">
       <div class="card-top" onclick="toggleListCard(this.closest('.list-card'))">
         <div>
           <h3 class="card-name">${escapeHtml(card.name)}</h3>
@@ -1762,11 +1769,21 @@ function renderCardFilters() {
 
 function clearCardFilters() {
   document.getElementById("card-search").value = "";
+  document.getElementById("card-merchant-search").value = "";
   document.querySelectorAll("#card-region-filter [data-region-scope]").forEach((item) => item.classList.remove("active"));
   document.querySelector('#card-region-filter [data-region-scope=""]').classList.add("active");
   document.getElementById("card-bank-filter").value = "";
   document.getElementById("card-category-filter").value = "";
   renderCards();
+}
+
+function cardOfferMatchesMerchantQuery(offer, query) {
+  if (!query) return false;
+  const normalizedQuery = query.toLowerCase();
+  const tokens = collectMerchantTokens(normalizedQuery);
+  const keywords = Array.isArray(offer.requiresKeywords) ? offer.requiresKeywords.map((k) => k.toLowerCase()) : [];
+  if (!keywords.length) return false;
+  return keywords.some((k) => tokens.includes(k) || keywordMatchesDescription(k, normalizedQuery));
 }
 
 function saveOffer() {
