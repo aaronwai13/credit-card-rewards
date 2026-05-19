@@ -6,7 +6,7 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "本地餐飲及娛樂 1%",
   "網上旅遊/娛樂/訂閱 港幣 5.4%"
 ]);
-const APP_VERSION = "v2026.05.19.7";
+const APP_VERSION = "v2026.05.19.8";
 const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
 const CURRENCY_TO_HKD = {
   HKD: 1,
@@ -450,7 +450,8 @@ const CANONICAL_OFFER_DEFINITIONS = [
     startDate: "2026-01-01",
     endDate: "2026-12-31",
     locations: ["網上", "海外"],
-    notes: "合資格網上旅遊商戶、娛樂及指定服務訂閱以外幣簽賬可享 6% 回贈；單一淨簽賬須滿 HK$300，DCC 不適用。"
+    notes: "合資格網上旅遊商戶、娛樂及指定服務訂閱以外幣簽賬可享 6% 回贈；單一淨簽賬須滿 HK$300，DCC 不適用。",
+    requiresKeywords: ["訂閱", "subscription", "app store", "disney+", "google play", "joox", "kkbox", "moov", "netflix", "now tv", "spotify", "youtube", "apple tv", "apple music", "viu", "adobe", "amazon prime", "canva", "chatgpt", "copy.ai", "deepseek", "elevenlabs", "grammarly", "grok", "hbo", "hulu", "jasper", "kimi", "manus", "microsoft", "midjourney", "mytv super", "notion", "otter.ai", "paramount+", "perplexity", "poe", "shopify", "shopline", "soundraw", "synthesia", "uber one", "viutv", "writesonic", "youku", "zoom"]
   },
   {
     cardName: "DBS Live Fresh",
@@ -463,7 +464,8 @@ const CANONICAL_OFFER_DEFINITIONS = [
     startDate: "2026-01-01",
     endDate: "2026-12-31",
     locations: ["網上"],
-    notes: "合資格網上旅遊商戶、娛樂及指定服務訂閱以港幣簽賬可享 5% 回贈；單一淨簽賬須滿 HK$300，DCC 不適用。"
+    notes: "合資格網上旅遊商戶、娛樂及指定服務訂閱以港幣簽賬可享 5% 回贈；單一淨簽賬須滿 HK$300，DCC 不適用。",
+    requiresKeywords: ["訂閱", "subscription", "app store", "disney+", "google play", "joox", "kkbox", "moov", "netflix", "now tv", "spotify", "youtube", "apple tv", "apple music", "viu", "adobe", "amazon prime", "canva", "chatgpt", "copy.ai", "deepseek", "elevenlabs", "grammarly", "grok", "hbo", "hulu", "jasper", "kimi", "manus", "microsoft", "midjourney", "mytv super", "notion", "otter.ai", "paramount+", "perplexity", "poe", "shopify", "shopline", "soundraw", "synthesia", "uber one", "viutv", "writesonic", "youku", "zoom"]
   },
   {
     cardName: "DBS Live Fresh",
@@ -935,6 +937,7 @@ const CANONICAL_RECOMMENDATION_RULES = {
     regions: "any",
     currency: "foreign",
     categoryAnyOf: ["travel", "entertainment", "subscription"],
+    merchantMode: "listed-or-category",
     minSpendType: "single",
     payoutTiming: "instant"
   },
@@ -944,6 +947,7 @@ const CANONICAL_RECOMMENDATION_RULES = {
     regions: "any",
     currency: "HKD",
     categoryAnyOf: ["travel", "entertainment", "subscription"],
+    merchantMode: "listed-or-category",
     minSpendType: "single",
     payoutTiming: "instant"
   },
@@ -2083,7 +2087,7 @@ function formatRecommendationOfferTitle(card, offer) {
 function offerScopeMatchesScenario(card, offer, scenario) {
   const rule = getCanonicalRecommendationRule(card, offer);
   if (rule) {
-    if (!ruleCategoryMatches(rule, scenario)) return false;
+    if (rule.merchantMode !== "listed-or-category" && !ruleCategoryMatches(rule, scenario)) return false;
     if (!ruleChannelMatches(rule, scenario)) return false;
     if (!ruleRegionMatches(rule, scenario, card, offer)) return false;
     if (!ruleCurrencyMatches(rule, scenario)) return false;
