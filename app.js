@@ -6,7 +6,7 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "本地餐飲及娛樂 1%",
   "網上旅遊/娛樂/訂閱 港幣 5.4%"
 ]);
-const APP_VERSION = "v2026.05.19.6";
+const APP_VERSION = "v2026.05.19.7";
 const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
 const CURRENCY_TO_HKD = {
   HKD: 1,
@@ -503,7 +503,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
     endDate: "2026-12-31",
     locations: ["網上"],
     notes: "✅（待返）發卡 4 個月內於任何兩個月（3 月 + 4 月）於指定合資格訂閱服務各簽賬任何金額一次可享 HK$100 現金回贈；最遲於完成要求後 6 個月回贈。",
-    requiresKeywords: ["訂閱", "subscription", "netflix", "spotify", "disney+", "apple tv", "apple music", "joox", "kkbox", "viu", "moov", "youtube"]
+    requiresKeywords: ["訂閱", "subscription", "app store", "disney+", "google play", "joox", "kkbox", "moov", "netflix", "now tv", "spotify", "youtube", "apple tv", "apple music", "viu", "adobe", "amazon prime", "canva", "chatgpt", "copy.ai", "deepseek", "elevenlabs", "grammarly", "grok", "hbo", "hulu", "jasper", "kimi", "manus", "microsoft", "midjourney", "mytv super", "notion", "otter.ai", "paramount+", "perplexity", "poe", "shopify", "shopline", "soundraw", "synthesia", "uber one", "viutv", "writesonic", "youku", "zoom"]
   },
   {
     cardName: "PayMe 銀聯卡",
