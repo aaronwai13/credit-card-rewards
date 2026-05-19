@@ -6,7 +6,7 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "本地餐飲及娛樂 1%",
   "網上旅遊/娛樂/訂閱 港幣 5.4%"
 ]);
-const APP_VERSION = "v2026.05.19.5";
+const APP_VERSION = "v2026.05.19.6";
 const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
 const CURRENCY_TO_HKD = {
   HKD: 1,
@@ -307,7 +307,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
   {
     cardName: "MMPOWER",
     title: "網上服飾 8%",
-    category: "general",
+    category: "clothing",
     tags: ["online", "shopping"],
     bonusRate: 7.6,
     minSpend: 0,
@@ -316,7 +316,6 @@ const CANONICAL_OFFER_DEFINITIONS = [
     endDate: "2026-12-31",
     locations: ["網上"],
     notes: "由恒生、Mastercard Asia / Pacific (Hong Kong) Limited 或相關收單銀行根據商戶編號界定為服飾類別之合資格零售簽賬高達 8% +FUN Dollars。",
-    requiresKeywords: ["服飾", "衫", "裙", "褲", "外套", "衣服", "fashion", "clothing"]
   },
   {
     cardName: "MMPOWER",
@@ -799,6 +798,7 @@ const CATEGORY_LABELS = {
   dining: "餐飲",
   entertainment: "娛樂",
   shopping: "購物",
+  clothing: "服飾",
   transport: "交通",
   travel: "旅遊",
   subscription: "訂閱",
