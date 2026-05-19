@@ -173,6 +173,26 @@
   .field { display: flex; flex-direction: column; }
   .field.full { grid-column: 1 / -1; }
   .field-hint { font-size: 11px; color: var(--muted); line-height: 1.5; margin-top: 6px; }
+  .merchant-suggestions {
+    position: absolute;
+    top: calc(100% - 10px);
+    left: 0; right: 0;
+    background: var(--card);
+    border: 1.5px solid var(--border-strong);
+    border-radius: 14px;
+    overflow: hidden;
+    z-index: 200;
+    box-shadow: var(--shadow);
+  }
+  .merchant-suggestion-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text);
+    border-bottom: 1px solid var(--border);
+  }
+  .merchant-suggestion-item:last-child { border-bottom: none; }
+  .merchant-suggestion-item:active { background: var(--card-inner); }
   .fx-rate-status.live { color: #4caf80; }
   .fx-rate-status.static { color: var(--muted); }
   .fx-source-link { color: inherit; opacity: 0.75; text-decoration: underline; }
@@ -724,9 +744,10 @@
           </div>
         </div>
 
-        <div class="form-group">
+        <div class="form-group" style="position:relative;">
           <label for="recommend-merchant">商戶（選填）</label>
-          <input id="recommend-merchant" type="text" placeholder="例如：Netflix、McDonald's、Starbucks">
+          <input id="recommend-merchant" type="text" placeholder="例如：Netflix、McDonald's、Starbucks" autocomplete="off">
+          <div id="merchant-suggestions" class="merchant-suggestions" hidden></div>
         </div>
 
         <div class="field-row">
@@ -877,6 +898,6 @@
 
   <div class="toast" id="toast"></div>
 
-<script src="./app.js?v=2026.05.19.11"></script>
+<script src="./app.js?v=2026.05.19.12"></script>
 </body>
 </html>

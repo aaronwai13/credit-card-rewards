@@ -6,7 +6,100 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "本地餐飲及娛樂 1%",
   "網上旅遊/娛樂/訂閱 港幣 5.4%"
 ]);
-const APP_VERSION = "v2026.05.19.11";
+const APP_VERSION = "v2026.05.19.12";
+const MERCHANT_SUGGESTIONS = [
+  ["Netflix", ["netflix"]],
+  ["Spotify", ["spotify"]],
+  ["Disney+", ["disney+", "disney"]],
+  ["Apple TV+", ["apple tv", "apple tv+"]],
+  ["Apple Music", ["apple music"]],
+  ["App Store", ["app store"]],
+  ["Google Play", ["google play"]],
+  ["YouTube", ["youtube"]],
+  ["Viu", ["viu"]],
+  ["ViuTV", ["viutv"]],
+  ["Now TV", ["now tv"]],
+  ["MyTV Super", ["mytv super", "mytvsuper"]],
+  ["JOOX", ["joox"]],
+  ["KKBOX", ["kkbox"]],
+  ["MOOV", ["moov"]],
+  ["HMVOD", ["hmvod"]],
+  ["HBO / HBO Max", ["hbo", "hbo max"]],
+  ["Hulu", ["hulu"]],
+  ["Paramount+", ["paramount+", "paramount"]],
+  ["Amazon Prime", ["amazon prime"]],
+  ["Youku（優酷）", ["youku", "優酷", "优酷"]],
+  ["ChatGPT", ["chatgpt"]],
+  ["Microsoft 365", ["microsoft", "microsoft 365"]],
+  ["Adobe", ["adobe"]],
+  ["Canva", ["canva"]],
+  ["Grammarly", ["grammarly"]],
+  ["Notion", ["notion"]],
+  ["Zoom", ["zoom"]],
+  ["Midjourney", ["midjourney"]],
+  ["Perplexity", ["perplexity"]],
+  ["DeepSeek", ["deepseek"]],
+  ["Grok", ["grok"]],
+  ["Kimi", ["kimi"]],
+  ["Shopify", ["shopify"]],
+  ["Shopline", ["shopline"]],
+  ["Uber One", ["uber one"]],
+  ["McDonald's（麥當勞）", ["mcdonald", "麥當勞", "麦当劳"]],
+  ["Starbucks（星巴克）", ["starbucks", "星巴克"]],
+  ["Pacific Coffee（太平洋咖啡）", ["pacific coffee", "太平洋咖啡"]],
+  ["Dyson（戴森）", ["dyson", "戴森"]],
+  ["Samsung（三星）", ["samsung", "三星"]],
+  ["Sony（索尼）", ["sony", "索尼"]],
+  ["Uniqlo（優衣庫）", ["uniqlo", "優衣庫", "优衣库"]],
+  ["GU", ["gu"]],
+  ["IKEA（宜家）", ["ikea", "宜家"]],
+  ["Log-On", ["log-on", "log on"]],
+  ["Lululemon", ["lululemon"]],
+  ["Arc'teryx", ["arc'teryx", "arcteryx"]],
+  ["Costco", ["costco"]],
+  ["Amazon（亞馬遜）", ["amazon", "亞馬遜", "亚马逊"]],
+  ["Booking.com", ["booking.com", "booking"]],
+  ["Farfetch", ["farfetch"]],
+  ["SSENSE", ["ssense"]],
+  ["Harrods", ["harrods"]],
+  ["Saks Fifth Avenue", ["saks fifth avenue", "saks"]],
+  ["SOGO（崇光）", ["sogo", "崇光"]],
+  ["King Power", ["king power"]],
+  ["Suning（蘇寧）", ["suning", "蘇寧", "苏宁"]],
+  ["MCL 戲院", ["mcl"]],
+  ["百老匯院線", ["百老匯", "百老汇"]],
+  ["英皇戲院", ["英皇"]],
+  ["Cinema City（影藝）", ["cinema city", "影藝", "影艺"]],
+  ["購票通", ["購票通", "购票通"]],
+  ["HotdogTix", ["hotdogtix"]],
+  ["KKTIX", ["kktix"]],
+  ["撲飛", ["撲飛", "扑飞"]],
+  ["Ticketflap", ["ticketflap"]],
+  ["城市售票網", ["城市售票網", "城市售票网"]],
+  ["迪士尼樂園", ["迪士尼", "disney"]],
+  ["海洋公園", ["海洋公園", "海洋公园"]],
+  ["POP MART", ["pop mart", "popmart"]],
+  ["唐吉訶德 / Don Quijote", ["唐吉訶德", "唐吉诃德", "don quijote"]],
+  ["松本清", ["松本清"]],
+  ["阪急百貨", ["阪急"]],
+  ["大丸百貨", ["大丸"]],
+  ["三越百貨", ["三越"]],
+  ["伊勢丹", ["伊勢丹", "伊势丹"]],
+  ["Uber Eats", ["uber eats"]],
+  ["Deliveroo", ["deliveroo"]],
+  ["DoorDash", ["doordash", "door dash"]],
+  ["Steam", ["steam"]],
+  ["PlayStation", ["playstation", "sony playstation"]],
+  ["Nintendo eShop", ["nintendo eshop", "nintendo e-shop"]],
+  ["JR（Japan Railway）", ["jr", "japan railway"]],
+  ["MRT", ["mrt", "mass rapid transit"]],
+  ["Translink", ["translink"]],
+  ["Transport for London（TfL）", ["tfl", "transport for london"]],
+  ["中國鐵路（12306）", ["中國鐵路", "中国铁路", "12306"]],
+  ["北京地鐵", ["北京地鐵", "北京地铁"]],
+  ["上海地鐵", ["上海地鐵", "上海地铁"]],
+  ["環島中港通", ["環島中港通", "环岛中港通"]],
+];
 const LOCATION_OPTIONS = ["香港", "澳門", "內地", "海外", "網上"];
 const CURRENCY_TO_HKD = {
   HKD: 1,
@@ -1207,6 +1300,37 @@ function bindEvents() {
   document.getElementById("card-bank-filter").addEventListener("change", renderCards);
   document.getElementById("card-category-filter").addEventListener("change", renderCards);
   document.getElementById("clearCardFiltersBtn").addEventListener("click", clearCardFilters);
+  initMerchantAutocomplete();
+}
+
+function initMerchantAutocomplete() {
+  const input = document.getElementById("recommend-merchant");
+  const dropdown = document.getElementById("merchant-suggestions");
+  if (!input || !dropdown) return;
+
+  input.addEventListener("input", () => {
+    const q = input.value.trim().toLowerCase();
+    if (!q) { dropdown.hidden = true; return; }
+    const matches = MERCHANT_SUGGESTIONS.filter(([display, variants]) =>
+      display.toLowerCase().includes(q) || variants.some((v) => v.includes(q))
+    ).slice(0, 8);
+    if (!matches.length) { dropdown.hidden = true; return; }
+    dropdown.innerHTML = matches.map(([display]) =>
+      `<div class="merchant-suggestion-item" onpointerdown="selectMerchantSuggestion(event)">${escapeHtml(display)}</div>`
+    ).join("");
+    dropdown.hidden = false;
+  });
+
+  input.addEventListener("blur", () => { setTimeout(() => { dropdown.hidden = true; }, 150); });
+}
+
+function selectMerchantSuggestion(event) {
+  const input = document.getElementById("recommend-merchant");
+  const dropdown = document.getElementById("merchant-suggestions");
+  const display = event.currentTarget.textContent;
+  input.value = display.replace(/（[^）]*）/, "").trim();
+  dropdown.hidden = true;
+  updateHkdHint();
 }
 
 function switchPage(page) {
@@ -2442,17 +2566,17 @@ function collectMerchantTokens(normalizedText) {
     ["netflix", ["netflix"]],
     ["spotify", ["spotify"]],
     ["disney+", ["disney+"]],
-    ["mcdonald", ["mcdonald", "麥當勞"]],
+    ["mcdonald", ["mcdonald", "麥當勞", "麦当劳"]],
     ["pacific coffee", ["pacific coffee", "太平洋咖啡"]],
     ["starbucks", ["starbucks", "星巴克"]],
     ["dyson", ["dyson", "戴森"]],
     ["samsung", ["samsung", "三星"]],
     ["sony", ["sony", "索尼"]],
-    ["uniqlo", ["uniqlo", "優衣庫"]],
+    ["uniqlo", ["uniqlo", "優衣庫", "优衣库"]],
     ["gu", [" gu ", "gu "]],
     ["ikea", ["ikea", "宜家"]],
     ["log-on", ["log-on", "log on"]],
-    ["amazon", ["amazon", "亞馬遜"]],
+    ["amazon", ["amazon", "亞馬遜", "亚马逊"]],
     ["lululemon", ["lululemon"]],
     ["costco", ["costco"]],
     ["arc'teryx", ["arc'teryx", "arcteryx"]],
@@ -2474,17 +2598,17 @@ function collectMerchantTokens(normalizedText) {
     ["唐吉訶德", ["唐吉訶德"]],
     ["松本清", ["松本清"]],
     ["mcl", ["mcl"]],
-    ["百老匯", ["百老匯"]],
+    ["百老匯", ["百老匯", "百老汇"]],
     ["英皇", ["英皇"]],
     ["jr", ["jr", "japan railway"]],
     ["translink", ["translink"]],
     ["trainlink", ["trainlink"]],
     ["go transit", ["go transit"]],
-    ["中國鐵路", ["中國鐵路", "12306"]],
-    ["北京地鐵", ["北京地鐵"]],
-    ["上海地鐵", ["上海地鐵"]],
+    ["中國鐵路", ["中國鐵路", "中国铁路", "12306"]],
+    ["北京地鐵", ["北京地鐵", "北京地铁"]],
+    ["上海地鐵", ["上海地鐵", "上海地铁"]],
     ["上海磁浮", ["上海磁浮"]],
-    ["環島中港通", ["環島中港通"]],
+    ["環島中港通", ["環島中港通", "环岛中港通"]],
     ["tfl", ["tfl", "transport for london"]]
   ];
   const tokens = [];
