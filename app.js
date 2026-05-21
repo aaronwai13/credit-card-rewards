@@ -6,7 +6,7 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "本地餐飲及娛樂 1%",
   "網上旅遊/娛樂/訂閱 港幣 5.4%"
 ]);
-const APP_VERSION = "v2026.05.19.20";
+const APP_VERSION = "v2026.05.19.21";
 const MERCHANT_SUGGESTIONS = [
   ["Netflix", ["netflix"]],
   ["Spotify", ["spotify"]],
@@ -1192,13 +1192,12 @@ function applyExchangeRates(rates) {
 function setFxRateStatus(ts) {
   const el = document.getElementById("fx-rate-status");
   if (!el) return;
-  const source = `<a href="https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/hkd.json" target="_blank" rel="noopener" class="fx-source-link">匯率來源</a>`;
+  const source = `<a href="https://latest.currency-api.pages.dev/v1/currencies/hkd.json" target="_blank" rel="noopener" class="fx-source-link">匯率來源</a>`;
   if (!ts) {
     el.className = "field-hint fx-rate-status static";
     el.innerHTML = `靜態匯率 · ${source}`;
     return;
   }
-  el.className = "field-hint fx-rate-status live";
   const rateDate = new Date(ts);
   const today = new Date();
   const isToday = rateDate.toDateString() === today.toDateString();
@@ -1207,18 +1206,21 @@ function setFxRateStatus(ts) {
   const isYesterday = rateDate.toDateString() === yesterday.toDateString();
   let label;
   if (isToday) {
+    el.className = "field-hint fx-rate-status live";
     label = "實時匯率";
   } else if (isYesterday) {
-    label = "實時匯率（昨日）";
+    el.className = "field-hint fx-rate-status live";
+    label = "匯率（昨日）";
   } else {
+    el.className = "field-hint fx-rate-status static";
     const dateStr = rateDate.toLocaleDateString("zh-HK", { month: "numeric", day: "numeric" });
-    label = `實時匯率（${dateStr}）`;
+    label = `匯率（${dateStr}）`;
   }
   el.innerHTML = `${label} · ${source}`;
 }
 
 async function fetchLiveRates() {
-  const CACHE_KEY = "ccr_fx_rates_v1";
+  const CACHE_KEY = "ccr_fx_rates_v2";
   let cachedTs = null;
   let cachedRates = null;
   try {
@@ -1237,17 +1239,26 @@ async function fetchLiveRates() {
   const cachedDay = cachedTs && new Date(cachedTs).toLocaleDateString("en-CA", { timeZone: "Asia/Hong_Kong" });
   const today = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Hong_Kong" });
   if (!cachedTs || cachedDay !== today) {
-    try {
-      const res = await fetch("https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/hkd.json");
-      if (!res.ok) { if (!cachedTs) setFxRateStatus(null); return; }
-      const data = await res.json();
-      if (!data.hkd) { if (!cachedTs) setFxRateStatus(null); return; }
-    const ts = Date.now();
-    localStorage.setItem(CACHE_KEY, JSON.stringify({ ts, rates: data.hkd }));
-    applyExchangeRates(data.hkd);
-    updateHkdHint();
-    setFxRateStatus(ts);
-  } catch { if (!cachedTs) setFxRateStatus(null); }
+    const URLS = [
+      "https://latest.currency-api.pages.dev/v1/currencies/hkd.json",
+      "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/hkd.json",
+    ];
+    for (const url of URLS) {
+      try {
+        const res = await fetch(url);
+        if (!res.ok) continue;
+        const data = await res.json();
+        if (!data.hkd) continue;
+        // Use the API's own date field so displayed freshness reflects actual data age
+        const ts = data.date ? new Date(data.date + "T12:00:00+08:00").getTime() : Date.now();
+        localStorage.setItem(CACHE_KEY, JSON.stringify({ ts, rates: data.hkd }));
+        applyExchangeRates(data.hkd);
+        updateHkdHint();
+        setFxRateStatus(ts);
+        return;
+      } catch {}
+    }
+    if (!cachedRates) setFxRateStatus(null);
   }
 }
 
