@@ -6,7 +6,7 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "本地餐飲及娛樂 1%",
   "網上旅遊/娛樂/訂閱 港幣 5.4%"
 ]);
-const APP_VERSION = "v2026.05.22.1";
+const APP_VERSION = "v2026.05.22.2";
 const MERCHANT_SUGGESTIONS = [
   ["Netflix", ["netflix"]],
   ["Spotify", ["spotify"]],
@@ -1999,6 +1999,7 @@ function runRecommendation() {
 
 function renderRecommendationResults(results, scenario, rateMode, currency) {
   uiState.latestRecommendationRenderData = { results, scenario, rateMode, currency };
+  const merchantQuery = (document.getElementById("recommend-merchant")?.value || "").trim();
 
   if (!results.length) {
     document.getElementById("recommendationResults").innerHTML = `<div class="empty-state">還沒有信用卡資料，暫時無法推薦。</div>`;
@@ -2072,8 +2073,8 @@ function renderRecommendationResults(results, scenario, rateMode, currency) {
           <div class="result-offer-details">
             ${result.selectedOffers.map((offer) => `
               <div class="result-offer-detail">
-                <div class="result-offer-detail-title">${escapeHtml(formatRecommendationOfferTitle(result.card, offer))}</div>
-                <div class="result-offer-detail-note">${escapeHtml(offer.notes || "沒有補充說明")}</div>
+                <div class="result-offer-detail-title">${merchantQuery ? highlightMerchantInText(formatRecommendationOfferTitle(result.card, offer), merchantQuery) : escapeHtml(formatRecommendationOfferTitle(result.card, offer))}</div>
+                <div class="result-offer-detail-note">${merchantQuery ? highlightMerchantInText(offer.notes || "沒有補充說明", merchantQuery) : escapeHtml(offer.notes || "沒有補充說明")}</div>
               </div>
             `).join("")}
           </div>
