@@ -6,7 +6,7 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "本地餐飲及娛樂 1%",
   "網上旅遊/娛樂/訂閱 港幣 5.4%"
 ]);
-const APP_VERSION = "v2026.05.22.2";
+const APP_VERSION = "v2026.05.22.3";
 const MERCHANT_SUGGESTIONS = [
   ["Netflix", ["netflix"]],
   ["Spotify", ["spotify"]],
@@ -1221,24 +1221,27 @@ function setFxRateStatus(ts) {
 
 async function fetchLiveRates() {
   const CACHE_KEY = "ccr_fx_rates_v2";
-  let cachedTs = null;
+  let cachedFetchTs = null;
+  let cachedDataTs = null;
   let cachedRates = null;
   try {
     const cached = localStorage.getItem(CACHE_KEY);
     if (cached) {
-      const { ts, rates } = JSON.parse(cached);
-      cachedTs = ts;
+      const { fetchTs, dataTs, rates } = JSON.parse(cached);
+      cachedFetchTs = fetchTs;
+      cachedDataTs = dataTs ?? fetchTs;
       cachedRates = rates;
     }
   } catch {}
   if (cachedRates) {
     applyExchangeRates(cachedRates);
     updateHkdHint();
-    setFxRateStatus(cachedTs);
+    setFxRateStatus(cachedDataTs);
   }
-  const cachedDay = cachedTs && new Date(cachedTs).toLocaleDateString("en-CA", { timeZone: "Asia/Hong_Kong" });
+  // Re-fetch at most once per day (based on fetch time, not API data date)
+  const cachedDay = cachedFetchTs && new Date(cachedFetchTs).toLocaleDateString("en-CA", { timeZone: "Asia/Hong_Kong" });
   const today = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Hong_Kong" });
-  if (!cachedTs || cachedDay !== today) {
+  if (!cachedFetchTs || cachedDay !== today) {
     const URLS = [
       "https://latest.currency-api.pages.dev/v1/currencies/hkd.json",
       "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/hkd.json",
@@ -1249,12 +1252,13 @@ async function fetchLiveRates() {
         if (!res.ok) continue;
         const data = await res.json();
         if (!data.hkd) continue;
-        // Use the API's own date field so displayed freshness reflects actual data age
-        const ts = data.date ? new Date(data.date + "T12:00:00+08:00").getTime() : Date.now();
-        localStorage.setItem(CACHE_KEY, JSON.stringify({ ts, rates: data.hkd }));
+        const fetchTs = Date.now();
+        // dataTs reflects actual API data age for display; fetchTs controls daily re-fetch
+        const dataTs = data.date ? new Date(data.date + "T12:00:00+08:00").getTime() : fetchTs;
+        localStorage.setItem(CACHE_KEY, JSON.stringify({ fetchTs, dataTs, rates: data.hkd }));
         applyExchangeRates(data.hkd);
         updateHkdHint();
-        setFxRateStatus(ts);
+        setFxRateStatus(dataTs);
         return;
       } catch {}
     }
