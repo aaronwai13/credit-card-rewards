@@ -6,7 +6,7 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "本地餐飲及娛樂 1%",
   "網上旅遊/娛樂/訂閱 港幣 5.4%"
 ]);
-const APP_VERSION = "v2026.05.22.3";
+const APP_VERSION = "v2026.05.22.4";
 const MERCHANT_SUGGESTIONS = [
   ["Netflix", ["netflix"]],
   ["Spotify", ["spotify"]],
@@ -712,6 +712,8 @@ const CANONICAL_OFFER_DEFINITIONS = [
     bonusRate: 0,
     minSpend: 0,
     cap: 0,
+    usageUsed: 0,
+    usageTotal: 1,
     startDate: "2026-01-01",
     endDate: "2026-06-30",
     locations: ["香港", "澳門", "海外"],
