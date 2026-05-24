@@ -6,7 +6,7 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "本地餐飲及娛樂 1%",
   "網上旅遊/娛樂/訂閱 港幣 5.4%"
 ]);
-const APP_VERSION = "v2026.05.24.2";
+const APP_VERSION = "v2026.05.24.3";
 const MERCHANT_SUGGESTIONS = [
   ["Netflix", ["netflix"]],
   ["Spotify", ["spotify"]],
@@ -1100,19 +1100,19 @@ const CANONICAL_RECOMMENDATION_RULES = {
     currency: "any"
   },
   [canonicalOfferKey("農行萬事達白金卡", "境外簽賬 1%")]: {
-    group: "abc-global-overseas",
+    group: null,
     channel: "either",
     regions: ["香港", "澳門", "海外"],
     currency: "any"
   },
   [canonicalOfferKey("農行萬事達白金卡", "境外線下簽賬 3%")]: {
-    group: "abc-global-overseas",
+    group: null,
     channel: "offline",
     regions: ["香港", "澳門", "海外"],
     currency: "any"
   },
   [canonicalOfferKey("農行萬事達白金卡", "境外精選商戶 10%")]: {
-    group: "abc-global-overseas",
+    group: null,
     channel: "either",
     regions: "any",
     currency: "any",
