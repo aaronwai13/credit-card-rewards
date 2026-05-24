@@ -6,7 +6,7 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "本地餐飲及娛樂 1%",
   "網上旅遊/娛樂/訂閱 港幣 5.4%"
 ]);
-const APP_VERSION = "v2026.05.24.3";
+const APP_VERSION = "v2026.05.24.4";
 const MERCHANT_SUGGESTIONS = [
   ["Netflix", ["netflix"]],
   ["Spotify", ["spotify"]],
