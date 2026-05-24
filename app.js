@@ -6,7 +6,7 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "本地餐飲及娛樂 1%",
   "網上旅遊/娛樂/訂閱 港幣 5.4%"
 ]);
-const APP_VERSION = "v2026.05.24.1";
+const APP_VERSION = "v2026.05.24.2";
 const MERCHANT_SUGGESTIONS = [
   ["Netflix", ["netflix"]],
   ["Spotify", ["spotify"]],
@@ -151,7 +151,8 @@ const CUSTOM_REWARD_OFFER_KEYS = new Set([
   canonicalOfferKey("農行萬事達白金卡", "Apple Pay 首3筆 100%返現"),
   canonicalOfferKey("農行萬事達白金卡", "Apple Pay 首2筆額外返 US$3 + US$2"),
   canonicalOfferKey("工行星座Visa卡", "香港 Apple Pay 滿 HK$50 返 US$2"),
-  canonicalOfferKey("工行星座Visa卡", "境外 Apple Pay 交通 100%")
+  canonicalOfferKey("工行星座Visa卡", "境外 Apple Pay 交通 100%"),
+  canonicalOfferKey("農行萬事達白金卡", "每月首筆境外線下返 US$1"),
 ]);
 
 function canonicalOfferKey(cardName, title) {
@@ -1091,6 +1092,12 @@ const CANONICAL_RECOMMENDATION_RULES = {
     regions: ["香港", "澳門", "海外"],
     currency: "any",
     paymentMethod: "applepay"
+  },
+  [canonicalOfferKey("農行萬事達白金卡", "每月首筆境外線下返 US$1")]: {
+    group: null,
+    channel: "offline",
+    regions: ["香港", "澳門", "海外"],
+    currency: "any"
   },
   [canonicalOfferKey("農行萬事達白金卡", "境外簽賬 1%")]: {
     group: "abc-global-overseas",
@@ -2434,6 +2441,9 @@ function getCustomRewardAmount(offer, amount, displayCurrency) {
   if (key === canonicalOfferKey("工行星座Visa卡", "境外 Apple Pay 交通 100%")) {
     rewardUsd = Math.min(amountInUsd, 3, remaining);
     return convertCurrencyAmount(rewardUsd, "USD", displayCurrency);
+  }
+  if (key === canonicalOfferKey("農行萬事達白金卡", "每月首筆境外線下返 US$1")) {
+    return convertCurrencyAmount(1, "USD", displayCurrency);
   }
   return 0;
 }
