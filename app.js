@@ -6,7 +6,7 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "本地餐飲及娛樂 1%",
   "網上旅遊/娛樂/訂閱 港幣 5.4%"
 ]);
-const APP_VERSION = "v2026.05.24.6";
+const APP_VERSION = "v2026.05.28.1";
 const MERCHANT_SUGGESTIONS = [
   ["Netflix", ["netflix"]],
   ["Spotify", ["spotify"]],
@@ -108,6 +108,7 @@ const CURRENCY_TO_HKD = {
   JPY: 0.052,
   KRW: 0.0052,
   MOP: 0.97,
+  SGD: 5.78,
   THB: 0.21,
   TWD: 0.24
 };
@@ -153,6 +154,13 @@ const CUSTOM_REWARD_OFFER_KEYS = new Set([
   canonicalOfferKey("工行星座Visa卡", "香港 Apple Pay 滿 HK$50 返 US$2"),
   canonicalOfferKey("工行星座Visa卡", "境外 Apple Pay 交通 100%"),
   canonicalOfferKey("農行萬事達白金卡", "每月首筆境外線下返 US$1"),
+]);
+const BASE_REWARD_OFFER_KEYS = new Set([
+  canonicalOfferKey("農行萬事達白金卡", "境外簽賬 1%"),
+  canonicalOfferKey("工行星座Visa卡", "境外簽賬 1%")
+]);
+const UNCERTAIN_REWARD_OFFER_KEYS = new Set([
+  canonicalOfferKey("中信i享銀聯卡", "境外線下隨機立減最高 30%")
 ]);
 
 function canonicalOfferKey(cardName, title) {
@@ -890,7 +898,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
 ];
 
 const CATEGORY_LABELS = {
-  general: "購物",
+  general: "一般",
   online: "網上",
   dining: "餐飲",
   entertainment: "娛樂",
@@ -1054,10 +1062,16 @@ const CANONICAL_RECOMMENDATION_RULES = {
     payoutTiming: "instant"
   },
   [canonicalOfferKey("中信i享銀聯卡", "香港線下滿 HK$200 減 HK$20")]: {
-    group: null,
+    group: "citic-ienjoy-instant",
     channel: "offline",
     regions: ["香港"],
     currency: "HKD"
+  },
+  [canonicalOfferKey("中信i享銀聯卡", "境外線下隨機立減最高 30%")]: {
+    group: "citic-ienjoy-instant",
+    channel: "offline",
+    regions: ["香港", "澳門", "海外"],
+    currency: "any"
   },
   [canonicalOfferKey("PayMe 銀聯卡", "港幣/澳門幣/人民幣 3%")]: {
     group: "payme-nfc",
@@ -1191,7 +1205,7 @@ function updateHkdHint() {
 }
 
 function applyExchangeRates(rates) {
-  const map = { USD: "usd", CNY: "cny", JPY: "jpy", KRW: "krw", MOP: "mop", THB: "thb", TWD: "twd" };
+  const map = { USD: "usd", CNY: "cny", JPY: "jpy", KRW: "krw", MOP: "mop", SGD: "sgd", THB: "thb", TWD: "twd" };
   for (const [code, key] of Object.entries(map)) {
     const perHkd = rates[key];
     if (perHkd && perHkd > 0) CURRENCY_TO_HKD[code] = 1 / perHkd;
@@ -1208,23 +1222,15 @@ function setFxRateStatus(ts) {
     return;
   }
   const rateDate = new Date(ts);
-  const today = new Date();
-  const isToday = rateDate.toDateString() === today.toDateString();
-  const yesterday = new Date(today);
-  yesterday.setDate(today.getDate() - 1);
-  const isYesterday = rateDate.toDateString() === yesterday.toDateString();
-  let label;
-  if (isToday) {
-    el.className = "field-hint fx-rate-status live";
-    label = "實時匯率";
-  } else if (isYesterday) {
-    el.className = "field-hint fx-rate-status live";
-    label = "匯率（昨日）";
-  } else {
-    el.className = "field-hint fx-rate-status static";
-    const dateStr = rateDate.toLocaleDateString("zh-HK", { month: "numeric", day: "numeric" });
-    label = `匯率（${dateStr}）`;
-  }
+  const rateDay = rateDate.toLocaleDateString("en-CA", { timeZone: "Asia/Hong_Kong" });
+  const today = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Hong_Kong" });
+  const dateLabel = rateDate.toLocaleDateString("zh-HK", {
+    timeZone: "Asia/Hong_Kong",
+    month: "numeric",
+    day: "numeric"
+  });
+  const label = rateDay === today ? "最新匯率（今日）" : `最新匯率（${dateLabel}）`;
+  el.className = "field-hint fx-rate-status live";
   el.innerHTML = `${label} · ${source}`;
 }
 
@@ -1957,7 +1963,7 @@ function runRecommendation() {
   const merchantRaw = (document.getElementById("recommend-merchant")?.value || "").trim();
   const amountRaw = document.getElementById("recommend-amount").value;
   const amount = amountRaw === "" ? null : Number(amountRaw);
-  const currency = document.getElementById("recommend-currency").value || "HKD";
+  const selectedCurrency = document.getElementById("recommend-currency").value || "HKD";
   const date = document.getElementById("recommend-date").value;
 
   if (!date) {
@@ -1977,11 +1983,13 @@ function runRecommendation() {
     merchantTokens = collectMerchantTokens(normalizedMerchant);
     if (!merchantTokens.length) merchantTokens = [normalizedMerchant];
   }
+  const currency = inferScenarioCurrency(selectedCurrency, region, merchantRaw, merchantTokens);
 
   const scenario = {
     description: merchantRaw,
     amount,
     currency,
+    selectedCurrency,
     date,
     location: region,
     locations,
@@ -2092,6 +2100,17 @@ function renderRecommendationResults(results, scenario, rateMode, currency) {
             `).join("")}
           </div>
         ` : ""}
+        ${result.uncertainOffers.length ? `
+          <div class="result-uncertain-details">
+            <div class="result-uncertain-title">可能額外優惠（不計入排序）</div>
+            ${result.uncertainOffers.map((offer) => `
+              <div class="result-uncertain-item">
+                <strong>${merchantQuery ? highlightMerchantInText(formatRecommendationOfferTitle(result.card, offer), merchantQuery) : escapeHtml(formatRecommendationOfferTitle(result.card, offer))}</strong>
+                <span>${merchantQuery ? highlightMerchantInText(offer.notes || "實際回贈金額不確定，未計入推薦排序。", merchantQuery) : escapeHtml(offer.notes || "實際回贈金額不確定，未計入推薦排序。")}</span>
+              </div>
+            `).join("")}
+          </div>
+        ` : ""}
         ${result.missedOfferReasons.length ? `
           <div class="result-missed-details">
             <div class="result-missed-title">未採用活動</div>
@@ -2132,13 +2151,15 @@ function setRecommendationResultScope(scope) {
 
 
 function evaluateCard(card, scenario, rateMode) {
-  const baseRateApplied = Number(card.baseRate || 0);
   const amount = scenario.amount || 0;
   const hkdAmount = convertCurrencyAmount(amount, scenario.currency, "HKD");
+  const baseRateApplied = getScenarioBaseRewardRate(card, scenario, hkdAmount, rateMode);
   const baseRewardAmount = hkdAmount * baseRateApplied / 100;
 
   const matchingOffers = state.offers.filter((offer) => {
     if (offer.cardId !== card.id) return false;
+    if (isBaseRewardOffer(card, offer)) return false;
+    if (isUncertainRewardOffer(card, offer)) return false;
     if (shouldIgnoreOfferForRecommendation(offer)) return false;
     if (rateMode && isFixedValueOffer(offer)) return false;
     if (!isDateInRange(scenario.date, offer.startDate, offer.endDate)) return false;
@@ -2161,13 +2182,14 @@ function evaluateCard(card, scenario, rateMode) {
   const bestOfferRate = selectedOffers.reduce((max, offer) => Math.max(max, Number(offer.bonusRate || 0)), 0);
   const bestRate = baseRateApplied + bestOfferRate;
   const hasInstantPayout = selectedOffers.some((offer) => getCanonicalRecommendationRule(card, offer)?.payoutTiming === "instant");
+  const uncertainOffers = getMatchingUncertainOffers(card, scenario, hkdAmount, rateMode);
   const missedOfferReasons = buildMissedOfferReasons(card, scenario, amount, rateMode, selectedOffers);
   const rankingScore = rateMode
     ? bestRate + getInstantPayoutRateBonus(hasInstantPayout)
     : totalRewardAmount + getInstantPayoutValueBonus(hasInstantPayout, amount);
 
   const explanationParts = [];
-  explanationParts.push("基礎回贈按卡片基本回贈率計算");
+  explanationParts.push("基礎回贈按卡片基本或筆筆回贈率計算");
   if (selectedOffers.length) {
     explanationParts.push("命中 " + selectedOffers.length + " 個已採用活動");
     if (skippedOffers.length) {
@@ -2178,6 +2200,9 @@ function evaluateCard(card, scenario, rateMode) {
     }
   } else {
     explanationParts.push("沒有命中可疊加活動");
+  }
+  if (uncertainOffers.length) {
+    explanationParts.push("另有不確定優惠符合條件但未計入排序");
   }
 
   return {
@@ -2190,6 +2215,7 @@ function evaluateCard(card, scenario, rateMode) {
     hasInstantPayout,
     rankingScore,
     selectedOffers,
+    uncertainOffers,
     offerTitles: selectedOffers.map((offer) => formatRecommendationOfferTitle(card, offer)),
     missedOfferReasons,
     offerSelectionSummary,
@@ -2197,10 +2223,46 @@ function evaluateCard(card, scenario, rateMode) {
   };
 }
 
+function getMatchingUncertainOffers(card, scenario, hkdAmount, rateMode) {
+  return state.offers.filter((offer) => {
+    if (offer.cardId !== card.id) return false;
+    if (!isUncertainRewardOffer(card, offer)) return false;
+    if (!isDateInRange(scenario.date, offer.startDate, offer.endDate)) return false;
+    if (!isOfferMinSpendSatisfied(card, offer, hkdAmount, scenario, { ignoreAmount: rateMode })) return false;
+    if (!offerScopeMatchesScenario(card, offer, scenario)) return false;
+    if (!offerRuleMatchesScenario(card, offer, scenario)) return false;
+    if (!merchantOfferMatchesScenario(offer, scenario)) return false;
+    return true;
+  });
+}
+
+function getScenarioBaseRewardRate(card, scenario, hkdAmount, rateMode) {
+  const cardBaseRate = Number(card.baseRate || 0);
+  const baseOfferRate = state.offers
+    .filter((offer) => offer.cardId === card.id && isBaseRewardOffer(card, offer))
+    .filter((offer) => isDateInRange(scenario.date, offer.startDate, offer.endDate))
+    .filter((offer) => isOfferMinSpendSatisfied(card, offer, hkdAmount, scenario, { ignoreAmount: rateMode }))
+    .filter((offer) => offerScopeMatchesScenario(card, offer, scenario))
+    .filter((offer) => offerRuleMatchesScenario(card, offer, scenario))
+    .filter((offer) => merchantOfferMatchesScenario(offer, scenario))
+    .reduce((max, offer) => Math.max(max, Number(offer.bonusRate || 0)), 0);
+  return Math.max(cardBaseRate, baseOfferRate);
+}
+
+function isBaseRewardOffer(card, offer) {
+  const key = offer.canonicalKey || canonicalOfferKey(card.name, offer.title || "");
+  return BASE_REWARD_OFFER_KEYS.has(key);
+}
+
+function isUncertainRewardOffer(card, offer) {
+  const key = offer.canonicalKey || canonicalOfferKey(card.name, offer.title || "");
+  return UNCERTAIN_REWARD_OFFER_KEYS.has(key);
+}
+
 function buildMissedOfferReasons(card, scenario, amount, rateMode, selectedOffers) {
   const selectedIds = new Set(selectedOffers.map((offer) => offer.id));
   return state.offers
-    .filter((offer) => offer.cardId === card.id && !selectedIds.has(offer.id))
+    .filter((offer) => offer.cardId === card.id && !selectedIds.has(offer.id) && !isBaseRewardOffer(card, offer) && !isUncertainRewardOffer(card, offer))
     .map((offer) => ({
       offer,
       reason: getOfferExclusionReason(card, offer, scenario, amount, rateMode)
@@ -2244,7 +2306,7 @@ function getMinSpendExclusionReason(card, offer) {
 function getOfferScopeExclusionReason(card, offer, scenario) {
   const rule = getCanonicalRecommendationRule(card, offer);
   if (rule) {
-    if (!ruleCategoryMatches(rule, scenario)) return "類別不符合活動要求";
+    if (!recommendationCategoryMatches(card, offer, scenario)) return "類別不符合活動要求";
     if (!ruleChannelMatches(rule, scenario)) return "交易方式不符合活動要求";
     if (!ruleRegionMatches(rule, scenario, card, offer)) return "地點不符合活動要求";
     if (!ruleCurrencyMatches(rule, scenario)) return "貨幣不符合活動要求";
@@ -2286,7 +2348,12 @@ function isOfferMinSpendSatisfied(card, offer, amount, scenario, options = {}) {
     return Boolean(scenario.flags?.chillMonthlyQualified);
   }
   if (options.ignoreAmount) return true;
-  return amount >= Number(offer.minSpend || 0);
+  const minSpend = Number(offer.minSpend || 0);
+  if (minSpend <= 0) return true;
+  const transactionAmount = Number(scenario?.amount ?? amount ?? 0);
+  const transactionCurrency = scenario?.currency || "HKD";
+  const requiredCurrency = offer.currency || card.currency || transactionCurrency;
+  return convertCurrencyAmount(transactionAmount, transactionCurrency, requiredCurrency) >= minSpend;
 }
 
 function formatRecommendationOfferTitle(card, offer) {
@@ -2294,13 +2361,13 @@ function formatRecommendationOfferTitle(card, offer) {
   if (rule?.titleSuffix === "monthlyQualified") {
     return `${offer.title}（今月累積需達 HK$${formatNumber(offer.minSpend)}）`;
   }
-  return offer.minSpend > 0 ? `${offer.title}（需達 HK$${formatNumber(offer.minSpend)}）` : offer.title;
+  return offer.minSpend > 0 ? `${offer.title}（需達 ${formatAmountByCurrency(offer.minSpend, offer.currency || card.currency || "HKD")}）` : offer.title;
 }
 
 function offerScopeMatchesScenario(card, offer, scenario) {
   const rule = getCanonicalRecommendationRule(card, offer);
   if (rule) {
-    if (rule.merchantMode !== "listed-or-category" && !ruleCategoryMatches(rule, scenario)) return false;
+    if (rule.merchantMode !== "listed-or-category" && !recommendationCategoryMatches(card, offer, scenario)) return false;
     if (!ruleChannelMatches(rule, scenario)) return false;
     if (!ruleRegionMatches(rule, scenario, card, offer)) return false;
     if (!ruleCurrencyMatches(rule, scenario)) return false;
@@ -2321,6 +2388,12 @@ function ruleCategoryMatches(rule, scenario) {
 function categoryMatchesOffer(offer, scenario) {
   if (offer.category === "general") return true;
   return offer.category === scenario.category;
+}
+
+function recommendationCategoryMatches(card, offer, scenario) {
+  const rule = getCanonicalRecommendationRule(card, offer);
+  if (rule?.categoryAnyOf?.length) return ruleCategoryMatches(rule, scenario);
+  return categoryMatchesOffer(offer, scenario);
 }
 
 function ruleChannelMatches(rule, scenario) {
@@ -2377,7 +2450,7 @@ function selectBestOfferCombination(card, scenario, offers, amount) {
 
   buckets.forEach((bucketOffers) => {
     const ranked = [...bucketOffers].sort((left, right) => {
-      const valueDiff = calculateOfferRewardAmount(right, amount, "HKD") - calculateOfferRewardAmount(left, amount, "HKD");
+      const valueDiff = calculateOfferRewardAmount(card, right, amount, "HKD") - calculateOfferRewardAmount(card, left, amount, "HKD");
       if (valueDiff !== 0) return valueDiff;
       return Number(right.bonusRate || 0) - Number(left.bonusRate || 0);
     });
@@ -2385,7 +2458,7 @@ function selectBestOfferCombination(card, scenario, offers, amount) {
     skippedOffers.push(...ranked.slice(1));
   });
 
-  const offerRewardAmount = selectedOffers.reduce((sum, offer) => sum + calculateOfferRewardAmount(offer, amount, "HKD"), 0);
+  const offerRewardAmount = selectedOffers.reduce((sum, offer) => sum + calculateOfferRewardAmount(card, offer, amount, "HKD"), 0);
   return {
     selectedOffers,
     skippedOffers,
@@ -2402,8 +2475,12 @@ function getOfferSelectionKey(card, offer) {
   return `stackable:${offer.id}`;
 }
 
-function hasCustomReward(offer) {
-  return CUSTOM_REWARD_OFFER_KEYS.has(offer.canonicalKey || "");
+function getOfferKey(card, offer) {
+  return offer.canonicalKey || canonicalOfferKey(card?.name || "", offer.title || "");
+}
+
+function hasCustomReward(offer, card = null) {
+  return CUSTOM_REWARD_OFFER_KEYS.has(getOfferKey(card, offer));
 }
 
 function isOfferExhausted(offer) {
@@ -2412,11 +2489,12 @@ function isOfferExhausted(offer) {
   return Number(offer.usageUsed || 0) >= total;
 }
 
-function getCustomRewardAmount(offer, amount, displayCurrency) {
-  const key = offer.canonicalKey || "";
+function getCustomRewardAmount(card, offer, amount, displayCurrency) {
+  const key = getOfferKey(card, offer);
   const used = Number(offer.usageUsed || 0);
-  const remaining = Math.max(0, Number(offer.usageTotal || 0) - used);
-  if (remaining <= 0) return 0;
+  const total = Number(offer.usageTotal || 0);
+  const remaining = total > 0 ? Math.max(0, total - used) : Infinity;
+  if (total > 0 && remaining <= 0) return 0;
   const amountInUsd = convertCurrencyAmount(Number(amount || 0), displayCurrency, "USD");
   let rewardUsd = 0;
 
@@ -2445,11 +2523,15 @@ function getCustomRewardAmount(offer, amount, displayCurrency) {
   if (key === canonicalOfferKey("農行萬事達白金卡", "每月首筆境外線下返 US$1")) {
     return convertCurrencyAmount(1, "USD", displayCurrency);
   }
+  if (key === canonicalOfferKey("中信i享銀聯卡", "境外線下隨機立減最高 30%")) {
+    const cap = convertCurrencyAmount(200, "CNY", displayCurrency);
+    return Math.min(Number(amount || 0) * 0.3, cap);
+  }
   return 0;
 }
 
-function calculateOfferRewardAmount(offer, amount, displayCurrency) {
-  if (hasCustomReward(offer)) return getCustomRewardAmount(offer, amount, displayCurrency);
+function calculateOfferRewardAmount(card, offer, amount, displayCurrency) {
+  if (hasCustomReward(offer, card)) return getCustomRewardAmount(card, offer, amount, displayCurrency);
   const bonusRate = Number(offer.bonusRate || 0);
   const cap = Number(offer.cap || 0);
   if (bonusRate === 0 && cap > 0) return cap;
@@ -2724,6 +2806,65 @@ function inferCurrencyBucket(currency, locations, description) {
   return currency === "HKD" ? "foreign" : "foreign";
 }
 
+function inferScenarioCurrency(selectedCurrency, region, description, merchantTokens = []) {
+  const normalized = String(description || "").toLowerCase();
+  if (selectedCurrency !== "HKD") return selectedCurrency;
+
+  const explicitCurrency = inferCurrencyFromText(normalized);
+  if (explicitCurrency) return explicitCurrency;
+
+  const tokenCurrencyMap = new Map([
+    ["中國鐵路", "CNY"],
+    ["北京地鐵", "CNY"],
+    ["上海地鐵", "CNY"],
+    ["上海磁浮", "CNY"],
+    ["環島中港通", "CNY"],
+    ["jr", "JPY"],
+    ["松本清", "JPY"],
+    ["唐吉訶德", "JPY"],
+    ["三越", "JPY"],
+    ["伊勢丹", "JPY"],
+    ["大丸", "JPY"],
+    ["松坂屋", "JPY"],
+    ["阪急", "JPY"],
+    ["阪神", "JPY"],
+    ["king power", "THB"]
+  ]);
+  const tokenCurrency = merchantTokens.map((token) => tokenCurrencyMap.get(token)).find(Boolean);
+  if (tokenCurrency) return tokenCurrency;
+
+  const countryCurrency = inferCountryCurrencyFromText(normalized);
+  if (countryCurrency) return countryCurrency;
+
+  if (region === "內地") return "CNY";
+  if (region === "澳門") return "MOP";
+  return selectedCurrency;
+}
+
+function inferCurrencyFromText(normalizedText) {
+  if (/港幣|港元|hkd/.test(normalizedText)) return "HKD";
+  if (/人民幣|人民币|rmb|cny/.test(normalizedText)) return "CNY";
+  if (/澳門幣|澳门币|mop/.test(normalizedText)) return "MOP";
+  if (/日圓|日元|日幣|日币|jpy|yen/.test(normalizedText)) return "JPY";
+  if (/韓圜|韓元|韩元|krw/.test(normalizedText)) return "KRW";
+  if (/新加坡元|坡幣|坡币|sgd/.test(normalizedText)) return "SGD";
+  if (/泰銖|泰铢|thb/.test(normalizedText)) return "THB";
+  if (/台幣|臺幣|台币|twd/.test(normalizedText)) return "TWD";
+  if (/美元|美金|usd/.test(normalizedText)) return "USD";
+  return "";
+}
+
+function inferCountryCurrencyFromText(normalizedText) {
+  if (/內地|内地|中國|中国|大陸|大陆|mainland|china/.test(normalizedText)) return "CNY";
+  if (/澳門|澳门|macau|macao/.test(normalizedText)) return "MOP";
+  if (/日本|japan/.test(normalizedText)) return "JPY";
+  if (/韓國|韩国|korea/.test(normalizedText)) return "KRW";
+  if (/新加坡|singapore/.test(normalizedText)) return "SGD";
+  if (/泰國|泰国|thailand/.test(normalizedText)) return "THB";
+  if (/台灣|臺灣|台湾|taiwan/.test(normalizedText)) return "TWD";
+  return "";
+}
+
 function formatOfferLocationLabel(offer, cardName = "") {
   if (cardName === "BOC Chill Card" && offer.title === "指定商戶 8%") {
     return { main: "指定商戶", sub: "實體或網上" };
@@ -2897,13 +3038,13 @@ function formatCurrency(value) {
 
 function formatAmountByCurrency(value, currency) {
   const amount = formatNumber(value);
-  const symbols = { HKD: "$", USD: "US$", CNY: "¥", JPY: "¥", KRW: "₩", MOP: "MOP$", THB: "฿", TWD: "NT$" };
+  const symbols = { HKD: "$", USD: "US$", CNY: "¥", JPY: "¥", KRW: "₩", MOP: "MOP$", SGD: "S$", THB: "฿", TWD: "NT$" };
   return (symbols[currency] || "$") + amount;
 }
 
 function formatCurrencyWithCode(value, currency) {
   const amount = Number(value || 0).toFixed(2);
-  const symbols = { HKD: "HK$", USD: "US$", CNY: "¥", JPY: "¥", KRW: "₩", MOP: "MOP$", THB: "฿", TWD: "NT$" };
+  const symbols = { HKD: "HK$", USD: "US$", CNY: "¥", JPY: "¥", KRW: "₩", MOP: "MOP$", SGD: "S$", THB: "฿", TWD: "NT$" };
   return (symbols[currency] || currency + "$") + amount;
 }
 
@@ -2916,7 +3057,7 @@ function convertCurrencyAmount(amount, fromCurrency, toCurrency) {
 }
 
 function currencySymbol(currency) {
-  const symbols = { HKD: "HK$", USD: "US$", CNY: "¥", JPY: "¥", KRW: "₩", MOP: "MOP$", THB: "฿", TWD: "NT$" };
+  const symbols = { HKD: "HK$", USD: "US$", CNY: "¥", JPY: "¥", KRW: "₩", MOP: "MOP$", SGD: "S$", THB: "฿", TWD: "NT$" };
   return symbols[currency] || "";
 }
 
