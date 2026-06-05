@@ -6,7 +6,7 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "本地餐飲及娛樂 1%",
   "網上旅遊/娛樂/訂閱 港幣 5.4%"
 ]);
-const APP_VERSION = "v2026.05.28.3";
+const APP_VERSION = "v2026.06.06.1";
 const MERCHANT_SUGGESTIONS = [
   ["Netflix", ["netflix"]],
   ["Spotify", ["spotify"]],
@@ -2072,6 +2072,7 @@ function renderRecommendationResults(results, scenario, rateMode, currency) {
           </div>
         </div>
         <div style="display:flex;align-items:flex-start;gap:8px;">
+          <button class="result-share-btn" type="button" onclick="shareResultCard(event, this.closest('.result-card'))">分享</button>
           <div class="result-value">${rateMode ? formatPercent(result.bestRate) : formatCurrencyWithCode(result.totalRewardAmount, "HKD")}</div>
           <span class="result-chevron">›</span>
         </div>
@@ -3103,6 +3104,113 @@ function todayString() {
   return local.toISOString().slice(0, 10);
 }
 
+async function shareResultCard(event, article) {
+  event?.stopPropagation();
+  if (!article) return;
+
+  try {
+    showToast("正在生成分享圖。");
+    const blob = await renderResultCardToPng(article);
+    const filename = `${slugifyFileName(article.querySelector(".card-name")?.textContent || "reward-card")}.png`;
+    const file = new File([blob], filename, { type: "image/png" });
+
+    if (navigator.canShare?.({ files: [file] })) {
+      await navigator.share({
+        title: article.querySelector(".card-name")?.textContent || "碌卡助手",
+        files: [file]
+      });
+      showToast("分享圖已準備好。");
+      return;
+    }
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    showToast("已下載分享圖。");
+  } catch (error) {
+    console.error(error);
+    showToast("暫時生成唔到分享圖。");
+  }
+}
+
+async function renderResultCardToPng(article) {
+  const sourceRect = article.getBoundingClientRect();
+  const clone = article.cloneNode(true);
+  clone.classList.add("expanded");
+  clone.querySelectorAll(".result-share-btn, .result-chevron, .result-missed-details").forEach((el) => el.remove());
+  clone.querySelectorAll("[onclick]").forEach((el) => el.removeAttribute("onclick"));
+
+  const measure = document.createElement("div");
+  measure.style.cssText = `position:fixed;left:-10000px;top:0;width:${Math.ceil(sourceRect.width)}px;padding:0;background:transparent;z-index:-1;`;
+  measure.appendChild(clone);
+  document.body.appendChild(measure);
+
+  const rect = clone.getBoundingClientRect();
+  const width = Math.ceil(rect.width);
+  const height = Math.ceil(rect.height);
+  const styles = [...document.querySelectorAll("style")].map((style) => style.textContent).join("\n");
+  const rootStyle = buildCapturedRootStyle();
+  const html = `
+    <div xmlns="http://www.w3.org/1999/xhtml">
+      <style>${rootStyle}${styles}</style>
+      ${clone.outerHTML}
+    </div>
+  `;
+  measure.remove();
+
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+      <foreignObject width="100%" height="100%">${html}</foreignObject>
+    </svg>
+  `;
+  const svgBlob = new Blob([svg], { type: "image/svg+xml;charset=utf-8" });
+  const url = URL.createObjectURL(svgBlob);
+
+  try {
+    const image = await loadImage(url);
+    const scale = Math.min(3, Math.max(2, window.devicePixelRatio || 2));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.ceil(width * scale);
+    canvas.height = Math.ceil(height * scale);
+    const ctx = canvas.getContext("2d");
+    ctx.scale(scale, scale);
+    ctx.drawImage(image, 0, 0, width, height);
+    return await new Promise((resolve, reject) => {
+      canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("PNG export failed")), "image/png", 0.96);
+    });
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+function buildCapturedRootStyle() {
+  const computed = getComputedStyle(document.documentElement);
+  const vars = ["--ink", "--ink-contrast", "--accent", "--accent-soft", "--bg", "--card", "--card-inner", "--text", "--muted", "--border", "--border-strong", "--good", "--warn", "--shadow"];
+  return `:root{${vars.map((name) => `${name}:${computed.getPropertyValue(name)};`).join("")}}body{margin:0;background:transparent;color:var(--text);font-family:\"IBM Plex Sans\",sans-serif;}`;
+}
+
+function loadImage(url) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = reject;
+    image.src = url;
+  });
+}
+
+function slugifyFileName(value) {
+  return String(value || "reward-card")
+    .trim()
+    .replace(/[\\/:*?"<>|]+/g, "")
+    .replace(/\s+/g, "-")
+    .slice(0, 80) || "reward-card";
+}
+
 function showToast(message) {
   const toast = document.getElementById("toast");
   toast.textContent = message;
@@ -3145,3 +3253,4 @@ function escapeHtml(value) {
 window.editOffer = editOffer;
 window.cycleOfferUsage = cycleOfferUsage;
 window.setRecommendationResultScope = setRecommendationResultScope;
+window.shareResultCard = shareResultCard;
