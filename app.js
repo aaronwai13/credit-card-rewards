@@ -6,7 +6,7 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "本地餐飲及娛樂 1%",
   "網上旅遊/娛樂/訂閱 港幣 5.4%"
 ]);
-const APP_VERSION = "v2026.06.06.4";
+const APP_VERSION = "v2026.06.07.1";
 const MERCHANT_SUGGESTIONS = [
   ["Netflix", ["netflix"]],
   ["Spotify", ["spotify"]],
@@ -122,16 +122,17 @@ const CARD_DISPLAY_ORDER = [
   "AEON WAKUWAKU",
   "長城萬事達 YOU 卡",
   "中信i享銀聯卡",
-  "中信萬事達扣賬卡",
   "農行萬事達白金卡",
   "工行星座Visa卡"
 ];
 const MAINLAND_CARD_NAMES = new Set([
   "長城萬事達 YOU 卡",
   "中信i享銀聯卡",
-  "中信萬事達扣賬卡",
   "農行萬事達白金卡",
   "工行星座Visa卡"
+]);
+const REMOVED_CARD_NAMES = new Set([
+  "中信萬事達扣賬卡"
 ]);
 const LEGACY_CARD_NAME_MAP = {
   "i享卡": "中信i享銀聯卡",
@@ -148,7 +149,6 @@ const LEGACY_OFFER_TITLE_MAP = {
 const CUSTOM_REWARD_OFFER_KEYS = new Set([
   canonicalOfferKey("長城萬事達 YOU 卡", "Apple Pay 首3筆 100%返現"),
   canonicalOfferKey("長城萬事達 YOU 卡", "Apple Pay 首2筆額外返 US$3 + US$2"),
-  canonicalOfferKey("中信萬事達扣賬卡", "Apple Pay 首2筆額外返 US$3 + US$2"),
   canonicalOfferKey("農行萬事達白金卡", "Apple Pay 首3筆 100%返現"),
   canonicalOfferKey("農行萬事達白金卡", "Apple Pay 首2筆額外返 US$3 + US$2"),
   canonicalOfferKey("工行星座Visa卡", "香港 Apple Pay 滿 HK$50 返 US$2"),
@@ -287,17 +287,6 @@ const CANONICAL_CARD_DEFINITIONS = [
       general: 1
     },
     locations: ["香港", "澳門", "海外"],
-    notes: ""
-  },
-  {
-    name: "中信萬事達扣賬卡",
-    bank: "中信",
-    baseRate: 0,
-    currency: "CNY",
-    categories: {
-      general: 1
-    },
-    locations: ["香港", "澳門", "內地", "海外", "網上"],
     notes: ""
   },
   {
@@ -699,21 +688,6 @@ const CANONICAL_OFFER_DEFINITIONS = [
     notes: "在香港、澳門、新加坡、日本、韓國通過銀聯清算網絡的合資格境外線下交易，單筆交易金額滿 200 元可享實時隨機立減，最高 30%，每月每卡最高可享 200 元實時立減。"
   },
   {
-    cardName: "中信萬事達扣賬卡",
-    title: "Apple Pay 首2筆額外返 US$3 + US$2",
-    category: "general",
-    tags: ["applepay"],
-    bonusRate: 0,
-    minSpend: 0,
-    cap: 0,
-    startDate: "2026-01-01",
-    endDate: "2026-12-31",
-    locations: ["香港", "澳門", "海外"],
-    usageUsed: 0,
-    usageTotal: 2,
-    notes: "Apple Pay 首筆消費可獲 US$3 返現，第二筆消費可獲 US$2 返現。"
-  },
-  {
     cardName: "農行萬事達白金卡",
     title: "每月首筆境外線下返 US$1",
     category: "general",
@@ -1094,13 +1068,6 @@ const CANONICAL_RECOMMENDATION_RULES = {
     paymentMethod: "applepay"
   },
   [canonicalOfferKey("長城萬事達 YOU 卡", "Apple Pay 首2筆額外返 US$3 + US$2")]: {
-    group: null,
-    channel: "either",
-    regions: ["香港", "澳門", "海外"],
-    currency: "any",
-    paymentMethod: "applepay"
-  },
-  [canonicalOfferKey("中信萬事達扣賬卡", "Apple Pay 首2筆額外返 US$3 + US$2")]: {
     group: null,
     channel: "either",
     regions: ["香港", "澳門", "海外"],
@@ -1493,11 +1460,16 @@ function normalizeOffer(offer) {
 }
 
 function migrateStoredData() {
-  const existingCards = (Array.isArray(state.cards) ? state.cards : [])
+  const loadedCards = (Array.isArray(state.cards) ? state.cards : [])
     .map((card) => ({
       ...card,
       name: LEGACY_CARD_NAME_MAP[card.name] || card.name
     }));
+  const removedCardIds = new Set(loadedCards
+    .filter((card) => REMOVED_CARD_NAMES.has(card.name))
+    .map((card) => card.id)
+    .filter(Boolean));
+  const existingCards = loadedCards.filter((card) => !REMOVED_CARD_NAMES.has(card.name));
   const customCards = existingCards
     .filter((card) => !CANONICAL_CARD_DEFINITIONS.some((item) => item.name === card.name))
     .map((card) => ({
@@ -1530,10 +1502,12 @@ function migrateStoredData() {
     }
   });
   const customOffers = existingOffers.filter((offer) => {
+    if (removedCardIds.has(offer.cardId)) return false;
     // 已廢棄的正式優惠標題，清除
     if (DEPRECATED_OFFER_TITLES.has(offer.title)) return false;
     // 只保留自訂卡（非正式卡）的優惠；正式卡的優惠由 canonicalOffers 重建
     const linkedCard = existingCardById[offer.cardId];
+    if (linkedCard && REMOVED_CARD_NAMES.has(linkedCard.name)) return false;
     return !linkedCard || !canonicalCardNames.has(linkedCard.name);
   });
 
@@ -2507,7 +2481,6 @@ function getCustomRewardAmount(card, offer, amount, displayCurrency) {
     return convertCurrencyAmount(rewardUsd, "USD", displayCurrency);
   }
   if (key === canonicalOfferKey("長城萬事達 YOU 卡", "Apple Pay 首2筆額外返 US$3 + US$2")
-    || key === canonicalOfferKey("中信萬事達扣賬卡", "Apple Pay 首2筆額外返 US$3 + US$2")
     || key === canonicalOfferKey("農行萬事達白金卡", "Apple Pay 首2筆額外返 US$3 + US$2")) {
     rewardUsd = used === 0 ? 3 : used === 1 ? 2 : 0;
     return convertCurrencyAmount(rewardUsd, "USD", displayCurrency);
@@ -2937,9 +2910,6 @@ function formatOfferLocationLabel(offer, cardName = "") {
   }
   if (cardName === "中信i享銀聯卡" && offer.title === "境外線下隨機立減最高 30%") {
     return { main: "香港 / 海外", sub: "實體" };
-  }
-  if (cardName === "中信萬事達扣賬卡" && offer.title === "Apple Pay 首2筆額外返 US$3 + US$2") {
-    return { main: "香港 / 澳門 / 海外", sub: "實體或網上" };
   }
   if (cardName === "農行萬事達白金卡" && offer.title === "每月首筆境外線下返 US$1") {
     return { main: "香港 / 澳門 / 海外", sub: "實體" };
