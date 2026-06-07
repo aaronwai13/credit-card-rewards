@@ -6,7 +6,7 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "本地餐飲及娛樂 1%",
   "網上旅遊/娛樂/訂閱 港幣 5.4%"
 ]);
-const APP_VERSION = "v2026.06.07.1";
+const APP_VERSION = "v2026.06.08.1";
 const MERCHANT_SUGGESTIONS = [
   ["Netflix", ["netflix"]],
   ["Spotify", ["spotify"]],
@@ -1049,13 +1049,13 @@ const CANONICAL_RECOMMENDATION_RULES = {
   },
   [canonicalOfferKey("PayMe 銀聯卡", "港幣/澳門幣/人民幣 3%")]: {
     group: "payme-nfc",
-    channel: "offline",
+    channel: "either",
     regions: ["香港", "澳門", "內地", "海外"],
     currencyAnyOf: ["HKD", "CNY", "MOP"]
   },
   [canonicalOfferKey("PayMe 銀聯卡", "其他貨幣 10%")]: {
     group: "payme-nfc",
-    channel: "offline",
+    channel: "either",
     regions: ["海外"],
     currency: "foreign",
     excludeCurrencies: ["HKD", "CNY", "MOP"]
