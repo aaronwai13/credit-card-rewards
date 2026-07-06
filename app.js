@@ -6,7 +6,7 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "本地餐飲及娛樂 1%",
   "網上旅遊/娛樂/訂閱 港幣 5.4%"
 ]);
-const APP_VERSION = "v2026.06.16.1";
+const APP_VERSION = "v2026.07.07.18";
 const MERCHANT_SUGGESTIONS = [
   ["Netflix", ["netflix"]],
   ["Spotify", ["spotify"]],
@@ -81,10 +81,21 @@ const MERCHANT_SUGGESTIONS = [
   ["POP MART", ["pop mart", "popmart"]],
   ["唐吉訶德 / Don Quijote", ["唐吉訶德", "唐吉诃德", "don quijote"]],
   ["松本清", ["松本清"]],
+  ["高島屋", ["高島屋", "高岛屋", "takashimaya"]],
   ["阪急百貨", ["阪急"]],
+  ["阪神百貨", ["阪神"]],
   ["大丸百貨", ["大丸"]],
+  ["松坂屋", ["松坂屋"]],
   ["三越百貨", ["三越"]],
   ["伊勢丹", ["伊勢丹", "伊势丹"]],
+  ["Coles", ["coles"]],
+  ["Woolworths", ["woolworths"]],
+  ["Olive Young", ["olive young", "oliveyoung", "올리브영"]],
+  ["新羅免稅店", ["新羅", "新罗", "shilla"]],
+  ["樂天免稅店", ["樂天免稅", "乐天免税", "lotte duty free"]],
+  ["新世界免稅店", ["新世界", "shinsegae"]],
+  ["Emporium", ["emporium"]],
+  ["Paragon Department Stores", ["paragon"]],
   ["Uber Eats", ["uber eats"]],
   ["Deliveroo", ["deliveroo"]],
   ["DoorDash", ["doordash", "door dash"]],
@@ -156,6 +167,14 @@ const BASE_REWARD_OFFER_KEYS = new Set([
 ]);
 const UNCERTAIN_REWARD_OFFER_KEYS = new Set([
   canonicalOfferKey("中信i享銀聯卡", "境外線下隨機立減最高 30%")
+]);
+const FORCE_CANONICAL_OFFER_KEYS = new Set([
+  canonicalOfferKey("PayMe 銀聯卡", "港幣/澳門幣/人民幣 3%"),
+  canonicalOfferKey("PayMe 銀聯卡", "其他貨幣 10%"),
+  canonicalOfferKey("恒生多貨幣扣賬卡", "指定海外商戶 15%"),
+  canonicalOfferKey("恒生多貨幣扣賬卡", "指定海外交通 20%"),
+  canonicalOfferKey("恒生多貨幣扣賬卡", "指定本地商戶 20%"),
+  canonicalOfferKey("農行萬事達白金卡", "Apple Pay 境外線下 2%")
 ]);
 
 function canonicalOfferKey(cardName, title) {
@@ -307,7 +326,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
     minSpend: 0,
     cap: 0,
     startDate: "2026-01-01",
-    endDate: "2026-06-30",
+    endDate: "2026-12-31",
     locations: ["澳門", "內地", "海外", "網上"],
     notes: "合資格海外簽賬（於海外商戶不論實體或網上以外幣交易及支付）可享 4% 現金回贈；以港幣支付的外幣簽賬不包括在內。"
   },
@@ -320,7 +339,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
     minSpend: 0,
     cap: 0,
     startDate: "2026-01-01",
-    endDate: "2026-06-30",
+    endDate: "2026-12-31",
     locations: ["香港", "澳門", "內地", "海外", "網上"],
     notes: "合資格網上簽賬（於網上完成之零售簽賬，簽賬地點及貨幣種類不限）可享 4% 現金回贈；電子錢包簽賬不算。"
   },
@@ -333,10 +352,10 @@ const CANONICAL_OFFER_DEFINITIONS = [
     minSpend: 1000,
     cap: 0,
     startDate: "2026-01-01",
-    endDate: "2026-06-30",
+    endDate: "2026-12-31",
     locations: ["香港", "澳門", "內地", "海外", "網上"],
-    notes: "每月累積合資格簽賬（本地或海外實體商戶以實體卡或 Apple Pay 支付）滿 HK$1,000，Chill 商戶簽賬可享 8% 現金回贈：全港戲院、Apple TV、App Store、Disney+、Netflix、Spotify、McDonald's、Pacific Coffee、Starbucks、Dyson、Samsung、Sony、Uniqlo、GU、IKEA、LOG-ON。",
-    requiresKeywords: ["戲院", "睇戲", "電影", "cinema", "apple tv", "app store", "disney+", "netflix", "spotify", "mcdonald", "麥當勞", "pacific coffee", "starbucks", "星巴克", "dyson", "samsung", "sony", "uniqlo", "優衣庫", "gu", "ikea", "log-on", "log on"]
+    notes: "每月累積合資格簽賬（本地或海外實體商戶以實體卡或 Apple Pay 支付）滿 HK$1,000，Chill 商戶簽賬可享 8% 現金回贈：全港戲院、Apple TV / Music、Apple Store / App Store、Disney+、Google Play、JOOX、KK Box、MOOV、Netflix、Nintendo、PlayStation、Spotify、YouTube、McDonald's / McDonald App、Pacific Coffee、Starbucks、NOC、% ARABICA、FINEPRINT、Dyson、Samsung、Sony、Logitech、Razer、Uniqlo、GU、IKEA、LOG-ON。",
+    requiresKeywords: ["戲院", "睇戲", "電影", "cinema", "apple tv", "apple music", "apple store", "app store", "disney+", "google play", "joox", "kkbox", "kk box", "moov", "netflix", "nintendo", "playstation", "sony playstation", "spotify", "youtube", "mcdonald", "麥當勞", "mcdonald app", "pacific coffee", "starbucks", "星巴克", "noc", "arabica", "% arabica", "fineprint", "fine print", "dyson", "samsung", "sony", "logitech", "razer", "uniqlo", "優衣庫", "gu", "ikea", "log-on", "log on"]
   },
   {
     cardName: "HSBC 金卡",
@@ -426,11 +445,11 @@ const CANONICAL_OFFER_DEFINITIONS = [
     bonusRate: 14.6,
     minSpend: 0,
     cap: 0,
-    startDate: "2026-01-01",
-    endDate: "2026-06-30",
+    startDate: "2026-07-01",
+    endDate: "2026-12-31",
     locations: ["海外"],
-    notes: "於指定海外商戶作合資格交易可享 15% 現金回贈，只可於每個指定商戶享現金回贈一次。\n【日本】松本清、唐吉訶德、阪急／阪神百貨、大丸松坂屋、樂天免稅店東京銀座店、三越伊勢丹、三井 Outlet Park 爵士之夢長島、三井 Outlet Park 木更津。\n【英國】Harrods。\n【加拿大】Lululemon。\n【澳洲】Coles、Woolworths。\n【泰國】曼谷 Emporium、Paragon Department Stores。",
-    requiresKeywords: ["松本清", "唐吉訶德", "阪急", "阪神", "大丸", "松坂屋", "樂天免稅", "三越", "伊勢丹", "三井", "harrods", "lululemon", "coles", "woolworths", "emporium", "paragon"]
+    notes: "於指定海外商戶作合資格交易可享 15% 現金回贈；每個指定商戶只可享現金回贈一次。分兩階段：7/1-9/30、10/1-12/31；下列門檻及上限均按每階段計。\n【日本】高島屋：滿 JPY 10,000，每階段最高返 JPY 1,500；松本清：滿 JPY 20,000，每階段最高返 JPY 3,000；阪急百貨及阪神百貨：滿 JPY 30,000，每階段最高返 JPY 4,500；大丸松坂屋百貨：滿 JPY 50,000，每階段最高返 JPY 7,500；三越伊勢丹：滿 JPY 80,000，每階段最高返 JPY 12,000。\n【英國】Harrods：滿 GBP 350，每階段最高返 GBP 52.5。\n【加拿大】Lululemon：滿 CAD 200，每階段最高返 CAD 30。\n【澳洲】Coles：滿 AUD 150，每階段最高返 AUD 22.5；Woolworths：滿 AUD 150，每階段最高返 AUD 22.5。\n【韓國】Olive Young：滿 KRW 90,000，每階段最高返 KRW 13,500；新羅免稅店：滿 KRW 250,000，每階段最高返 KRW 37,500；樂天免稅店：滿 USD 500，每階段最高返 USD 75；新世界免稅店：滿 USD 1,000，每階段最高返 USD 150。\n【泰國】曼谷 Emporium：滿 THB 10,000，每階段最高返 THB 1,500；百麗宮百貨公司 Paragon Department Stores：滿 THB 10,000，每階段最高返 THB 1,500。",
+    requiresKeywords: ["高島屋", "takashimaya", "松本清", "阪急", "阪神", "大丸", "松坂屋", "三越", "伊勢丹", "harrods", "lululemon", "coles", "woolworths", "olive young", "oliveyoung", "新羅", "shilla", "樂天免稅", "lotte duty free", "新世界", "shinsegae", "emporium", "paragon"]
   },
   {
     cardName: "恒生多貨幣扣賬卡",
@@ -440,10 +459,10 @@ const CANONICAL_OFFER_DEFINITIONS = [
     bonusRate: 19.6,
     minSpend: 0,
     cap: 120,
-    startDate: "2026-01-01",
-    endDate: "2026-06-30",
+    startDate: "2026-07-01",
+    endDate: "2026-12-31",
     locations: ["內地", "海外", "網上"],
-    notes: "於指定海外交通作合資格交易可享 20% 現金回贈（上限 HK$120）。\n【澳洲】Transport for NSW TrainLink、Translink。\n【加拿大】Go Transit。\n【內地】中國鐵路 12306、北京地鐵、Go 巴出行、上海地鐵、上海磁浮、環島中港通。\n【日本】Japan Railway。\n【泰國】Mass Rapid Transit Authority of Thailand。\n【英國】Lothian Buses、Transport for Greater Manchester、Transport for London。\n部分指定商戶網站/網上交易亦適用。",
+    notes: "於指定海外交通作合資格交易可享 20% 現金回贈，每階段上限 HK$120。分兩階段：7/1-9/30、10/1-12/31。\n【澳洲】Transport for NSW TrainLink、Translink。\n【加拿大】Go Transit。\n【內地】中國鐵路 12306、北京地鐵、Go 巴出行、上海地鐵、上海磁浮、環島中港通。\n【日本】Japan Railway。\n【泰國】Mass Rapid Transit Authority of Thailand。\n【英國】Lothian Buses、Transport for Greater Manchester、Transport for London。\n部分指定商戶網站/網上交易亦適用。",
     requiresKeywords: ["translink", "trainlink", "go transit", "中國鐵路", "北京地鐵", "go巴出行", "上海地鐵", "上海磁浮", "環島中港通", "japan railway", "jr", "mass rapid transit", "mrt", "lothian buses", "transport for greater manchester", "transport for london", "tfl"]
   },
   {
@@ -454,10 +473,10 @@ const CANONICAL_OFFER_DEFINITIONS = [
     bonusRate: 19.6,
     minSpend: 0,
     cap: 120,
-    startDate: "2026-01-01",
-    endDate: "2026-06-30",
+    startDate: "2026-07-01",
+    endDate: "2026-12-31",
     locations: ["香港", "網上"],
-    notes: "於指定本地商戶作合資格交易可享 20% 現金回贈（上限 HK$120）。優惠只適用於指定商戶之香港零售分店及指定網站：POP MART（popmart.com/hk）、MCL 戲院（mclcinema.com）、百老匯院線（cinema.com.hk/tc）、英皇戲院（emperorcinemas.com/zh）；唐吉訶德及松本清只限香港零售分店。",
+    notes: "於指定本地商戶作合資格交易可享 20% 現金回贈，每階段上限 HK$120。分兩階段：7/1-9/30、10/1-12/31。優惠只適用於指定商戶之香港零售分店及指定網站：POP MART（popmart.com/hk）、MCL 戲院（mclcinema.com）、百老匯院線（cinema.com.hk/tc）、英皇戲院（emperorcinemas.com/zh）；唐吉訶德及松本清只限香港零售分店。",
     requiresKeywords: ["pop mart", "popmart", "唐吉訶德", "松本清", "mcl", "百老匯", "英皇", "睇戲", "電影"]
   },
   {
@@ -588,13 +607,13 @@ const CANONICAL_OFFER_DEFINITIONS = [
     tags: ["nfc"],
     bonusRate: 3,
     minSpend: 0,
-    cap: 200,
-    startDate: "2026-04-23",
-    endDate: "2026-06-23",
+    cap: 600,
+    startDate: "2026-06-24",
+    endDate: "2026-09-30",
     locations: ["香港", "澳門", "內地", "海外"],
-    displayCap: 200,
+    displayCap: 600,
     displayCurrency: "HKD",
-    notes: "於香港、中國內地及全球各地，以 PayMe 銀聯卡經 NFC 免觸支付，港幣、人民幣或澳門幣付款可享累積交易金額 3% 回贈。每個推廣階段兩項優惠合共最高 HK$200，兩個階段合共最高 HK$400；第一階段 2026-04-23 至 2026-05-22，第二階段 2026-05-23 至 2026-06-23。"
+    notes: "PayMe 銀聯卡綁定 Apple Pay 後免觸或線上付款；三階段：6/24-7/31、8/1-8/31、9/1-9/30。兩項優惠合共最高 HK$600，每階段完結後 10 個工作天內入賬。"
   },
   {
     cardName: "PayMe 銀聯卡",
@@ -603,29 +622,13 @@ const CANONICAL_OFFER_DEFINITIONS = [
     tags: ["nfc", "overseas"],
     bonusRate: 10,
     minSpend: 0,
-    cap: 200,
-    startDate: "2026-04-23",
-    endDate: "2026-06-23",
+    cap: 600,
+    startDate: "2026-06-24",
+    endDate: "2026-09-30",
     locations: ["海外"],
-    displayCap: 200,
+    displayCap: 600,
     displayCurrency: "HKD",
-    notes: "以 PayMe 銀聯卡經 NFC 免觸支付，以其他貨幣付款可享累積交易金額 10% 回贈。每個推廣階段兩項優惠合共最高 HK$200，兩個階段合共最高 HK$400；第一階段 2026-04-23 至 2026-05-22，第二階段 2026-05-23 至 2026-06-23。"
-  },
-  {
-    cardName: "中信i享銀聯卡",
-    title: "香港線下滿 HK$200 減 HK$20",
-    category: "general",
-    tags: ["shopping", "dining", "entertainment", "transport"],
-    bonusRate: 0,
-    minSpend: 200,
-    cap: 20,
-    currency: "HKD",
-    startDate: "2026-01-01",
-    endDate: "2026-05-31",
-    locations: ["香港"],
-    usageUsed: 0,
-    usageTotal: 10,
-    notes: "在香港線下消費滿 HK$200 可享 HK$20 立減，每用戶每天可享 1 次，累計最高可享 HK$200。"
+    notes: "PayMe 銀聯卡綁定 Apple Pay 後免觸或線上付款；HKD/CNY/MOP 以外貨幣 10%。三階段：6/24-7/31、8/1-8/31、9/1-9/30。兩項優惠合共最高 HK$600，每階段完結後 10 個工作天內入賬。"
   },
   {
     cardName: "中信i享銀聯卡",
@@ -637,9 +640,25 @@ const CANONICAL_OFFER_DEFINITIONS = [
     cap: 200,
     currency: "CNY",
     startDate: "2026-01-01",
-    endDate: "2026-06-30",
+    endDate: "2026-12-31",
     locations: ["香港", "澳門", "海外"],
     notes: "在香港、澳門、新加坡、日本、韓國通過銀聯清算網絡的合資格境外線下交易，單筆交易金額滿 200 元可享實時隨機立減，最高 30%，每月每卡最高可享 200 元實時立減。"
+  },
+  {
+    cardName: "農行萬事達白金卡",
+    title: "Apple Pay 境外線下 2%",
+    category: "general",
+    tags: ["overseas", "applepay"],
+    bonusRate: 2,
+    minSpend: 0,
+    cap: 0,
+    displayCap: 50,
+    displayCurrency: "USD",
+    startDate: "2026-07-01",
+    endDate: "2026-09-30",
+    dateNote: "",
+    locations: ["香港", "澳門", "海外"],
+    notes: "經萬事達網絡清算的 Apple Pay 境外線下交易可享 2% 返現；單客戶每月至高返 US$50，先消費先得。"
   },
   {
     cardName: "農行萬事達白金卡",
@@ -652,7 +671,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
     usageUsed: 0,
     usageTotal: 1,
     startDate: "2026-01-01",
-    endDate: "2026-06-30",
+    endDate: "2026-09-30",
     locations: ["香港", "澳門", "海外"],
     notes: "每月首筆境外線下消費返 US$1。"
   },
@@ -665,7 +684,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
     minSpend: 0,
     cap: 0,
     startDate: "2026-01-01",
-    endDate: "2026-06-30",
+    endDate: "2026-12-31",
     locations: ["香港", "澳門", "海外", "網上"],
     notes: "境外線上／線下消費筆筆返現 1%，每月返現金額不設上限。"
   },
@@ -678,7 +697,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
     minSpend: 0,
     cap: 0,
     startDate: "2026-01-01",
-    endDate: "2026-06-30",
+    endDate: "2026-09-30",
     locations: ["香港", "澳門", "海外"],
     notes: "境外線下消費筆筆返現 3%，每季度返現上限 US$30，先消費先得，滿額即止。"
   },
@@ -691,7 +710,7 @@ const CANONICAL_OFFER_DEFINITIONS = [
     minSpend: 0,
     cap: 0,
     startDate: "2026-01-01",
-    endDate: "2026-06-30",
+    endDate: "2026-09-30",
     locations: ["香港", "海外", "網上"],
     notes: "境外精選商戶消費筆筆返 10%，每季度返現上限 US$30，先消費先得，滿額即止。\n購物：COSTCO、IKEA、ARC'TERYX、LULULEMON、Saks Fifth Avenue、HARRODS、SOGO、KING POWER、SUNING、FARFETCH、SSENSE。\n出行：BOOKING.COM。\n外賣：UBER EATS、DELIVEROO、DOOR DASH。\n交通：UBER。\n娛樂：STEAM、NETFLIX、SPOTIFY、Sony PlayStation、Nintendo eShop。",
     requiresKeywords: ["costco", "ikea", "arc'teryx", "arcteryx", "lululemon", "saks fifth avenue", "harrods", "sogo", "king power", "suning", "farfetch", "ssense", "booking.com", "booking", "uber eats", "deliveroo", "door dash", "doordash", "uber", "steam", "netflix", "spotify", "sony playstation", "playstation", "nintendo eshop", "nintendo e-shop", "nintendo eshop"]
@@ -707,12 +726,12 @@ const CANONICAL_OFFER_DEFINITIONS = [
     currency: "HKD",
     displayCap: 8,
     displayCurrency: "USD",
-    startDate: "2026-01-01",
-    endDate: "2026-05-31",
+    startDate: "2026-01-15",
+    endDate: "2026-09-30",
     locations: ["香港"],
     usageUsed: 3,
     usageTotal: 4,
-    notes: "在香港線下商戶以 Apple Pay 單筆消費滿 HK$50 可獲 US$2 返現，活動期間最多可返現 4 筆。"
+    notes: "香港線下商戶以 Apple Pay 單筆消費滿 HK$50 可獲 US$2 返現，每階段最多返 4 筆；先到先得。"
   },
   {
     cardName: "工行星座Visa卡",
@@ -959,12 +978,6 @@ const CANONICAL_RECOMMENDATION_RULES = {
     currency: "foreign",
     payoutTiming: "instant"
   },
-  [canonicalOfferKey("中信i享銀聯卡", "香港線下滿 HK$200 減 HK$20")]: {
-    group: "citic-ienjoy-instant",
-    channel: "offline",
-    regions: ["香港"],
-    currency: "HKD"
-  },
   [canonicalOfferKey("中信i享銀聯卡", "境外線下隨機立減最高 30%")]: {
     group: "citic-ienjoy-instant",
     channel: "offline",
@@ -1008,6 +1021,13 @@ const CANONICAL_RECOMMENDATION_RULES = {
     regions: "any",
     currency: "any",
     merchantMode: "listed"
+  },
+  [canonicalOfferKey("農行萬事達白金卡", "Apple Pay 境外線下 2%")]: {
+    group: null,
+    channel: "offline",
+    regions: ["香港", "澳門", "海外"],
+    currency: "any",
+    paymentMethod: "applepay"
   },
   [canonicalOfferKey("工行星座Visa卡", "香港 Apple Pay 滿 HK$50 返 US$2")]: {
     group: null,
@@ -1411,6 +1431,7 @@ function migrateStoredData() {
   const canonicalOffers = CANONICAL_OFFER_DEFINITIONS.map((definition) => {
     const key = canonicalOfferKey(definition.cardName, definition.title);
     const existing = findExistingCanonicalOffer(definition, existingOffers, existingCardById);
+    const forceCanonical = FORCE_CANONICAL_OFFER_KEYS.has(key);
     const existingDisplayCap = Number(existing?.displayCap || 0);
     const definitionDisplayCap = Number(definition.displayCap || 0);
     const existingUsageTotal = Number(existing?.usageTotal || 0);
@@ -1428,18 +1449,18 @@ function migrateStoredData() {
       bonusRate: definition.bonusRate,
       minSpend: definition.minSpend,
       cap: definition.cap,
-      currency: existing?.currency || definition.currency,
-      displayMinSpend: existing?.displayMinSpend || definition.displayMinSpend,
-      displayCap: existingDisplayCap > 0 ? existingDisplayCap : definitionDisplayCap,
-      displayCurrency: existing?.displayCurrency || definition.displayCurrency,
+      currency: forceCanonical ? definition.currency : (existing?.currency || definition.currency),
+      displayMinSpend: forceCanonical ? definition.displayMinSpend : (existing?.displayMinSpend || definition.displayMinSpend),
+      displayCap: forceCanonical ? definitionDisplayCap : (existingDisplayCap > 0 ? existingDisplayCap : definitionDisplayCap),
+      displayCurrency: forceCanonical ? definition.displayCurrency : (existing?.displayCurrency || definition.displayCurrency),
       startDate: definition.startDate,
       endDate: definition.endDate,
-      dateNote: existing?.dateNote || definition.dateNote,
+      dateNote: forceCanonical ? definition.dateNote : (existing?.dateNote || definition.dateNote),
       locations: definition.locations,
-      usageMode: definition.usageMode || existing?.usageMode,
-      usageUsed: existing?.usageUsed ?? definition.usageUsed,
-      usageTotal: existingUsageTotal > 0 ? existingUsageTotal : definitionUsageTotal,
-      usageCurrency: existing?.usageCurrency || definition.usageCurrency,
+      usageMode: forceCanonical ? definition.usageMode : (definition.usageMode || existing?.usageMode),
+      usageUsed: forceCanonical ? definition.usageUsed : (existing?.usageUsed ?? definition.usageUsed),
+      usageTotal: forceCanonical ? definitionUsageTotal : (existingUsageTotal > 0 ? existingUsageTotal : definitionUsageTotal),
+      usageCurrency: forceCanonical ? definition.usageCurrency : (existing?.usageCurrency || definition.usageCurrency),
       notes: definition.notes,
       requiresKeywords: definition.requiresKeywords
     });
@@ -2782,9 +2803,6 @@ function formatOfferLocationLabel(offer, cardName = "") {
   if (cardName === "PayMe 銀聯卡" && offer.title === "其他貨幣 10%") {
     return { main: "海外", sub: "實體或網上" };
   }
-  if (cardName === "中信i享銀聯卡" && offer.title === "香港線下滿 HK$200 減 HK$20") {
-    return { main: "香港", sub: "實體" };
-  }
   if (cardName === "中信i享銀聯卡" && offer.title === "境外線下隨機立減最高 30%") {
     return { main: "香港 / 海外", sub: "實體" };
   }
@@ -2799,6 +2817,9 @@ function formatOfferLocationLabel(offer, cardName = "") {
   }
   if (cardName === "農行萬事達白金卡" && offer.title === "境外精選商戶 10%") {
     return { main: "指定商戶", sub: "實體或網上" };
+  }
+  if (cardName === "農行萬事達白金卡" && offer.title === "Apple Pay 境外線下 2%") {
+    return { main: "香港 / 澳門 / 海外", sub: "Apple Pay 線下" };
   }
   if (cardName === "工行星座Visa卡" && offer.title === "香港 Apple Pay 滿 HK$50 返 US$2") {
     return { main: "香港", sub: "實體" };
