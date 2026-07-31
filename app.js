@@ -6,7 +6,7 @@ const DEPRECATED_OFFER_TITLES = new Set([
   "本地餐飲及娛樂 1%",
   "網上旅遊/娛樂/訂閱 港幣 5.4%"
 ]);
-const APP_VERSION = "v2026.07.07.18";
+const APP_VERSION = "v2026.08.01.2";
 const MERCHANT_SUGGESTIONS = [
   ["Netflix", ["netflix"]],
   ["Spotify", ["spotify"]],
@@ -572,33 +572,6 @@ const CANONICAL_OFFER_DEFINITIONS = [
     endDate: "2026-12-31",
     locations: ["網上", "海外"],
     notes: "合資格網上外幣簽賬可享 1% 回贈。"
-  },
-  {
-    cardName: "DBS Live Fresh",
-    title: "迎新 HK$500",
-    category: "general",
-    tags: ["welcome"],
-    bonusRate: 0,
-    minSpend: 5000,
-    cap: 500,
-    startDate: "2026-01-01",
-    endDate: "2026-12-31",
-    locations: ["香港", "網上", "海外"],
-    notes: "✅（待返）發卡 3 個月內累積合資格簽賬滿 HK$5,000 可享 HK$500 現金回贈；最遲於完成要求後 6 個月回贈。"
-  },
-  {
-    cardName: "DBS Live Fresh",
-    title: "迎新 HK$100",
-    category: "general",
-    tags: ["welcome", "subscription"],
-    bonusRate: 0,
-    minSpend: 0,
-    cap: 100,
-    startDate: "2026-01-01",
-    endDate: "2026-12-31",
-    locations: ["網上"],
-    notes: "✅（待返）發卡 4 個月內於任何兩個月（3 月 + 4 月）於指定合資格訂閱服務各簽賬任何金額一次可享 HK$100 現金回贈；最遲於完成要求後 6 個月回贈。",
-    requiresKeywords: ["訂閱", "subscription", "app store", "disney+", "google play", "joox", "kkbox", "moov", "netflix", "now tv", "spotify", "youtube", "apple tv", "apple music", "viu", "adobe", "amazon prime", "canva", "chatgpt", "copy.ai", "deepseek", "elevenlabs", "grammarly", "grok", "hbo", "hulu", "jasper", "kimi", "manus", "microsoft", "midjourney", "mytv super", "notion", "otter.ai", "paramount+", "perplexity", "poe", "shopify", "shopline", "soundraw", "synthesia", "uber one", "viutv", "writesonic", "youku", "zoom"]
   },
   {
     cardName: "PayMe 銀聯卡",
